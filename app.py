@@ -1,10 +1,16 @@
-from flask import Flask, render_template, request, redirect, flash, url_for, session
+from flask import Flask, render_template, request, redirect, flash, url_for, session, jsonify
 from datetime import datetime, timedelta
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from functools import wraps
 from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, flash, url_for, session
+from datetime import datetime
+import firebase_admin
+from firebase_admin import credentials, firestore
+from functools import wraps
+
 
 load_dotenv()
 
@@ -581,7 +587,6 @@ def expenses_route():
 
 
 
-from flask import jsonify
 @app.route('/expense-types/<category>')
 @auth_required
 def expense_types_by_category(category):
@@ -595,16 +600,6 @@ def expense_types_by_category(category):
     return jsonify(expense_types)
 
 
-
-
-
-from flask import Flask, render_template, request, redirect, flash, url_for, session
-from datetime import datetime
-import firebase_admin
-from firebase_admin import credentials, firestore
-from functools import wraps
-
-# ... your other imports and init code ...
 
 @app.route('/tools', methods=['GET', 'POST'])
 @auth_required
