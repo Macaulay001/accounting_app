@@ -1,0 +1,430 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Manage / Edit Data</h2>
+
+<!-- Main Tools Dropdown -->
+<div class="mb-4">
+  <label for="tool-select" class="form-label">Select Tool Type:</label>
+  <select id="tool-select" class="form-select">
+    <option value="" disabled selected>Choose an option</option>
+    <option value="customers">Add New Customers</option>
+    <option value="vendors">Add New Vendors</option>
+    <option value="products">Add New Ponmo Type</option>
+    <option value="bank_names">Add New Bank Name</option>
+    <option value="expense_type">Add New Expenses Type</option>
+
+    <!-- Option for Edit Transactions -->
+    <option value="edit_records">Edit Transactions</option>
+  </select>
+</div>
+
+<!-- ===============================
+     Customers Section
+=============================== -->
+<div id="customers-section" class="tool-section">
+  <h3>Manage Customers</h3>
+  <form method="post" class="mb-4" onsubmit="showLoading(event)">
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="entity_type" value="customer">
+    <input type="hidden" name="current_section" value="customers">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="name" class="form-control" placeholder="Customer Name" required>
+      </div>
+      <div class="col-md-5">
+        <input type="text" name="phone_number" class="form-control" placeholder="Phone (optional)">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success submit-btn">
+          <span class="button-text">Add</span>
+          <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for customer in customers %}
+      <tr>
+        <td>{{ customer.name }}</td>
+        <td>{{ customer.phone_number }}</td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="showLoading(event)">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="entity_type" value="customer">
+            <input type="hidden" name="id" value="{{ customer.id }}">
+            <input type="hidden" name="current_section" value="customers">
+            <button type="submit" class="btn btn-danger btn-sm submit-btn">
+              <span class="button-text">Delete</span>
+              <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===============================
+     Vendors Section
+=============================== -->
+<div id="vendors-section" class="tool-section" style="display: none;">
+  <h3>Manage Vendors</h3>
+  <form method="post" class="mb-4" onsubmit="showLoading(event)">
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="entity_type" value="vendor">
+    <input type="hidden" name="current_section" value="vendors">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="name" class="form-control" placeholder="Vendor Name" required>
+      </div>
+      <div class="col-md-5">
+        <input type="text" name="phone_number" class="form-control" placeholder="Phone (optional)">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success submit-btn">
+          <span class="button-text">Add</span>
+          <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for vendor in vendors %}
+      <tr>
+        <td>{{ vendor.name }}</td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="showLoading(event)">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="entity_type" value="vendor">
+            <input type="hidden" name="id" value="{{ vendor.id }}">
+            <input type="hidden" name="current_section" value="vendors">
+            <button type="submit" class="btn btn-danger btn-sm submit-btn">
+              <span class="button-text">Delete</span>
+              <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===============================
+     Products Section
+=============================== -->
+<div id="products-section" class="tool-section" style="display: none;">
+  <h3>Manage Products</h3>
+  <form method="post" class="mb-4" onsubmit="showLoading(event)">
+    <input type="hidden" name="action" value="add_product">
+    <input type="hidden" name="current_section" value="products">
+    <div class="row">
+      <div class="col-md-4">
+        <input type="text" name="product_name" class="form-control" placeholder="Product Name" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="price1" class="form-control" placeholder="Owo Price" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="price2" class="form-control" placeholder="Piece Price" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success submit-btn">
+          <span class="button-text">Add</span>
+          <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Product Name</th>
+        <th>Owo Price</th>
+        <th>Piece Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>{{ product.name }}</td>
+        <td>#{{ product.price1 }}</td>
+        <td>#{{ product.price2 }}</td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="showLoading(event)">
+            <input type="hidden" name="action" value="delete_product">
+            <input type="hidden" name="id" value="{{ product.id }}">
+            <input type="hidden" name="current_section" value="products">
+            <button type="submit" class="btn btn-danger btn-sm submit-btn">
+              <span class="button-text">Delete</span>
+              <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===============================
+     Bank Names Section
+=============================== -->
+<div id="bank-names-section" class="tool-section" style="display: none;">
+  <h3>Manage Bank Names</h3>
+  <form method="post" class="mb-4" onsubmit="showLoading(event)">
+    <input type="hidden" name="action" value="add_bank_name">
+    <input type="hidden" name="current_section" value="bank_names">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="bank_name" class="form-control" placeholder="Bank Name" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success submit-btn">
+          <span class="button-text">Add</span>
+          <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Bank Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bank in bank_names %}
+      <tr>
+        <td>{{ bank.name }}</td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="showLoading(event)">
+            <input type="hidden" name="action" value="delete_bank_name">
+            <input type="hidden" name="id" value="{{ bank.id }}">
+            <input type="hidden" name="current_section" value="bank_names">
+            <button type="submit" class="btn btn-danger btn-sm submit-btn">
+              <span class="button-text">Delete</span>
+              <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===============================
+     Expenses Section
+=============================== -->
+<div id="expenses-type-section" class="tool-section" style="display: none;">
+  <h3>Manage Expenses Type</h3>
+  <form method="post" class="mb-4" onsubmit="showLoading(event)">
+    <input type="hidden" name="action" value="add_expenses_type">
+    <input type="hidden" name="current_section" value="expense_type">
+    <div class="row">
+      <div class="col-md-4">
+        <input type="text" name="expense_type" class="form-control" placeholder="Expense Type Name" required>
+      </div>
+      <div class="col-md-3">
+        <select name="expense_category" class="form-select" required>
+          <option value="" disabled selected>Select Category</option>
+          <option value="company">Company Expenses</option>
+          <option value="awo">Awo Expenses</option>
+          <option value="personal">Personal Expenses</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success submit-btn">
+          <span class="button-text">Add</span>
+          <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+        </button>      
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Expense Type</th>
+        <th>Category</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for expense in expense_types %}
+      <tr>
+        <td>{{ expense.name }}</td>
+        <td>{{ expense.category }}</td>
+        <td>
+          <form method="post" style="display:inline;" onsubmit="showLoading(event)">
+            <input type="hidden" name="action" value="delete_expenses_type">
+            <input type="hidden" name="id" value="{{ expense.id }}">
+            <input type="hidden" name="current_section" value="expense_type">
+            <button type="submit" class="btn btn-danger btn-sm submit-btn">
+              <span class="button-text">Delete</span>
+              <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===============================
+     Edit Transactions Section
+=============================== -->
+<div id="edit-records-section" class="tool-section" style="display: none;">
+  <h3>Edit Transactions (Sales, Deposits, Production, Stock, Expenses)</h3>
+
+  <!-- Dropdown to filter by type (all, sale, deposit, production, stock, expense) -->
+  <form method="get" action="{{ url_for('tools_route') }}" class="mb-3">
+    <input type="hidden" name="section" value="edit_records">
+    <label for="filter_type" class="form-label">Filter by Transaction Type:</label>
+    <select id="filter_type" name="filter_type" class="form-select" onchange="this.form.submit()">
+      <option value="all" {% if request.args.get('filter_type', 'all') == 'all' %}selected{% endif %}>All Types</option>
+      <option value="sale" {% if request.args.get('filter_type') == 'sale' %}selected{% endif %}>Sales</option>
+      <option value="deposit" {% if request.args.get('filter_type') == 'deposit' %}selected{% endif %}>Deposits</option>
+      <option value="production" {% if request.args.get('filter_type') == 'production' %}selected{% endif %}>Production</option>
+      <option value="stock" {% if request.args.get('filter_type') == 'stock' %}selected{% endif %}>Stock</option>
+      <option value="expense" {% if request.args.get('filter_type') == 'expense' %}selected{% endif %}>Expense</option>
+    </select>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Date</th>
+        <th>Customer/Vendor</th>
+        <th>Details</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tx in all_transactions %}
+      <tr>
+        <td>{{ tx.type }}</td>
+        <td>{{ tx.date }}</td>
+        <td>
+          {% if tx.type in ['sale', 'deposit'] %}
+            Customer: {{ tx.customer_id }}
+          {% elif tx.type in ['production', 'stock', 'expense'] %}
+            Vendor: {{ tx.vendor_id }}
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+        <td>
+          {% if tx.type == 'sale' %}
+            Invoice#: {{ tx.invoice_number }}, Amount: {{ tx.total_amount }}
+          {% elif tx.type == 'deposit' %}
+            Amount: {{ tx.amount }}
+          {% elif tx.type == 'production' %}
+            Processed: {{ tx.processed }} (Remaining: {{ tx.remaining }})
+          {% elif tx.type == 'stock' %}
+            Qty: {{ tx.quantity }}, Rate: {{ tx.rate }}
+          {% elif tx.type == 'expense' %}
+            Amount: {{ tx.amount }}
+          {% endif %}
+        </td>
+        <td>
+          <!-- Example "Edit" form -->
+          <form method="post" style="display:inline;" onsubmit="showLoading(event)">
+            <input type="hidden" name="action" value="edit_record">
+            <input type="hidden" name="id" value="{{ tx.id }}">
+            <input type="hidden" name="current_section" value="edit_records">
+            <button type="submit" class="btn btn-warning btn-sm submit-btn">
+              <span class="button-text">Edit</span>
+              <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toolSelect = document.getElementById("tool-select");
+    const sections = {
+      customers: document.getElementById("customers-section"),
+      vendors: document.getElementById("vendors-section"),
+      products: document.getElementById("products-section"),
+      bank_names: document.getElementById("bank-names-section"),
+      expense_type: document.getElementById("expenses-type-section"),
+      edit_records: document.getElementById("edit-records-section")
+    };
+
+    // Hide all sections
+    function hideAllSections() {
+      Object.values(sections).forEach(section => {
+        if (section) section.style.display = "none";
+      });
+    }
+
+    // On dropdown change
+    toolSelect.addEventListener("change", function () {
+      hideAllSections();
+      const selectedSection = sections[this.value];
+      if (selectedSection) {
+        selectedSection.style.display = "block";
+      }
+    });
+
+    // Show the correct section based on current_section passed from server
+    const currentSection = "{{ current_section }}";
+    if (currentSection && sections[currentSection]) {
+      toolSelect.value = currentSection;
+      hideAllSections();
+      sections[currentSection].style.display = "block";
+    }
+  });
+
+  // Show spinner on form submission
+  function showLoading(event) {
+    event.preventDefault();
+    const form = event.target;
+    const submitBtn = form.querySelector(".submit-btn");
+    const buttonText = submitBtn.querySelector(".button-text");
+    const spinner = submitBtn.querySelector(".loading-spinner");
+
+    submitBtn.disabled = true;
+    if (buttonText) buttonText.style.display = "none";
+    if (spinner) spinner.style.display = "inline-block";
+
+    setTimeout(() => {
+      form.submit();
+    }, 100);
+  }
+</script>
+{% endblock %}

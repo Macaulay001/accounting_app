@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Set Up Your Business</h2>
+<p>Welcome! Please enter your business name and phone number to continue.</p>
+
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST" id="business-setup-form">
+  <div class="mb-3">
+    <label for="business_name" class="form-label">Business Name</label>
+    <input type="text" name="business_name" id="business_name" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="phone_number" class="form-label">Phone Number</label>
+    <input type="tel" name="phone_number" id="phone_number" class="form-control" required>
+  </div>
+
+  <button type="submit" class="btn btn-success">Save Details</button>
+</form>
+
+<script>
+  // Automatically redirect to dashboard after successful setup
+  if (document.querySelector('.alert-success')) {
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 2000);  // 2-second delay before redirecting
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,89 @@
+<!-- templates/deposit.html -->
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record a Deposit</h2>
+<form method="post" action="{{ url_for('deposit_route') }}" onsubmit="showLoading()">
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label for="customer" class="form-label">Customer</label>
+    <select id="customer" name="customer" class="form-select" required>
+      <option value="" disabled selected>Select Customer</option>
+      {% for customer in customers %}
+      <option value="{{ customer.id }}">{{ customer.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+
+    <!-- Vendor Selection -->
+    <!-- <div class="mb-3">
+      <label for="vendor" class="form-label">Vendor</label>
+      <select id="vendor" name="vendor" class="form-select" required>
+        <option value="" disabled selected>Select Vendor</option>
+        {% for vendor in vendors %}
+        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+        {% endfor %}
+      </select>
+    </div> -->
+
+    
+  <!-- Payment Method -->
+  <div class="mb-3">
+    <label for="payment_method" class="form-label">Payment Method</label>
+    <select id="payment_method" name="payment_method" class="form-select" required>
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="cash">Cash</option>
+      <option value="bank_transfer">Bank Transfer</option>
+      <option value="mobile_money">Mobile Money</option>
+    </select>
+  </div>
+  <!-- if bank transfer selected, choose bank name -->
+  <div id="bank-name-container" class="mb-3" style="display: none;">
+    <label for="bank_name" class="form-label">Bank Name</label>
+    <select id="bank_name" name="bank_name" class="form-select" required>
+      {% for bank in bank_names %}
+      <option value="{{ bank.name }}">{{ bank.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("payment_method").addEventListener("change", function () {
+      var bankNameContainer = document.getElementById("bank-name-container");
+      if (this.value === "bank_transfer") {
+        bankNameContainer.style.display = "block";
+        document.getElementById("bank_name").required = true;
+      } else {
+        bankNameContainer.style.display = "none";
+        document.getElementById("bank_name").required = false;
+      }
+    });
+  </script>
+
+
+  <!-- Amoumt Paid -->
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
+  <button type="submit" id="submit-btn" class="btn btn-success">
+    <span id="button-text">Save Deposit</span>
+    <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+  </button>
+</form>
+
+<script>
+  function showLoading() {
+    // Disable the button to prevent multiple submissions
+    document.getElementById("submit-btn").disabled = true;
+    
+    // Hide text and show loading spinner
+    document.getElementById("button-text").style.display = "none";
+    document.getElementById("loading-spinner").style.display = "inline-block";
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Reports</h2>
+
+<!-- 1) Choose Report Type -->
+<form method="get" action="{{ url_for('reports') }}" class="mb-4">
+  <label for="report_type" class="form-label">Select Report Type:</label>
+  <select id="report_type" name="report_type" class="form-select" required onchange="this.form.submit()">
+    <option value="" disabled {% if not report_type %}selected{% endif %}>Choose Report Type</option>
+    <option value="customer" {% if report_type=='customer' %}selected{% endif %}>Customer Account Report</option>
+    <option value="vendor" {% if report_type=='vendor' %}selected{% endif %}>Vendor Account Report</option>
+  </select>
+</form>
+
+{% if report_type == "customer" %}
+  <h3>Customer Account Report</h3>
+
+  <!-- 2) Choose a specific customer -->
+  <form method="get" action="{{ url_for('reports') }}" class="mb-4">
+    <input type="hidden" name="report_type" value="customer">
+    <label for="customer_id" class="form-label">Select Customer:</label>
+    <select id="customer_id" name="selected_id" class="form-select" required onchange="this.form.submit()">
+      <option value="" disabled selected>Select Customer</option>
+      {% for customer in customers %}
+      <!-- If the doc uses 'business_name', switch to {{ customer.business_name }} -->
+      <option value="{{ customer.id }}" {% if selected_customer == customer.id %}selected{% endif %}>
+        {{ customer.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
+
+  {% if selected_customer %}
+    <h4>Sales and Deposits</h4>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Reference</th>
+          <th> Vendor (Alawo)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Show each sale as two lines if there's a payment -->
+        {% for sale in sales_records %}
+          <!-- Sale Invoice (money out -> red) -->
+          <tr>
+            <td>Sale Invoice</td>
+            <td>{{ sale.date }}</td>
+            <td><span class="text-red">-{{ sale.total_amount }}</span></td>
+            <td>{{ sale.invoice_number or 'N/A' }}</td>
+            <td>{{ sale.vendor.name }}</td>
+          </tr>
+          <!-- If amount_paid > 0, list it as separate line (money in -> green) -->
+          {% if sale.amount_paid and sale.amount_paid > 0 %}
+          <tr>
+            <td>Sale Payment</td>
+            <td>{{ sale.date }}</td>
+            <td><span class="text-green">+{{ sale.amount_paid }}</span></td>
+            <td>{{ sale.invoice_number or 'N/A' }}</td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+        
+        <!-- Deposits (always money in -> green) -->
+        {% for deposit in deposit_records %}
+        <tr>
+          <td>Deposit</td>
+          <td>{{ deposit.date }}</td>
+          <td><span class="text-green">+{{ deposit.amount }}</span></td>
+          <td>{{ deposit.reference or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="2">Total Invoice Amount:</th>
+          <td><span class="text-red">-{{ total_sales }}</span></td>
+          <td></td>
+        </tr>
+        <!-- You could list "Total Payment from Sales" here if you want, but we're skipping it per request -->
+        <tr>
+          <th colspan="2">Total Deposits:</th>
+          <td><span class="text-green">+{{ total_deposits }}</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <!-- 
+               If you still want to reflect partial sale payments,
+               you could show the sum here. But the user asked not
+               to group them in one line, so we skip it.
+          -->
+          <th colspan="2">Current Balance (Money In - Money Out):</th>
+          <td colspan="2">{{ current_balance }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  {% endif %}
+
+<!-- =========================================
+     VENDOR ACCOUNT REPORT
+========================================= -->
+{% elif report_type == "vendor" %}
+  <h3>Vendor Account Report</h3>
+
+  <!-- Dropdown to pick which vendor -->
+  <form method="get" action="{{ url_for('reports') }}" class="mb-4">
+    <input type="hidden" name="report_type" value="vendor">
+    <label for="vendor_id" class="form-label">Select Vendor:</label>
+    <select id="vendor_id" name="selected_id" class="form-select" required onchange="this.form.submit()">
+      <option value="" disabled selected>Select Vendor</option>
+      {% for v in vendors %}
+      <option value="{{ v.id }}" {% if selected_vendor == v.id %}selected{% endif %}>
+        {{ v.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
+
+  {% if selected_vendor %}
+    <h4>Stock, Production, Expenses, and Profit/Loss</h4>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Quantity or Amount</th>
+          <th>Reference</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Stock records (Incoming, might be cost to you, so we can mark it red or neutral) -->
+        {% for stock in stock_records %}
+        <tr>
+          <td>Stock In</td>
+          <td>{{ stock.date }}</td>
+          <td><span class="text-green">+{{ stock.quantity }}</span></td>
+          <td>{{ stock.reference or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+        
+        <!-- Production records (some might treat as neutral, but let's show negative for "used" stock) -->
+        {% for prod in production_records %}
+        <tr>
+          <td>Produced</td>
+          <td>{{ prod.date }}</td>
+          <td><span class="text-red">-{{ prod.processed }}</span></td>
+          <td>{{ prod.reference or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+        
+        <!-- Vendor Expenses (money out, so red) -->
+        {% for exp in vendor_expenses_records %}
+        <tr>
+          <td>Expense</td>
+          <td>{{ exp.date }}</td>
+          <td><span class="text-red">-{{ exp.amount }}</span></td>
+          <td>{{ exp.reference or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="2">Total Stock In (Qty):</th>
+          <td>{{ total_stock_in }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">Total Produced (Qty):</th>
+          <td>{{ total_produced }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">Vendor Expenses (Sum):</th>
+          <td><span class="text-red">-{{ total_vendor_expenses }}</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">Current Balance (Stock In - Produced):</th>
+          <td colspan="2">{{ current_balance }}</td>
+        </tr>
+        <tr>
+          <th colspan="2">Total Stock Cost (Σ qty*rate):</th>
+          <td>{{ total_stock_cost }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">Average Cost per Unit:</th>
+          <td>{{ average_cost|round(2) }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">Sales Revenue (Vendor-based sales):</th>
+          <td><span class="text-green">+{{ total_sales_revenue }}</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">COGS (Produced * Avg Cost):</th>
+          <td><span class="text-red">-{{ cogs|round(2) }}</span></td>
+          <td></td>
+        </tr>
+        <tr>
+          <th colspan="2">
+            Profit or Loss (Revenue - COGS - Vendor Expenses):
+          </th>
+          <td colspan="2">{{ profit_or_loss|round(2) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  {% endif %}
+
+<!-- If no report type is chosen, show a placeholder -->
+{% else %}
+  <p>Please choose a report type above.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<!-- Load Chart.js from a CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Build the chart if we have chart_data for the customer
+  {% if selected_customer %}
+    const ctx = document.getElementById('customerChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_labels|tojson }},
+        datasets: [{
+          label: 'Cumulative Net Balance',
+          data: {{ chart_data|tojson }},
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: true,
+          tension: 0.1
+        }]
+      },
+      options: {
+        scales: {
+          x: { title: { display: true, text: 'Date' } },
+          y: {
+            title: { display: true, text: 'Net Balance' },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  {% endif %}
+</script>
+{% endblock %}

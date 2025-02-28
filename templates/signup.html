@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up | Flask App</title>
+
+  <!-- Google Fonts (Optional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home_css.css') }}">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Inline CSS for Signup Page -->
+  <style>
+    /* Use a modern font */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+      /* Subtle gradient background */
+      background: linear-gradient(135deg, #f4f4f4 0%, #ffffff 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    /* Container for the entire signup section */
+    .signup-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      min-height: calc(100vh - 60px); /* Enough space for a navbar if you have one */
+    }
+
+    /* White card container */
+    .signup-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Fade-in animation */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .signup-form-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .signup-title {
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    /* Flash messages (optional) */
+    .alert {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .alert-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .alert-danger {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    /* Signup form styles */
+    .signup-form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group input {
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+    }
+    .input-group input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Buttons */
+    .signup-btn,
+    .google-signin-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      padding: 0.75rem;
+    }
+
+    .signup-btn {
+      background-color: #3498db;
+      color: #fff;
+    }
+    .signup-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .google-signin-btn {
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      gap: 0.5rem;
+    }
+    .google-signin-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    .google-signin-btn img {
+      width: 20px;
+    }
+
+    /* Divider for OR */
+    .alt-signin-divider {
+      text-align: center;
+      margin: 1rem 0;
+      color: #999;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .alt-signin-divider::before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background-color: #ccc;
+      transform: translateY(-50%);
+    }
+    .alt-signin-divider span {
+      background: #fff;
+      padding: 0 0.5rem;
+    }
+
+    /* Error message for Google sign-in */
+    .error-msg {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      margin-top: 0.5em;
+      text-align: center;
+    }
+
+    /* Link to Login */
+    .login-link-container {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    .login-link-container a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .login-link-container a:hover {
+      text-decoration: underline;
+      color: #2980b9;
+    }
+
+    /* Simple Footer (optional) */
+    footer {
+      background-color: #747E79;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .signup-container {
+        padding: 1.5rem;
+      }
+      .signup-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'navbar_public.html' %}
+
+  <main class="signup-page">
+    <div class="signup-container">
+      <div class="signup-form-wrapper">
+        <h2 class="signup-title">Create an Account</h2>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Email/Password Signup -->
+        <form method="POST" action="{{ url_for('signup') }}" class="signup-form">
+          <div class="input-group">
+            <input type="email" name="email" placeholder="Email" required />
+          </div>
+
+          <div class="input-group">
+            <input type="password" name="password" placeholder="Password" required />
+          </div>
+
+          <div class="input-group">
+            <input type="text" name="business_name" placeholder="Business Name" required />
+          </div>
+
+          <div class="input-group">
+            <input type="tel" name="phone_number" placeholder="Phone Number" required />
+          </div>
+
+          <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+
+        <div class="alt-signin-divider">
+          <span>OR</span>
+        </div>
+
+        <!-- Google Sign-In -->
+        <button onclick="handleGoogleSignIn()" class="google-signin-btn">
+          <img
+            src="{{ url_for('static', filename='images/google-icon.png') }}"
+            alt="Google Sign-in"
+          />
+          Sign up with Google
+        </button>
+
+        <div id="google-signin-error-message" class="error-msg"></div>
+
+        <div class="login-link-container">
+          Already have an account?
+          <a href="{{ url_for('login') }}">Login</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+
+  <!-- Firebase Config (Optional if you're using Google Sign-In) -->
+  <script type="module" src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+  <script type="module">
+    import { googleSignIn } from "{{ url_for('static', filename='js/firebase-config.js') }}";
+
+    async function handleGoogleSignIn() {
+      try {
+        const response = await googleSignIn();
+
+        if (!response || !response.status) {
+          throw new Error("Invalid response from server");
+        }
+
+        // If user needs to set up business, redirect them to /setup_business
+        if (response.status === "setup") {
+          window.location.href = "{{ url_for('setup_business') }}";
+        } else if (response.status === "success") {
+          window.location.href = "{{ url_for('dashboard') }}";
+        } else {
+          document.getElementById("google-signin-error-message").innerText =
+            "Google Sign-In Failed. Please try again.";
+        }
+      } catch (error) {
+        document.getElementById("google-signin-error-message").innerText =
+          "An error occurred while signing in.";
+      }
+    }
+
+    window.handleGoogleSignIn = handleGoogleSignIn;
+  </script>
+</body>
+</html>

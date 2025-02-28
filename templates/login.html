@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Flask App</title>
+
+  <!-- Google Fonts (Optional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home_css.css') }}">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Inline CSS for Login Page -->
+  <style>
+    /* Use a modern font */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+      /* Subtle gradient background */
+      background: linear-gradient(135deg, #f4f4f4 0%, #ffffff 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    /* Container for the entire login section */
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      min-height: calc(100vh - 60px); /* Enough space for a navbar if you have one */
+    }
+
+    /* White card container */
+    .login-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Fade-in animation */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-form-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .login-title {
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    /* Flash messages (optional) */
+    .alert {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .alert-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .alert-danger {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    /* Login form styles */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+      text-align: center;
+    }
+
+    .primary-btn {
+      background-color: #3498db;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+    .primary-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .google-btn {
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      margin-top: 0.5rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      gap: 0.5rem;
+    }
+    .google-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    .google-icon {
+      width: 20px;
+    }
+
+    /* Divider for OR */
+    .alt-signin-divider {
+      text-align: center;
+      margin: 1rem 0;
+      color: #999;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .alt-signin-divider span {
+      background: #fff;
+      padding: 0 0.5rem;
+    }
+    .alt-signin-divider::before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background-color: #ccc;
+      transform: translateY(-50%);
+    }
+
+    /* Error message for Google sign-in */
+    .error-msg {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      margin-top: 0.5em;
+      text-align: center;
+    }
+
+    /* Signup & Forgot Password Links */
+    .signup-link,
+    .forgot-link {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .signup-link-text {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .signup-link-text:hover {
+      text-decoration: underline;
+      color: #2980b9;
+    }
+
+    /* Simple Footer (optional) */
+    footer {
+      background-color: #747E79;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 1.5rem;
+      }
+      .login-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Optional Navbar (remove if you don't need it) -->
+  {% include 'navbar_public.html' %}
+
+  <!-- Main Container -->
+  <main class="login-page">
+    <div class="login-container">
+      <div class="login-form-wrapper">
+        <h2 class="login-title">Welcome Back</h2>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Email/Password Login -->
+        <form method="POST" action="{{ url_for('login') }}" class="login-form">
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              placeholder="you@example.com"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Enter your password"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <button type="submit" class="btn primary-btn">Sign In</button>
+        </form>
+
+        <div class="alt-signin-divider">
+          <span>OR</span>
+        </div>
+
+        <!-- Google Sign-In -->
+        <button onclick="handleGoogleSignIn()" class="btn google-btn">
+          <img
+            src="{{ url_for('static', filename='images/google-icon.png') }}"
+            alt="Google Sign-in"
+            class="google-icon"
+          />
+          Sign in with Google
+        </button>
+
+        <div id="google-signin-error-message" class="error-msg"></div>
+
+        <div class="signup-link">
+          Don't have an account?
+          <a href="{{ url_for('signup') }}" class="signup-link-text">Sign up</a>
+        </div>
+        <div class="forgot-link">
+          <a href="{{ url_for('reset_password') }}">Forgot Password?</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+
+  <!-- Firebase Config (Optional if you're using Google Sign-In) -->
+  <script type="module" src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+  <script type="module">
+    import { googleSignIn } from "{{ url_for('static', filename='js/firebase-config.js') }}";
+
+    async function handleGoogleSignIn() {
+      try {
+        const response = await googleSignIn();
+        if (!response || !response.status) {
+          throw new Error("Invalid response from server");
+        }
+
+        // If user needs to set up business, redirect them to /setup_business
+        if (response.status === "setup") {
+          window.location.href = "{{ url_for('setup_business') }}";
+        } else if (response.status === "success") {
+          window.location.href = "{{ url_for('dashboard') }}";
+        } else {
+          document.getElementById("google-signin-error-message").innerText =
+            "Google Sign-In Failed. Please try again.";
+        }
+      } catch (error) {
+        document.getElementById("google-signin-error-message").innerText =
+          "An error occurred while signing in.";
+      }
+    }
+
+    window.handleGoogleSignIn = handleGoogleSignIn;
+  </script>
+</body>
+</html>

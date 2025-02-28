@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record an Expense</h2>
+
+<!-- 
+  Change the onsubmit handler to call handleFormSubmit(event) 
+  instead of validateExpenseForm()
+-->
+<form method="post" action="{{ url_for('expenses_route') }}" onsubmit="return handleFormSubmit(event)">
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="expense_category" class="form-label">Expense Category</label>
+    <select name="expense_category" id="expense_category" class="form-select" required>
+      <option value="" disabled selected>Select Expense Category</option>
+      <option value="company">Company Expenses</option>
+      <option value="awo">Awo Expenses</option>
+      <option value="personal">Personal Expenses</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="expense_type" class="form-label">Expense Type</label>
+    <select id="expense_type" name="expense_type" class="form-select" required>
+      <option value="" disabled selected>Select Expense Type</option>
+      <!-- Options will be populated via AJAX -->
+    </select>
+  </div>
+
+  <!-- Vendor dropdown for Awo category -->
+  <div id="vendor-name-container" class="mb-3" style="display: none;">
+    <label for="vendor" class="form-label">Vendor Name (Alawo)</label>
+    <select id="vendor" name="vendor" class="form-select">
+      <option value="" disabled selected>Select Vendor</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    // Populate expense types and toggle vendor requirement
+    document.getElementById("expense_category").addEventListener("change", function () {
+      var selectedCategory = this.value;
+      var expenseTypeSelect = document.getElementById("expense_type");
+      expenseTypeSelect.innerHTML = '<option value="" disabled selected>Select Expense Type</option>';
+      
+      var vendorContainer = document.getElementById("vendor-name-container");
+      var vendorSelect = document.getElementById("vendor");
+      if (selectedCategory === "awo") {
+        vendorContainer.style.display = "block";
+        vendorSelect.required = true;
+      } else {
+        vendorContainer.style.display = "none";
+        vendorSelect.required = false;
+      }
+      
+      // AJAX call to get expense types
+      fetch("{{ url_for('expense_types_by_category', category='') }}" + selectedCategory)
+        .then(response => response.json())
+        .then(data => {
+          data.forEach(function(exp) {
+            var option = document.createElement("option");
+            option.value = exp.name;
+            option.text = exp.name;
+            expenseTypeSelect.appendChild(option);
+          });
+        })
+        .catch(error => console.error("Error fetching expense types:", error));
+    });
+  </script>
+
+  <div class="mb-3">
+    <label for="payment_method" class="form-label">Payment Method</label>
+    <select id="payment_method" name="payment_method" class="form-select" required>
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="cash">Cash</option>
+      <option value="bank_transfer">Bank Transfer</option>
+      <option value="mobile_money">Mobile Money</option>
+    </select>
+  </div>
+
+  <div id="bank-name-container" class="mb-3" style="display: none;">
+    <label for="bank_name" class="form-label">Bank Name</label>
+    <select id="bank_name" name="bank_name" class="form-select" required>
+      {% for bank in bank_names %}
+      <option value="{{ bank.name }}">{{ bank.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("payment_method").addEventListener("change", function () {
+      var bankContainer = document.getElementById("bank-name-container");
+      if (this.value === "bank_transfer") {
+        bankContainer.style.display = "block";
+        document.getElementById("bank_name").required = true;
+      } else {
+        bankContainer.style.display = "none";
+        document.getElementById("bank_name").required = false;
+      }
+    });
+  </script>
+
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
+
+  <!-- The button includes spinner elements -->
+  <button type="submit" class="btn btn-success submit-btn">
+    <span class="button-text">Save Expense</span>
+    <span class="loading-spinner spinner-border spinner-border-sm" style="display: none;"></span>
+  </button>      
+</form>
+
+<script>
+  // 1. Validate the form
+  function validateExpenseForm() {
+    var expenseTypeSelect = document.getElementById("expense_type");
+    if (!expenseTypeSelect.value) {
+      alert("Please select an expense type.");
+      return false;
+    }
+    return true;
+  }
+
+  // 2. Show spinner and submit form
+  function showLoading(event) {
+    event.preventDefault(); // Stop immediate form submission
+    const form = event.target;
+    const submitBtn = form.querySelector(".submit-btn");
+    const buttonText = submitBtn.querySelector(".button-text");
+    const spinner = submitBtn.querySelector(".loading-spinner");
+
+    submitBtn.disabled = true;
+    if (buttonText) {
+      buttonText.style.display = "none";
+    }
+    if (spinner) {
+      spinner.style.display = "inline-block";
+    }
+    // Submit after a short delay so the spinner is visible
+    setTimeout(() => {
+      form.submit();
+    }, 100);
+  }
+
+  // 3. Combined form submit handler
+  function handleFormSubmit(event) {
+    // If validation fails, block submission
+    if (!validateExpenseForm()) {
+      event.preventDefault();
+      return false;
+    }
+    // Otherwise, show spinner and then submit
+    showLoading(event);
+    return false; // We'll submit manually in showLoading
+  }
+</script>
+{% endblock %}

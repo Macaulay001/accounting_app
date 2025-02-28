@@ -1,0 +1,3610 @@
+=== Directory Tree ===
+.
+./co.sh
+./models.py
+./requirements.txt
+./firebase-auth.json
+./static
+./static/css
+./static/css/home_css.css
+./static/css/style.css
+./static/images
+./static/images/ponmo_img3.jpeg
+./static/images/default_logo.png
+./static/images/ponmo_img2.jpeg
+./static/images/ponmo_img1.jpeg
+./static/images/google-icon.png
+./static/images/ponmo_img4.jpg
+./static/js
+./static/js/index.js
+./static/js/script.js
+./static/js/scripts.js
+./static/js/firebase-config.js
+./compiled.txt
+./instance
+./instance/accounting.db
+./app.py
+./templates
+./templates/deposit.html
+./templates/expenses.html
+./templates/navbar_private.html
+./templates/home.html
+./templates/layout.html
+./templates/sales.html
+./templates/login.html
+./templates/dashboard.html
+./templates/tools.html
+./templates/footer.html
+./templates/setup_business.html
+./templates/signup.html
+./templates/navbar_public.html
+./templates/reports.html
+./templates.zip
+./firebase _config.py
+./static.zip
+
+
+=== File Contents ===
+
+
+--------------------
+File: ./models.py
+Size: 0 bytes
+--------------------
+
+
+--------------------
+File: ./static/css/home_css.css
+Size: 7853 bytes
+--------------------
+:root {
+    --primary-color: #f4f4f4;
+    --primary-light-color: #FFE769;
+    --secondary-color: #FFE4BA;
+    --secondary-light-color: #FFF6E8;
+    --post-color: #62EEA8;
+    --delete-color: #FF9F9F;
+    --light-color: #FFFEFC;
+    --grey-color: #747E79;
+    --dark-color: #000000;
+
+    --primary-font: 'Poppins', sans-serif;
+    --seconday-font: 'Poppins', sans-serif;
+    
+    --border-width: 3px;
+    --element-border-radius: 5px;
+    
+    --button-height: 5px;
+    --small-button-height: 2px;
+    
+    --element-padding: 0.8em;
+    
+    --maximum-width: 320px;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+}
+
+body {
+    color: var(--dark-color);
+    background-color: var(--primary-color);
+    font-family: var(--primary-font);
+    height: 100vh;
+}
+
+main {
+    padding: 2rem;
+    height: 100vh;
+}
+
+
+
+
+
+/* === Structure === */
+
+.container {
+    max-width: var(--maximum-width);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+
+/* === Navbar === */
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: black;
+    box-shadow: 0px 8px 16px -4px rgba(128, 128, 128, 0.2);
+
+
+    width: 100%;
+    
+}
+
+.logo-img {
+    width: 80px;
+    margin-left: 1rem;
+}
+
+.logo {
+    font-size: 3rem;
+    text-decoration: none;
+    color: white;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: black;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-size: 1.3rem;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center; 
+    margin-right: 2rem;
+}
+
+.navbar a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+
+/* Style the dropdown button */
+.dropdown {
+    position: relative; /* This makes the positioning of the dropdown content relative to this container */
+    display: inline-block;
+}
+
+.dropdown .dropbtn {
+    cursor: pointer;
+}
+
+/* Dropdown content (hidden by default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    margin-top: 1.5rem;
+    right: 0; 
+    left: auto;
+    white-space: nowrap;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 1rem 1rem;
+    text-decoration: none;
+    display: block;
+    text-align: left; /* Ensure text is aligned to the left */
+}
+
+
+/* Show the dropdown content on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* === Hamburger Menu === */
+.hamburger {
+    display: none;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.closebtn {
+    display: none;
+}
+
+.hide {
+    display: none;
+}
+
+
+
+
+
+/* === Buttons === */
+
+button {
+    font-weight: 600;
+    width: 100%;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+
+/* === Forms === */
+
+input, button {
+    padding: var(--element-padding);
+    border-radius: var(--element-border-radius);
+    width: 100%;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+
+
+
+
+
+
+  
+
+
+
+/* Auth page styles - Login, Signup, Forgot Password */
+
+.auth-page_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+
+
+}
+
+.login-form-container {
+    display: flex;
+    justify-content: center;
+    /* align-items: center;  */
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    width: 100%;
+}
+  
+.login-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+  
+.input-group {
+    margin-bottom: 20px;
+}
+  
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+  
+.input-group input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: calc(100% - 20px);
+}
+  
+.input-group, .login-btn, .google-login-btn {
+    width: 100%; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.input-group {
+    flex-direction: column;
+
+}
+
+.login-btn {
+    background-color: #007bff;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    font-weight: 500;
+    color: white;
+    cursor: pointer;
+    height: 2.5rem;
+    font-size: 1.2rem;
+}
+
+.login-btn:hover {
+    transition: all 0.2s ease;
+    transform: scale(1.05);
+}
+
+.google-login-btn {
+    color: var(--dark-color);
+    background-color: var(--light-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em;
+    border: 1px solid rgba(0, 0, 0, 0.25);  
+}
+
+.google-login-btn:hover {
+    transition: all 0.2s ease;
+    transform: scale(1.05);
+}
+
+.google-btn-logo {
+    width: 1.375em;
+}
+
+.alt-signin-divider {
+    margin: 1em 0;
+    text-align: center;
+    font-size: 0.875em;
+    color: var(--dark-color);
+}
+
+.signup-link-container {
+    text-align: center;
+    margin-top: 1em;
+}
+
+.error-msg {
+    color: red;
+    font-size: 1rem;
+    margin-top: 0.5em;
+    text-align: center;
+}
+
+.login-link-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-color);
+    text-decoration: none;
+    font-weight: 500;
+    max-width: 10rem;
+    margin-top: 1rem;
+    height: 2.5rem;
+    cursor: pointer;
+    background-color: rgb(202, 195, 195);
+    border: none;
+}
+
+.login-link-btn:hover {
+    background-color: var(--grey-color);
+    border: none;
+    color: white;
+}
+
+/* Footer Styles */
+
+footer {
+    background-color: var(--grey-color); /* Light grey background */
+    color: white; /* Dark grey text */
+    font-family: var(--primary-font);
+    text-align: center; /* Centering the content */
+    padding: 10px 0; /* Padding above and below */
+    font-size: 14px; /* Standard font size */
+}
+
+.simple-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem; /* Padding on the sides */
+}
+
+.simple-footer a {
+    color: white; /* Standard link color */
+    text-decoration: none; /* No underlines on links */
+    margin: 0 5px; /* Margins for spacing */
+}
+
+.simple-footer a:hover {
+    text-decoration: underline; /* Underline on hover for better user interaction */
+}
+
+
+
+
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+
+
+
+
+    .navbar-right {
+        position: fixed; 
+        top: 0;
+        left: -100%; 
+        flex-direction: column;
+        justify-content: center; 
+        align-items: center; 
+        width: 100%;
+        height: 100vh;
+        background-color: var(--primary-color); 
+        overflow-x: hidden; /* Prevent horizontal scroll */
+        overflow-y: auto;
+        transition: 0.5s; /* Smooth transition for sliding in/out */
+        padding: 0;
+        padding-bottom: 40rem;
+        margin: 0;
+    }
+
+    .navbar-right a {
+        color: black;
+        padding: 15px;
+        text-decoration: none;
+        font-size: 2rem;
+        display: block; /* Ensure links take full width */
+        transition: 0.3s; /* Smooth transition for hover effect */
+    }
+
+    .navbar a:hover {
+        
+        background-color: inherit;
+    }
+
+    .dropdown {
+        width: 100%;
+    }
+
+    .dropdown-content {
+        position: relative;
+        width: 100%;
+        right: auto;
+        text-align: center;
+        padding: 0;
+        margin-top: 0;
+        box-shadow: none;
+        overflow-y: auto;
+        
+    }
+
+    .dropdown-content a {
+        padding: auto;
+        text-align: center;
+        font-size: 1.6rem;
+        color: gray;
+    }
+
+
+    .hamburger {
+        display: block;
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        font-size: 2.2rem;
+    }
+
+    .closebtn {
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 1rem;
+        font-size: 3rem;
+        cursor: pointer;
+        color: black
+    }
+
+    .simple-footer {
+        flex-direction: column;
+        padding: 0;
+    }
+}
+
+--------------------
+File: ./static/css/style.css
+Size: 0 bytes
+--------------------
+
+
+--------------------
+File: ./static/js/index.js
+Size: 5448 bytes
+--------------------
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getAuth, 
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        signOut,
+        onAuthStateChanged,
+        signInWithPopup,
+        GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+
+
+  // Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+
+
+
+/* === UI === */
+
+/* == UI - Elements == */
+
+const signOutButtonEl = document.getElementById("sign-out-btn")
+signOutButtonEl.addEventListener("click", authSignOut)
+
+const signInWithGoogleButtonEl = document.getElementById("sign-in-with-google-btn")
+
+const emailInputEl = document.getElementById("email-input")
+const passwordInputEl = document.getElementById("password-input")
+
+const signInButtonEl = document.getElementById("sign-in-btn")
+const createAccountButtonEl = document.getElementById("create-account-btn")
+
+
+
+// const imgElement = document.getElementById("user-profile-picture")
+
+// const greetElement = document.getElementById("greeting")
+
+// const textareaEl = document.getElementById("post-input")
+// const postButtonEl = document.getElementById("post-btn")
+
+/* == UI - Event Listeners == */
+
+signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
+
+signInButtonEl.addEventListener("click", authSignInWithEmail)
+createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
+
+
+
+
+
+/* === Main Code === */
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in, see docs for a list of available properties
+      // https://firebase.google.com/docs/reference/js/auth.user
+        const uid = user.uid;
+        user.getIdToken().then(function(idToken) {
+            // The ID token you need
+            console.log(idToken);
+            // Send the ID token to your server, etc.
+        });
+        
+        showLoggedInView(user)
+        showProfilePicture(imgElement, user)
+        showUserGreeting(greetElement, user)
+      // ...
+    } else {
+        showLoggedOutView()
+    }
+  });
+  
+
+
+/* === Functions === */
+
+/* = Functions - Firebase - Authentication = */
+
+function authSignInWithGoogle() {
+
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            // This gives you a Google Access Token. You can use it to access the Google API.
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential.accessToken;
+            // The signed-in user info.
+            const user = result.user;
+            user.getIdToken().then(function(idToken) {
+                // The ID token you need
+                console.log(idToken);
+                // Send the ID token to your server, etc.
+            });
+            
+            showLoggedInView(user)
+            showProfilePicture(imgElement, user)
+            showUserGreeting(greetElement, user)
+            // IdP data available using getAdditionalUserInfo(result)
+            // ...
+        }).catch((error) => {
+            // The AuthCredential type that was used.
+            const credential = GoogleAuthProvider.credentialFromError(error);
+
+            console.error(error.message)
+        });
+
+    
+}
+
+function authSignInWithEmail() {
+    console.log("Sign in with email and password")
+
+    const email = emailInputEl.value
+    const password = passwordInputEl.value
+
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Signed in 
+            const user = userCredential.user;
+            console.log("User signed in: ", user)
+            clearAuthFields()
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error("Error signing in: ", errorMessage)
+        });
+}
+
+function authCreateAccountWithEmail() {
+
+    const email = emailInputEl.value
+    const password = passwordInputEl.value
+
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Signed in 
+            const user = userCredential.user;
+            console.log("User created: ", user)
+            clearAuthFields()
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error("Error creating user: ", errorMessage)
+        });
+
+}
+
+function authSignOut() {
+    console.log("User signed out")
+    signOut(auth).then(() => {
+        console.log("User signed out")
+      }).catch((error) => {
+        console.error(error.message)
+      });
+}
+
+
+/* == Functions - UI Functions == */
+
+function showLoggedOutView() {
+    console.log("Show logged out view")
+}
+
+function showLoggedInView(user) {
+    console.log("Show logged in view")
+    console.log(user.uid)
+    window.location.href = '/dashboard';
+
+    
+}
+
+
+function clearInputField(field) {
+	field.value = ""
+}
+
+function clearAuthFields() {
+	clearInputField(emailInputEl)
+	clearInputField(passwordInputEl)
+}
+
+
+
+
+--------------------
+File: ./static/js/script.js
+Size: 0 bytes
+--------------------
+
+
+--------------------
+File: ./static/js/scripts.js
+Size: 1160 bytes
+--------------------
+
+// Toggles the hamburger menu with click
+
+document.querySelector('.hamburger').addEventListener('click', function() {
+    var navRight = document.getElementById('navbarRight');
+    if (navRight.style.left === "0px") {
+        navRight.style.left = "-100%"; // Slide out
+    } else {
+        navRight.style.left = "0"; // Slide in
+    }
+});
+
+document.querySelector('.hamburger').addEventListener('click', function() {
+    document.getElementById('navbarRight').style.left = "0"; // Slide in
+});
+
+document.querySelector('.closebtn').addEventListener('click', function() {
+    document.getElementById('navbarRight').style.left = "-100%"; // Slide out
+});
+
+
+
+
+// Toggles the dropdown menu with click
+
+const dropBtn = document.getElementById('dropBtn');
+if (dropBtn) { // Check if the element actually exists
+const dropdownContent = document.querySelector('.dropdown-content');
+
+dropBtn.addEventListener('click', function() {
+    console.log('clicked');
+    if (dropdownContent.style.display === "none") {
+        dropdownContent.style.display = "block";
+    } else {
+        dropdownContent.style.display = "none";
+    }
+    console.log(dropdownContent);
+});
+}
+
+
+
+
+--------------------
+File: ./static/js/firebase-config.js
+Size: 1351 bytes
+--------------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+
+--------------------
+File: ./app.py
+Size: 25952 bytes
+--------------------
+from flask import Flask, render_template, request, redirect, flash, url_for, session
+from datetime import datetime, timedelta
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
+from functools import wraps
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+
+# ----------------------------------------------------------------------
+# Configuration
+# ----------------------------------------------------------------------
+app.secret_key = os.getenv('SECRET_KEY')
+
+# Configure session cookie settings
+app.config['SESSION_COOKIE_SECURE'] = True       # Ensure cookies are sent over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True     # Prevent JavaScript access to cookies
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# Initialize Firebase Admin SDK and Firestore client
+cred = credentials.Certificate("firebase-auth.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+########################################
+# Authentication Decorator
+########################################
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# ----------------------------------------------------------------------
+# Routes
+# ----------------------------------------------------------------------
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+# ------------------------------
+# Login Route
+# ------------------------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        try:
+            # Authenticate user with Firebase (just checks existence)
+            user_record = auth.get_user_by_email(email)
+            user_id = user_record.uid
+
+            # Fetch user details from Firestore
+            user_doc = db.collection("users").document(user_id).get()
+
+            if not user_doc.exists:
+                flash("Account not found. Please sign up.", "danger")
+                return redirect(url_for("signup"))
+
+            user_data = user_doc.to_dict()
+
+            # Ensure business details are set
+            if not user_data.get("business_name") or not user_data.get("phone_number"):
+                session["pending_user"] = {"uid": user_id, "email": email}
+                return redirect(url_for("setup_business"))
+
+            # Store user in session
+            session["user"] = {
+                "uid": user_id,
+                "email": email,
+                "business_name": user_data["business_name"],
+                "phone_number": user_data["phone_number"],
+            }
+
+            return redirect(url_for('dashboard'))
+
+        except Exception as e:
+            flash("Invalid login credentials. Please try again.", "danger")
+            return redirect(url_for("login"))
+
+    return render_template('login.html')
+
+
+# ------------------------------
+# Signup Route
+# ------------------------------
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == "GET":
+        return render_template("signup.html")
+
+    try:
+        email = request.form.get("email")
+        password = request.form.get("password")
+        business_name = request.form.get("business_name", "").strip()
+        phone_number = request.form.get("phone_number", "").strip()
+
+        if not email or not password or not business_name or not phone_number:
+            flash("All fields are required.", "danger")
+            return redirect(url_for("signup"))
+
+        # Create user in Firebase Authentication
+        user_record = auth.create_user(email=email, password=password)
+        user_id = user_record.uid
+
+        # Save user details in Firestore
+        db.collection("users").document(user_id).set({
+            "email": email,
+            "business_name": business_name,
+            "phone_number": phone_number,
+            "created_at": datetime.utcnow()
+        })
+
+        # Create a user-specific collection
+        user_collection_ref = db.collection(f"user_data_{user_id}")
+        user_collection_ref.document("metadata").set({
+            "business_name": business_name,
+            "created_at": datetime.utcnow()
+        })
+
+        # Store user in session
+        session["user"] = {
+            "uid": user_id,
+            "email": email,
+            "business_name": business_name,
+            "phone_number": phone_number
+        }
+
+        flash("Account created successfully!", "success")
+        return redirect(url_for("dashboard"))
+
+    except Exception as e:
+        flash(f"Error: {str(e)}", "danger")
+        return redirect(url_for("signup"))
+
+
+# ------------------------------
+# Google Authentication (OAuth)
+# ------------------------------
+@app.route('/auth', methods=['POST'])
+def authorize():
+    token = request.json.get("idToken")
+    if not token:
+        return {"status": "error", "message": "Unauthorized: No token received"}, 401
+
+    try:
+        # Verify the token with Firebase
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token.get("uid")
+        user_email = decoded_token.get("email")
+
+        if not user_id or not user_email:
+            return {"status": "error", "message": "Unauthorized: Missing user info"}, 401
+
+        user_ref = db.collection('users').document(user_id)
+        user_doc = user_ref.get()
+
+        # First-time Google user
+        if not user_doc.exists:
+            session["pending_user"] = {"uid": user_id, "email": user_email}
+            return {"status": "setup"}
+
+        user_data = user_doc.to_dict()
+
+        # Ensure business details are set
+        if not user_data.get("business_name") or not user_data.get("phone_number"):
+            session["pending_user"] = {"uid": user_id, "email": user_email}
+            return {"status": "setup"}
+
+        # Store user in session
+        session["user"] = {
+            "uid": user_id,
+            "email": user_email,
+            "business_name": user_data["business_name"],
+            "phone_number": user_data["phone_number"],
+        }
+
+        return {"status": "success"}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 401
+
+
+# ------------------------------
+# Setup Business Route
+# ------------------------------
+@app.route('/setup_business', methods=['GET', 'POST'])
+def setup_business():
+    pending_user = session.get("pending_user")
+
+    if not pending_user:
+        flash("Unauthorized access. Please sign in first.", "danger")
+        return redirect(url_for("login"))
+
+    if request.method == 'POST':
+        business_name = request.form.get("business_name", "").strip()
+        phone_number = request.form.get("phone_number", "").strip()
+
+        if not business_name or not phone_number:
+            flash("Business name and phone number are required.", "danger")
+            return redirect(url_for("setup_business"))
+
+        # Save details in Firestore
+        user_id = pending_user["uid"]
+        user_email = pending_user["email"]
+        db.collection("users").document(user_id).set({
+            "email": user_email,
+            "business_name": business_name,
+            "phone_number": phone_number,
+            "created_at": datetime.utcnow()
+        })
+
+        # Create user-specific collection if not already created
+        user_collection_ref = db.collection(f"user_data_{user_id}")
+        user_collection_ref.document("metadata").set({
+            "business_name": business_name,
+            "created_at": datetime.utcnow()
+        })
+
+        # Store user in session
+        session["user"] = {
+            "uid": user_id,
+            "email": user_email,
+            "business_name": business_name,
+            "phone_number": phone_number
+        }
+
+        session.pop("pending_user", None)
+
+        flash("Business details saved successfully! Redirecting to dashboard...", "success")
+        return redirect(url_for("dashboard"))
+
+    return render_template("setup_business.html")
+
+
+@app.route('/reset-password')
+def reset_password():
+    if 'user' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('forgot_password.html')
+
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/")
+
+# ------------------------------
+# Verify Token (Optional, for Google)
+# ------------------------------
+@app.route("/verify-token", methods=["POST"])
+def verify_token():
+    token = request.json.get("idToken")
+    if not token:
+        return {"status": "error", "message": "Unauthorized: No token received"}, 401
+
+    try:
+        decoded_token = auth.verify_id_token(token)
+        user_id = decoded_token.get("uid")
+        user_email = decoded_token.get("email")
+
+        if not user_id or not user_email:
+            return {"status": "error", "message": "Unauthorized: Missing user info"}, 401
+
+        user_doc = db.collection("users").document(user_id).get()
+        if not user_doc.exists:
+            session["pending_user"] = {"uid": user_id, "email": user_email}
+            return {"status": "setup"}, 200
+
+        user_data = user_doc.to_dict()
+        if not user_data.get("business_name") or not user_data.get("phone_number"):
+            session["pending_user"] = {"uid": user_id, "email": user_email}
+            return {"status": "setup"}, 200
+
+        session["user"] = {
+            "uid": user_id,
+            "email": user_email,
+            "business_name": user_data["business_name"],
+            "phone_number": user_data["phone_number"],
+        }
+        return {"status": "success"}, 200
+
+    except Exception as e:
+        return {"status": "error", "message": f"Unauthorized: {str(e)}"}, 401
+
+
+# ------------------------------
+# Dashboard
+# ------------------------------
+@app.route('/dashboard')
+@auth_required
+def dashboard():
+    return render_template("dashboard.html", user=session["user"])
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+# ------------------------------
+# Sales Route
+# ------------------------------
+@app.route('/sales', methods=['GET', 'POST'])
+@auth_required
+def sales_route():
+    user_id = session["user"]["uid"]
+    user_data_collection = db.collection(f"user_data_{user_id}")
+    user_ref = db.collection("users").document(user_id)  # Fetch user document
+
+    if request.method == 'POST':
+        try:
+            # Validate and parse date
+            date_str = request.form.get('date')
+            datetime.strptime(date_str, '%Y-%m-%d')
+
+            # Fetch "customer" and "vendor" from user_data_{user_id}
+            customer_id = request.form.get('customer')
+            customer_doc = user_data_collection.document(customer_id).get()
+            if not customer_doc.exists or customer_doc.to_dict().get("type") != "customer":
+                raise ValueError("Invalid customer selected")
+
+            vendor_id = request.form.get('vendor')
+            vendor_doc = user_data_collection.document(vendor_id).get()
+            if not vendor_doc.exists or vendor_doc.to_dict().get("type") != "vendor":
+                raise ValueError("Invalid vendor selected")
+
+            # Get product details from form
+            products = request.form.getlist('product[]')
+            quantities1 = request.form.getlist('quantity1[]')
+            quantities2 = request.form.getlist('quantity2[]')
+            subtotals = request.form.getlist('subtotal[]')
+
+            if not products:
+                raise ValueError("No products selected")
+
+            product_details = []
+            total_amount = 0
+            for i in range(len(products)):
+                subtotal = float(subtotals[i])
+                quantity1 = int(quantities1[i])
+                quantity2 = int(quantities2[i])
+                total_amount += subtotal
+
+                product_details.append({
+                    'product': products[i],
+                    'quantity1': quantity1,
+                    'quantity2': quantity2,
+                    'subtotal': subtotal
+                })
+
+            # 🔥 Fetch last invoice number from user's document
+            user_doc = user_ref.get()
+            if user_doc.exists:
+                last_invoice_number = user_doc.to_dict().get("last_invoice_number", 0)
+            else:
+                last_invoice_number = 0  # Default if user doc is missing
+
+            # Increment invoice number
+            new_invoice_number = f"{last_invoice_number + 1:06d}"
+
+            #get payment method
+            payment_method = request.form.get('payment_method')
+
+            if payment_method == "bank":
+                bank_name = request.form.get('bank_name')
+            else:
+                bank_name = "N/A"
+
+            # Store sale in user_data_{user_id} with type="sale"
+            sale_data = {
+                'type': 'sale',
+                'date': date_str,
+                'invoice_number': new_invoice_number,
+                'customer_id': customer_id,
+                'vendor_id': vendor_id,
+                'total_amount': total_amount,
+                'products': product_details,
+                'created_at': datetime.utcnow(),
+                'bank_name': bank_name,
+                'payment_method': payment_method
+            }
+            user_data_collection.add(sale_data)
+
+            # 🔥 Update user's last invoice number (No indexing required)
+            user_ref.update({"last_invoice_number": last_invoice_number + 1})
+
+            flash(f"Sale recorded with invoice {new_invoice_number}.", "success")
+            return redirect(url_for('sales_route'))
+
+        except ValueError as e:
+            flash(f"Input Error: {str(e)}", "danger")
+        except Exception as e:
+            flash(f"Error processing sale: {str(e)}", "danger")
+
+    # Fetch customers, vendors, and products from user_data_{user_id}
+    customers = []
+    vendors = []
+    products = []
+    bank_names = []
+
+    for doc in user_data_collection.where("type", "==", "customer").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        customers.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "vendor").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        vendors.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "product").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        products.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "bank").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        bank_names.append(doc_dict)
+
+    return render_template('sales.html', customers=customers, vendors=vendors, products=products, bank_names=bank_names)
+
+
+# ------------------------------
+# Deposit Route
+# ------------------------------
+@app.route('/deposit', methods=['GET', 'POST'])
+@auth_required
+def deposit_route():
+    user_id = session["user"]["uid"]
+    user_data_collection = db.collection(f"user_data_{user_id}")
+
+    if request.method == 'POST':
+        try:
+            date_str = request.form.get('date')
+            datetime.strptime(date_str, '%Y-%m-%d')
+            customer_id = request.form.get('customer')
+            amount_str = request.form.get('amount_paid')
+            if not amount_str:
+                raise ValueError("Amount is required")
+            amount = float(amount_str)
+
+            bank_or_cash = request.form.get('payment_method')
+            #get bank name
+            if bank_or_cash:
+                bank_name = request.form.get('bank_name')
+            else:
+                bank_name = "N/A"
+
+            if bank_or_cash == "cash":
+                bank_name = "N/A"
+            deposit_data = {
+                "type": "deposit",
+                "date": date_str,
+                "customer_id": customer_id,
+                "amount": amount,
+                "created_at": datetime.utcnow(),
+                "bank_name": bank_name,
+                "payment_method": bank_or_cash
+            }
+            user_data_collection.add(deposit_data)
+
+            flash("Deposit recorded successfully.", "success")
+            return redirect(url_for('deposit_route'))
+        except Exception as e:
+            flash(f"Error processing deposit: {str(e)}", "danger")
+            return redirect(url_for('deposit_route'))
+
+    # Fetch customers from user_data_{user_id} with type="customer"
+    customers = []
+    bank_names = []
+    for doc in user_data_collection.where("type", "==", "bank").stream():
+        data = doc.to_dict()
+        data['id'] = doc.id
+        bank_names.append(data)
+    for doc in user_data_collection.where("type", "==", "customer").stream():
+        data = doc.to_dict()
+        data['id'] = doc.id
+        customers.append(data)
+    return render_template('deposit.html', customers=customers, bank_names=bank_names)
+
+
+# ------------------------------
+# Expenses Route
+# ------------------------------
+@app.route('/expenses', methods=['GET', 'POST'])
+@auth_required
+def expenses_route():
+    user_id = session["user"]["uid"]
+    user_data_collection = db.collection(f"user_data_{user_id}")
+
+    if request.method == 'POST':
+        try:
+            date_str = request.form.get('date')
+            datetime.strptime(date_str, '%Y-%m-%d')
+            expense_type = request.form.get('expenses_type')
+            amount = float(request.form.get('amount_paid'))
+            bank_or_cash = request.form.get('payment_method')
+
+
+            expense_data = {
+                "type": "expense",
+                "date": date_str,
+                "expense_type": expense_type,
+                "amount": amount,
+                "bank_or_cash": bank_or_cash,
+                "created_at": datetime.utcnow()
+            }
+            user_data_collection.add(expense_data)
+
+            flash("Expense recorded successfully.", "success")
+            return redirect(url_for('expenses_route'))
+        except Exception as e:
+            flash(f"Error processing expense: {str(e)}", "danger")
+            return redirect(url_for('expenses_route'))
+
+    return render_template('expenses.html')
+
+
+# ------------------------------
+# Tools Route
+# ------------------------------
+@app.route('/tools', methods=['GET', 'POST'])
+@auth_required
+def tools_route():
+    user_id = session["user"]["uid"]
+    user_data_collection = db.collection(f"user_data_{user_id}")
+
+    # Fetch existing customers, vendors, and products
+    customers = []
+    vendors = []
+    products = []
+    bank_names = []
+    expense_types = []
+
+    for doc in user_data_collection.where("type", "==", "expense").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        expense_types.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "customer").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        customers.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "vendor").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        vendors.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "product").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        products.append(doc_dict)
+
+    for doc in user_data_collection.where("type", "==", "bank").stream():
+        doc_dict = doc.to_dict()
+        doc_dict["id"] = doc.id
+        bank_names.append(doc_dict)
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        entity_type = request.form.get('entity_type')
+
+        if action == 'add':
+            name = request.form.get('name')
+            phone_number = request.form.get('phone_number', '')
+
+            
+
+            if entity_type in ['customer', 'vendor']:
+
+                #check if customer or vendor already exists
+                existing_entity = user_data_collection.where("type", "==", entity_type).where("name", "==", name).get()
+                if existing_entity:
+                    flash(f"{entity_type.capitalize()} '{name}' already exists.", "danger")
+                    return redirect(url_for('tools_route'))
+                # Add customer or vendor to Firestore
+                doc_data = {
+                    "type": entity_type,
+                    "name": name,
+                    "phone_number": phone_number,
+                    "created_at": datetime.utcnow()
+                }
+                user_data_collection.add(doc_data)
+                flash(f"{entity_type.capitalize()} added successfully.", "success")
+
+        elif action == 'add_bank_name':
+            bank_name = request.form.get('bank_name', '').strip()
+            # Ensure value is provided
+            if not bank_name:
+                flash("Bank name is required.", "danger")
+                return redirect(url_for('tools_route'))
+
+            #check if bank name already exists
+            existing_bank = user_data_collection.where("type", "==", "bank").where("name", "==", bank_name).get()
+            if existing_bank:
+                flash(f"Bank '{bank_name}' already exists. You can delete the current '{bank_name}'", "danger")
+                return redirect(url_for('tools_route'))
+
+            # Add bank name to Firestore
+            doc_data = {
+                "type": "bank",
+                "name": bank_name,
+                "created_at": datetime.utcnow()
+            }
+            user_data_collection.add(doc_data)
+            flash(f"Bank '{bank_name}' added successfully.", "success")
+
+
+        elif action == 'add_expenses_type':
+            expense_type = request.form.get('expense_type', '').strip()
+            # Ensure value is provided
+            if not expense_type:
+                flash("Expense type is required.", "danger")
+                return redirect(url_for('tools_route'))
+
+            #check if expense type already exists
+            existing_expense = user_data_collection.where("type", "==", "expense").where("name", "==", expense_type).get()
+            if existing_expense:
+                flash(f"Expense '{expense_type}' already exists. You can delete the current '{expense_type}'", "danger")
+                return redirect(url_for('tools_route'))
+
+            # Add expense type to Firestore
+            doc_data = {
+                "type": "expense",
+                "name": expense_type,
+                "created_at": datetime.utcnow()
+            }
+            user_data_collection.add(doc_data)
+            flash(f"Expense '{expense_type}' added successfully.", "success")
+
+
+
+        elif action == 'add_product':  # Fix: Match action to form
+            product_name = request.form.get('product_name', '').strip()
+            price1 = request.form.get('price1', '').strip()
+            price2 = request.form.get('price2', '').strip()
+
+            # Ensure values are provided
+            if not product_name or not price1 or not price2:
+                flash("All product fields are required.", "danger")
+                return redirect(url_for('tools_route'))
+
+            try:
+                price1 = float(price1)
+                price2 = float(price2)
+            except ValueError:
+                flash("Price fields must be valid numbers.", "danger")
+                return redirect(url_for('tools_route'))
+            
+            #check if product already exists
+            existing_product = user_data_collection.where("type", "==", "product").where("name", "==", product_name).get()
+            if existing_product:
+                flash(f"Product '{product_name}' already exists. You can delete the current '{product_name}'", "danger")
+                return redirect(url_for('tools_route'))
+
+            # Add product to Firestore
+            doc_data = {
+                "type": "product",
+                "name": product_name,
+                "price1": price1,
+                "price2": price2,
+                "created_at": datetime.utcnow()
+            }
+            user_data_collection.add(doc_data)
+            flash(f"Product '{product_name}' added successfully.", "success")
+
+        elif action == 'delete':
+            doc_id = request.form.get('id')
+            user_data_collection.document(doc_id).delete()
+            flash(f"{entity_type.capitalize()} deleted successfully.", "danger")
+
+        elif action == 'delete_product':  # Fix: Ensure product deletion works
+            doc_id = request.form.get('id')
+            user_data_collection.document(doc_id).delete()
+            flash("Product deleted successfully.", "danger")
+
+        return redirect(url_for('tools_route'))
+
+    return render_template('tools.html', customers=customers, vendors=vendors, products=products, bank_names=bank_names, expense_types=expense_types)
+
+
+# ------------------------------
+# Reports Route (Example)
+# ------------------------------
+@app.route('/reports')
+@auth_required
+def reports_route():
+    # For demonstration, fetch all docs in user_data_<user_id> except metadata
+    user_id = session["user"]["uid"]
+    user_data_collection = db.collection(f"user_data_{user_id}")
+
+    entries = []
+    for doc in user_data_collection.where("type", "in", ["sale", "expense", "deposit"]).stream():
+        entry = doc.to_dict()
+        entry["id"] = doc.id
+        entries.append(entry)
+
+    return render_template('reports.html', entries=entries)
+
+
+# ----------------------------------------------------------------------
+# Main Entry Point
+# ----------------------------------------------------------------------
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+--------------------
+File: ./templates/deposit.html
+Size: 2354 bytes
+--------------------
+<!-- templates/deposit.html -->
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record a Deposit</h2>
+<form method="post" action="{{ url_for('deposit_route') }}">
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label for="customer" class="form-label">Customer</label>
+    <select id="customer" name="customer" class="form-select" required>
+      <option value="" disabled selected>Select Customer</option>
+      {% for customer in customers %}
+      <option value="{{ customer.id }}">{{ customer.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <!-- Payment Method -->
+  <div class="mb-3">
+    <label for="payment_method" class="form-label">Payment Method</label>
+    <select id="payment_method" name="payment_method" class="form-select" required>
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="cash">Cash</option>
+      <option value="bank_transfer">Bank Transfer</option>
+      <option value="mobile_money">Mobile Money</option>
+    </select>
+  </div>
+  <!-- if bank transfer selected, choose bank name -->
+  <div id="bank-name-container" class="mb-3" style="display: none;">
+    <label for="bank_name" class="form-label">Bank Name</label>
+    <select id="bank_name" name="bank_name" class="form-select" required>
+      {% for bank in bank_names %}
+      <option value="{{ bank.name }}">{{ bank.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("payment_method").addEventListener("change", function () {
+      var bankNameContainer = document.getElementById("bank-name-container");
+      if (this.value === "bank_transfer") {
+        bankNameContainer.style.display = "block";
+        document.getElementById("bank_name").required = true;
+      } else {
+        bankNameContainer.style.display = "none";
+        document.getElementById("bank_name").required = false;
+      }
+    });
+  </script>
+
+
+  <!-- Amoumt Paid -->
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-success">Save Deposit</button>
+</form>
+{% endblock %}
+
+
+--------------------
+File: ./templates/expenses.html
+Size: 3713 bytes
+--------------------
+<!-- templates/expenses.html -->
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record an Expense</h2>
+<form method="post" action="{{ url_for('expenses_route') }}">
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label for="expense_type" class="form-label">Expense Name</label>
+    <select id="expenses_type" name="expenses_type" class="form-select" required>
+      <option value="" disabled selected>Select Expenses</option>
+      {% for expense in expense_types %}
+      <option value="{{ expense.name }}">{{ expense.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="expense_type" class="form-label">Expense Category</label>
+    <select name="expense_category" id="expense_category" class="form-select" required>
+      <option value="company">Company Expenses</option>
+      <option value="awo">Awo Expenses</option>
+      <option value="personal">Personal expenses</option>
+    </select> 
+  </div>
+
+  <!-- Vendor Name for Awo Expenses -->
+  <div id="vendor-name-container" class="mb-3" style="display: none;">
+    <label for="vendor_name" class="form-label">Vendor Name (Alawo)</label>
+    <select id="vendor" name="vendor" class="form-select" required>
+      <option value="" disabled selected>Select Vendor</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("expense_category").addEventListener("change", function () {
+      var vendorNameContainer = document.getElementById("vendor-name-container");
+      var vendorSelect = document.getElementById("vendor");
+      if (this.value === "awo") {
+        vendorNameContainer.style.display = "block";
+        vendorSelect.required = true;
+      } else {
+        vendorNameContainer.style.display = "none";
+        vendorSelect.required = false;
+      }
+    });
+  </script>
+
+
+  <!-- Payment Method -->
+  <div class="mb-3">
+    <label for="payment_method" class="form-label">Payment Method</label>
+    <select id="payment_method" name="payment_method" class="form-select" required>
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="cash">Cash</option>
+      <option value="bank_transfer">Bank Transfer</option>
+      <option value="mobile_money">Mobile Money</option>
+    </select>
+  </div>
+  <!-- if bank transfer selected, choose bank name -->
+  <div id="bank-name-container" class="mb-3" style="display: none;">
+    <label for="bank_name" class="form-label">Bank Name</label>
+    <select id="bank_name" name="bank_name" class="form-select" required>
+      {% for bank in bank_names %}
+      <option value="{{ bank.name }}">{{ bank.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("payment_method").addEventListener("change", function () {
+      var bankNameContainer = document.getElementById("bank-name-container");
+      if (this.value === "bank_transfer") {
+        bankNameContainer.style.display = "block";
+        document.getElementById("bank_name").required = true;
+      } else {
+        bankNameContainer.style.display = "none";
+        document.getElementById("bank_name").required = false;
+      }
+    });
+  </script>
+
+
+  <!-- Amoumt Paid -->
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
+
+  <button type="submit" class="btn btn-danger">Save Expense</button>
+</form>
+{% endblock %}
+
+
+--------------------
+File: ./templates/navbar_private.html
+Size: 795 bytes
+--------------------
+<div class="navbar">
+    <img class="logo-img" src="{{ url_for('static', filename='images/default_logo.png') }}" />
+    <span class="hamburger">&#9776;</span> <!-- Hamburger Icon -->
+    <div class="navbar-right" id="navbarRight">
+        <span class="closebtn">&times;</span>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <!-- Dropdown for News -->
+        <a href="#contact">News</a>
+        <a href="/login">Actions</a>
+        <div class="dropdown">
+            <a class="dropbtn" id="dropBtn">Account</a>
+            <div class="dropdown-content">
+                <a href="#news1">Profile</a>
+                <a href="#news2">Settings</a>
+                <a id="sign-out-btn" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+--------------------
+File: ./templates/home.html
+Size: 7935 bytes
+--------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ponmo Business Manager | Home</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ===============================
+       Global Styles
+    =============================== */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      overflow-x: hidden;
+    }
+    main {
+      padding: 0;
+      margin: 0;
+    }
+
+    /* ===============================
+       Header
+    =============================== */
+    header {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: linear-gradient(90deg, #FFE4BA, #FFF6E8);
+    }
+    header h1 {
+      font-size: 3rem;
+      margin: 0;
+      background: linear-gradient(45deg, #3498db, #2980b9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    /* ===============================
+       Ponmo Journey (Image Gallery)
+       (Now at the top, under header)
+    =============================== */
+    .ponmo-journey {
+      text-align: center;
+      padding: 2rem 1rem;
+      background-color: #fff;
+    }
+    .ponmo-journey h2 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .ponmo-journey p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0.5rem auto 2rem;
+      color: #555;
+    }
+    .ponmo-grid {
+      display: grid;
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      align-items: start;
+    }
+    .ponmo-grid figure {
+      margin: 0;
+    }
+    .ponmo-grid img {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: block;
+    }
+    .ponmo-grid figcaption {
+      font-size: 0.9rem;
+      color: #333;
+      margin-top: 0.5rem;
+    }
+
+    /* ===============================
+       Hero Section
+    =============================== */
+    .hero {
+      position: relative;
+      padding: 4rem 1rem;
+      text-align: center;
+      background: #fff;
+      overflow: hidden;
+    }
+    /* Rotating shape in background */
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      width: 140%;
+      height: 140%;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      clip-path: polygon(0 0, 100% 10%, 90% 100%, 0% 90%);
+      opacity: 0.1;
+      z-index: -1;
+      animation: rotateShape 20s linear infinite;
+    }
+    @keyframes rotateShape {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 1rem;
+    }
+    .hero-content h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      animation: fadeInDown 1s ease-out;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero-content .tagline {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #333;
+      width: 0; /* Start with zero width */
+      animation: typewriter 4s steps(30) forwards;
+    }
+    @keyframes typewriter {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    .hero-content p {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+    .cta-btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: #2980b9;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 1.1rem;
+      transition: background 0.3s ease;
+    }
+    .cta-btn:hover {
+      background: #1c6691;
+    }
+
+    /* ===============================
+       Features Section
+    =============================== */
+    .features {
+      padding: 2rem 1rem;
+      background: #fff;
+      text-align: center;
+    }
+    .features h3 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .features p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ===============================
+       Footer
+    =============================== */
+    footer {
+      background: #747E79;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* ===============================
+       Responsive
+    =============================== */
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 2.5rem;
+      }
+      .hero-content h2 {
+        font-size: 2rem;
+      }
+      .hero-content .tagline {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'navbar_public.html' %}
+
+  <!-- Header -->
+  <header>
+    <h1>Ponmo Business Manager</h1>
+    <p>Record production, sales, and analyze profit/loss on your processed Awo</p><br>
+    <a href="{{ url_for('signup') }}" class="cta-btn">Get Started Today</a>
+
+  </header>
+
+  <!-- Ponmo Journey Section (Images at the top) -->
+  <section class="ponmo-journey">
+    <h2>From Raw Cow Skin to Tasty Ponmo</h2>
+    <p>Explore the journey from raw hides to the delicious, stir-fried Ponmo we all love!</p>
+
+    <div class="ponmo-grid">
+      <!-- Replace filenames below with your actual image names in static/images/ -->
+      <figure>
+        <img src="{{ url_for('static', filename='images/ponmo_img4.jpg') }}"
+             alt="Stack of raw cow skins in a warehouse" />
+        <figcaption>Raw Cow Skins Stacked</figcaption>
+      </figure>
+
+      <figure>
+        <img src="{{ url_for('static', filename='images/ponmo_img2.jpeg') }}"
+             alt="Black, partially processed cow skin pieces" />
+        <figcaption>Partially Processed Ponmo</figcaption>
+      </figure>
+
+      <figure>
+        <img src="{{ url_for('static', filename='images/ponmo_img1.jpeg') }}"
+             alt="Ponmo pieces in a bowl, ready to eat" />
+        <figcaption>Fresh Ponmo Pieces</figcaption>
+      </figure>
+
+      <figure>
+        <img src="{{ url_for('static', filename='images/ponmo_img3.jpeg') }}"
+             alt="Delicious Ponmo stir-fried in stew" />
+        <figcaption>Ponmo Stir-Fried in Stew</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h2>Empower Your Business</h2>
+      <div class="tagline">Data-Driven Decisions Made Easy...</div>
+      <p>
+        Our software provides Ponmo-Business owners with real-time insights into production and sales. Monitor every aspect of your Awo processing and instantly know if you're making a profit or loss.
+      </p>
+      <a href="{{ url_for('signup') }}" class="cta-btn">Get Started Today</a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <h3>Features</h3>
+    <p>
+      • Seamless recording of production data<br>
+      • Accurate tracking of sales and expenses<br>
+      • Instant profit/loss analysis for every batch of Awo<br>
+      • Intuitive dashboard and comprehensive reports
+    </p>
+  </section>
+
+  {% include 'footer.html' %}
+
+  <script>
+    // Optional JS for smooth scrolling or additional animations
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener("click", function(e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute("href")).scrollIntoView({
+          behavior: "smooth"
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+--------------------
+File: ./templates/layout.html
+Size: 2441 bytes
+--------------------
+<!-- templates/layout.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>DOJMAC GLOBAL ENTERPRISES - Accounting System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('login') }}">DOJMAC GLOBAL</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('sales_route') }}">Sales</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('deposit_route') }}">Deposit</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('expenses_route') }}">Expenses</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('reports_route') }}">Reports</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('tools_route') }}">Settings</a></li>
+          </ul>
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container mt-3">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+
+
+--------------------
+File: ./templates/sales.html
+Size: 8552 bytes
+--------------------
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record a Sale</h2>
+<form method="post" action="{{ url_for('sales_route') }}" onsubmit="showLoading()">
+
+  <!-- Date Input -->
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+
+  <!-- Customer Selection -->
+  <div class="mb-3">
+    <label for="customer" class="form-label">Customer</label>
+    <select id="customer" name="customer" class="form-select" required>
+      <option value="" disabled selected>Select Customer</option>
+      {% for customer in customers %}
+      <option value="{{ customer.id }}">{{ customer.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Vendor Selection -->
+  <div class="mb-3">
+    <label for="vendor" class="form-label">Vendor</label>
+    <select id="vendor" name="vendor" class="form-select" required>
+      <option value="" disabled selected>Select Vendor</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Product Selection -->
+  <h3>Select Products</h3>
+  <div id="product-list">
+    <div class="product-entry row g-2">
+      <div class="col-md-4">
+        <label>Product</label>
+        <select class="form-select product" name="product[]" onchange="updatePrice(this)">
+          <option value="" disabled selected>Select Product</option>
+          {% for product in products %}
+          <option value="{{ product.name }}" data-price1="{{ product.price1 }}" data-price2="{{ product.price2 }}">
+            {{ product.name }} - Owo (#{{ product.price1 }}) / Piece (#{{ product.price2 }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label>Owo Quantity</label>
+        <input type="number" class="form-control quantity1" name="quantity1[]" min="0" value="0" oninput="updateSubtotal(this)">
+      </div>
+      <div class="col-md-2">
+        <label>Piece Quantity</label>
+        <input type="number" class="form-control quantity2" name="quantity2[]" min="0" value="0" oninput="updateSubtotal(this)">
+      </div>
+      <div class="col-md-2">
+        <label>Subtotal</label>
+        <input type="text" class="form-control subtotal" name="subtotal[]" readonly>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-danger remove-product">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="add-product" class="btn btn-primary mt-3">+ Add Product</button>
+
+  <h3 class="mt-4">Total Price: #<span id="total-price">0</span></h3>
+  <input type="hidden" id="total-amount" name="total_amount" value="0">
+
+
+  <!-- Payment Method -->
+  <div class="mb-3">
+    <label for="payment_method" class="form-label">Payment Method</label>
+    <select id="payment_method" name="payment_method" class="form-select" required>
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="cash">Cash</option>
+      <option value="bank_transfer">Bank Transfer</option>
+      <option value="mobile_money">Mobile Money</option>
+    </select>
+  </div>
+  <!-- if bank transfer selected, choose bank name -->
+  <div id="bank-name-container" class="mb-3" style="display: none;">
+    <label for="bank_name" class="form-label">Bank Name</label>
+    <select id="bank_name" name="bank_name" class="form-select" required>
+      {% for bank in bank_names %}
+      <option value="{{ bank.name }}">{{ bank.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("payment_method").addEventListener("change", function () {
+      var bankNameContainer = document.getElementById("bank-name-container");
+      if (this.value === "bank_transfer") {
+        bankNameContainer.style.display = "block";
+        document.getElementById("bank_name").required = true;
+      } else {
+        bankNameContainer.style.display = "none";
+        document.getElementById("bank_name").required = false;
+      }
+    });
+  </script>
+
+
+  <!-- Amoumt Paid -->
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
+  <button type="submit" id="submit-btn" class="btn btn-success">
+    <span id="button-text">Save Sale</span>
+    <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+  </button>
+
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // Function to update subtotal for each product entry
+    function updateSubtotal(input) {
+      let entry = input.closest(".product-entry");
+      let productSelect = entry.querySelector(".product");
+      let quantity1 = parseFloat(entry.querySelector(".quantity1").value) || 0;
+      let quantity2 = parseFloat(entry.querySelector(".quantity2").value) || 0;
+      let price1 = parseFloat(productSelect.selectedOptions[0]?.dataset.price1) || 0;
+      let price2 = parseFloat(productSelect.selectedOptions[0]?.dataset.price2) || 0;
+      
+      let subtotal = (quantity1 * price1) + (quantity2 * price2);
+      entry.querySelector(".subtotal").value = subtotal.toFixed(2);
+      updateTotalPrice();
+    }
+
+    // Function to update total price
+    function updateTotalPrice() {
+      let total = 0;
+      document.querySelectorAll(".subtotal").forEach(input => {
+        total += parseFloat(input.value) || 0;
+      });
+      document.getElementById("total-price").innerText = total.toFixed(2);
+      document.getElementById("total-amount").value = total.toFixed(2);
+    }
+
+    // Function to prevent duplicate product selection
+    function checkDuplicateProduct(select) {
+      let selectedProducts = Array.from(document.querySelectorAll(".product"))
+        .map(s => s.value)
+        .filter(value => value !== "");
+      
+      let duplicate = selectedProducts.filter(p => p === select.value).length > 1;
+      if (duplicate) {
+        alert("This product has already been selected. Choose another product.");
+        select.value = "";
+      }
+    }
+
+    // Function to add new product selection row
+    document.getElementById("add-product").addEventListener("click", function () {
+      let newEntry = document.querySelector(".product-entry").cloneNode(true);
+      newEntry.querySelector(".product").value = "";
+      newEntry.querySelector(".quantity1").value = 0;
+      newEntry.querySelector(".quantity2").value = 0;
+      newEntry.querySelector(".subtotal").value = "";
+      
+      newEntry.querySelector(".product").addEventListener("change", function () {
+        checkDuplicateProduct(this);
+      });
+      
+      newEntry.querySelector(".remove-product").addEventListener("click", function () {
+        newEntry.remove();
+        updateTotalPrice();
+      });
+
+      document.getElementById("product-list").appendChild(newEntry);
+    });
+
+    // Attach event listeners to all remove buttons
+    document.querySelectorAll(".remove-product").forEach(button => {
+      button.addEventListener("click", function () {
+        this.closest(".product-entry").remove();
+        updateTotalPrice();
+      });
+    });
+
+    // Function to show loading animation on form submit
+    function showLoading() {
+      document.getElementById("submit-btn").disabled = true;
+      document.getElementById("button-text").style.display = "none";
+      document.getElementById("loading-spinner").style.display = "inline-block";
+    }
+
+    // Event listener for quantity input changes
+    document.getElementById("product-list").addEventListener("input", function (event) {
+      if (event.target.classList.contains("quantity1") || event.target.classList.contains("quantity2")) {
+        updateSubtotal(event.target.closest(".product-entry"));
+      }
+    });
+
+    // Event listener for product selection change
+    document.getElementById("product-list").addEventListener("change", function (event) {
+      if (event.target.classList.contains("product")) {
+        checkDuplicateProduct(event.target);
+      }
+    });
+
+  });
+</script>
+<script>
+  function showLoading() {
+    // Disable the button to prevent multiple submissions
+    document.getElementById("submit-btn").disabled = true;
+    
+    // Hide text and show loading spinner
+    document.getElementById("button-text").style.display = "none";
+    document.getElementById("loading-spinner").style.display = "inline-block";
+  }
+</script>
+
+{% endblock %}
+
+
+--------------------
+File: ./templates/login.html
+Size: 8608 bytes
+--------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Flask App</title>
+
+  <!-- Google Fonts (Optional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home_css.css') }}">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Inline CSS for Login Page -->
+  <style>
+    /* Use a modern font */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+      /* Subtle gradient background */
+      background: linear-gradient(135deg, #f4f4f4 0%, #ffffff 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    /* Container for the entire login section */
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      min-height: calc(100vh - 60px); /* Enough space for a navbar if you have one */
+    }
+
+    /* White card container */
+    .login-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Fade-in animation */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-form-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .login-title {
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    /* Flash messages (optional) */
+    .alert {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .alert-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .alert-danger {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    /* Login form styles */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+      text-align: center;
+    }
+
+    .primary-btn {
+      background-color: #3498db;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+    .primary-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .google-btn {
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      margin-top: 0.5rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      gap: 0.5rem;
+    }
+    .google-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    .google-icon {
+      width: 20px;
+    }
+
+    /* Divider for OR */
+    .alt-signin-divider {
+      text-align: center;
+      margin: 1rem 0;
+      color: #999;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .alt-signin-divider span {
+      background: #fff;
+      padding: 0 0.5rem;
+    }
+    .alt-signin-divider::before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background-color: #ccc;
+      transform: translateY(-50%);
+    }
+
+    /* Error message for Google sign-in */
+    .error-msg {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      margin-top: 0.5em;
+      text-align: center;
+    }
+
+    /* Signup & Forgot Password Links */
+    .signup-link,
+    .forgot-link {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .signup-link-text {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .signup-link-text:hover {
+      text-decoration: underline;
+      color: #2980b9;
+    }
+
+    /* Simple Footer (optional) */
+    footer {
+      background-color: #747E79;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 1.5rem;
+      }
+      .login-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Optional Navbar (remove if you don't need it) -->
+  {% include 'navbar_public.html' %}
+
+  <!-- Main Container -->
+  <main class="login-page">
+    <div class="login-container">
+      <div class="login-form-wrapper">
+        <h2 class="login-title">Welcome Back</h2>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Email/Password Login -->
+        <form method="POST" action="{{ url_for('login') }}" class="login-form">
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              placeholder="you@example.com"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="Enter your password"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <button type="submit" class="btn primary-btn">Sign In</button>
+        </form>
+
+        <div class="alt-signin-divider">
+          <span>OR</span>
+        </div>
+
+        <!-- Google Sign-In -->
+        <button onclick="handleGoogleSignIn()" class="btn google-btn">
+          <img
+            src="{{ url_for('static', filename='images/google-icon.png') }}"
+            alt="Google Sign-in"
+            class="google-icon"
+          />
+          Sign in with Google
+        </button>
+
+        <div id="google-signin-error-message" class="error-msg"></div>
+
+        <div class="signup-link">
+          Don't have an account?
+          <a href="{{ url_for('signup') }}" class="signup-link-text">Sign up</a>
+        </div>
+        <div class="forgot-link">
+          <a href="{{ url_for('reset_password') }}">Forgot Password?</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+
+  <!-- Firebase Config (Optional if you're using Google Sign-In) -->
+  <script type="module" src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+  <script type="module">
+    import { googleSignIn } from "{{ url_for('static', filename='js/firebase-config.js') }}";
+
+    async function handleGoogleSignIn() {
+      try {
+        const response = await googleSignIn();
+        if (!response || !response.status) {
+          throw new Error("Invalid response from server");
+        }
+
+        // If user needs to set up business, redirect them to /setup_business
+        if (response.status === "setup") {
+          window.location.href = "{{ url_for('setup_business') }}";
+        } else if (response.status === "success") {
+          window.location.href = "{{ url_for('dashboard') }}";
+        } else {
+          document.getElementById("google-signin-error-message").innerText =
+            "Google Sign-In Failed. Please try again.";
+        }
+      } catch (error) {
+        document.getElementById("google-signin-error-message").innerText =
+          "An error occurred while signing in.";
+      }
+    }
+
+    window.handleGoogleSignIn = handleGoogleSignIn;
+  </script>
+</body>
+</html>
+
+
+--------------------
+File: ./templates/dashboard.html
+Size: 745 bytes
+--------------------
+<!-- templates/dashboard.html -->
+{% extends "layout.html" %}
+{% block content %}
+<div class="text-center mt-5">
+  <h1>Welcome to {{ user.business_name }}</h1>
+  <p>Phone: {{ user.phone_number }}</p>
+  <p>Use the navigation bar to record transactions and view reports.</p>
+  <a href="{{ url_for('sales_route') }}" class="btn btn-primary m-2">Record Sale</a>
+  <a href="{{ url_for('deposit_route') }}" class="btn btn-success m-2">Record Deposit</a>
+  <a href="{{ url_for('expenses_route') }}" class="btn btn-danger m-2">Record Expense</a>
+  <a href="{{ url_for('tools_route') }}" class="btn btn-warning m-2">Manage Customers & Vendors</a>
+  <a href="{{ url_for('reports') }}" class="btn btn-info m-2">View Reports</a>
+</div>
+{% endblock %}
+
+
+--------------------
+File: ./templates/tools.html
+Size: 8246 bytes
+--------------------
+{% extends "layout.html" %}
+
+{% block content %}
+<h2>Manage Customers, Vendors & Products</h2>
+
+<!-- Dropdown to select tool type -->
+<div class="mb-4">
+  <label for="tool-select" class="form-label">Select Tool Type:</label>
+  <select id="tool-select" class="form-select">
+    <option value="" disabled selected>Choose an option</option>
+    <option value="customers">Add New Customers</option>
+    <option value="vendors">Add New Vendors</option>
+    <option value="products">Add New Ponmo Type</option>
+    <option value="bank_names">Add New Bank Name</option>
+    <option value="expenses_type">Add New Expenses Type</option>
+
+  </select>
+</div>
+
+<!-- Customers Section -->
+<div id="customers-section" class="tool-section">
+  <h3>Manage Customers</h3>
+  <form method="post" class="mb-4">
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="entity_type" value="customer">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="name" class="form-control" placeholder="Customer Name" required>
+      </div>
+      <div class="col-md-5">
+        <input type="text" name="phone_number" class="form-control" placeholder="Phone (optional)">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success">Add Customer</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for customer in customers %}
+      <tr>
+        <td>{{ customer.name }}</td>
+        <td>{{ customer.phone_number }}</td>
+        <td>
+          <form method="post" style="display:inline;">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="entity_type" value="customer">
+            <input type="hidden" name="id" value="{{ customer.id }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Vendors Section -->
+<div id="vendors-section" class="tool-section" style="display: none;">
+  <h3>Manage Vendors</h3>
+  <form method="post" class="mb-4">
+    <input type="hidden" name="action" value="add">
+    <input type="hidden" name="entity_type" value="vendor">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="name" class="form-control" placeholder="Vendor Name" required>
+      </div>
+      <div class="col-md-5">
+        <input type="text" name="phone_number" class="form-control" placeholder="Phone (optional)">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success">Add Vendor</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for vendor in vendors %}
+      <tr>
+        <td>{{ vendor.name }}</td>
+        <td>
+          <form method="post" style="display:inline;">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="entity_type" value="vendor">
+            <input type="hidden" name="id" value="{{ vendor.id }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Products Section -->
+<div id="products-section" class="tool-section" style="display: none;">
+  <h3>Manage Products</h3>
+  <form method="post" class="mb-4">
+    <input type="hidden" name="action" value="add_product">
+    <div class="row">
+      <div class="col-md-4">
+        <input type="text" name="product_name" class="form-control" placeholder="Product Name" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="price1" class="form-control" placeholder="Owo Price" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="price2" class="form-control" placeholder="Piece Price" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary">Add Product</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Product Name</th>
+        <th>Owo Price</th>
+        <th>Piece Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td>{{ product.name }}</td>
+        <td>#{{ product.price1 }}</td>
+        <td>#{{ product.price2 }}</td>
+        <td>
+          <form method="post" style="display:inline;">
+            <input type="hidden" name="action" value="delete_product">
+            <input type="hidden" name="id" value="{{ product.id }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+<!-- Bank Names Section -->
+<div id="bank-names-section" class="tool-section" style="display: none;">
+  <h3>Manage Bank Names</h3>
+  <form method="post" class="mb-4">
+    <input type="hidden" name="action" value="add_bank_name">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="bank_name" class="form-control" placeholder="Bank Name" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success">Add Bank Name</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Bank Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bank in bank_names %}
+      <tr>
+        <td>{{ bank.name }}</td>
+        <td>
+          <form method="post" style="display:inline;">
+            <input type="hidden" name="action" value="delete_bank_name">
+            <input type="hidden" name="id" value="{{ bank.id }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>  
+<!-- Expenses Section -->
+<div id="expenses-type-section" class="tool-section" style="display: none;">
+  <h3>Manage Expenses Type</h3>
+  <form method="post" class="mb-4">
+    <input type="hidden" name="action" value="add_expenses_type">
+    <div class="row">
+      <div class="col-md-5">
+        <input type="text" name="expenses_type" class="form-control" placeholder="Expenses Name" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success">Add</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Expenses Type</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for expense in expenses %}
+      <tr>
+        <td>{{ expense.name }}</td>
+        <td>
+          <form method="post" style="display:inline;">
+            <input type="hidden" name="action" value="delete_expenses_type">
+            <input type="hidden" name="id" value="{{ expense.id }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const toolSelect = document.getElementById("tool-select");
+    const sections = {
+      customers: document.getElementById("customers-section"),
+      vendors: document.getElementById("vendors-section"),
+      products: document.getElementById("products-section"),
+      bank_names: document.getElementById("bank-names-section"),
+      expenses_type: document.getElementById("expenses-type-section")
+    };
+
+    // Function to hide all sections
+    function hideAllSections() {
+      Object.values(sections).forEach(section => section.style.display = "none");
+    }
+
+    // Event listener for dropdown change
+    toolSelect.addEventListener("change", function () {
+      hideAllSections();
+      const selectedSection = sections[this.value];
+      if (selectedSection) {
+        selectedSection.style.display = "block";
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+
+--------------------
+File: ./templates/footer.html
+Size: 324 bytes
+--------------------
+<footer>
+    <div class="simple-footer">
+        <p>&copy;2024 Your Company Name. All rights reserved.</p>
+        <div class="disclosure-links">
+            <a href="{{ url_for('terms') }}">Terms of Service</a> |
+            <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+        </div>
+        
+    </div>
+</footer>
+
+--------------------
+File: ./templates/setup_business.html
+Size: 1215 bytes
+--------------------
+{% extends "layout.html" %}
+{% block content %}
+<h2>Set Up Your Business</h2>
+<p>Welcome! Please enter your business name and phone number to continue.</p>
+
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST" id="business-setup-form">
+  <div class="mb-3">
+    <label for="business_name" class="form-label">Business Name</label>
+    <input type="text" name="business_name" id="business_name" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="phone_number" class="form-label">Phone Number</label>
+    <input type="tel" name="phone_number" id="phone_number" class="form-control" required>
+  </div>
+
+  <button type="submit" class="btn btn-success">Save Details</button>
+</form>
+
+<script>
+  // Automatically redirect to dashboard after successful setup
+  if (document.querySelector('.alert-success')) {
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 2000);  // 2-second delay before redirecting
+  }
+</script>
+
+{% endblock %}
+
+
+--------------------
+File: ./templates/signup.html
+Size: 8155 bytes
+--------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up | Flask App</title>
+
+  <!-- Google Fonts (Optional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home_css.css') }}">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Inline CSS for Signup Page -->
+  <style>
+    /* Use a modern font */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Poppins", sans-serif;
+      /* Subtle gradient background */
+      background: linear-gradient(135deg, #f4f4f4 0%, #ffffff 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    /* Container for the entire signup section */
+    .signup-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      min-height: calc(100vh - 60px); /* Enough space for a navbar if you have one */
+    }
+
+    /* White card container */
+    .signup-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Fade-in animation */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .signup-form-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .signup-title {
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    /* Flash messages (optional) */
+    .alert {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .alert-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .alert-danger {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    /* Signup form styles */
+    .signup-form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group input {
+      padding: 0.75rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+    }
+    .input-group input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    /* Buttons */
+    .signup-btn,
+    .google-signin-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      padding: 0.75rem;
+    }
+
+    .signup-btn {
+      background-color: #3498db;
+      color: #fff;
+    }
+    .signup-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .google-signin-btn {
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+      gap: 0.5rem;
+    }
+    .google-signin-btn:hover {
+      background-color: #f5f5f5;
+    }
+
+    .google-signin-btn img {
+      width: 20px;
+    }
+
+    /* Divider for OR */
+    .alt-signin-divider {
+      text-align: center;
+      margin: 1rem 0;
+      color: #999;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .alt-signin-divider::before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background-color: #ccc;
+      transform: translateY(-50%);
+    }
+    .alt-signin-divider span {
+      background: #fff;
+      padding: 0 0.5rem;
+    }
+
+    /* Error message for Google sign-in */
+    .error-msg {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      margin-top: 0.5em;
+      text-align: center;
+    }
+
+    /* Link to Login */
+    .login-link-container {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    .login-link-container a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .login-link-container a:hover {
+      text-decoration: underline;
+      color: #2980b9;
+    }
+
+    /* Simple Footer (optional) */
+    footer {
+      background-color: #747E79;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .signup-container {
+        padding: 1.5rem;
+      }
+      .signup-title {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'navbar_public.html' %}
+
+  <main class="signup-page">
+    <div class="signup-container">
+      <div class="signup-form-wrapper">
+        <h2 class="signup-title">Create an Account</h2>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Email/Password Signup -->
+        <form method="POST" action="{{ url_for('signup') }}" class="signup-form">
+          <div class="input-group">
+            <input type="email" name="email" placeholder="Email" required />
+          </div>
+
+          <div class="input-group">
+            <input type="password" name="password" placeholder="Password" required />
+          </div>
+
+          <div class="input-group">
+            <input type="text" name="business_name" placeholder="Business Name" required />
+          </div>
+
+          <div class="input-group">
+            <input type="tel" name="phone_number" placeholder="Phone Number" required />
+          </div>
+
+          <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+
+        <div class="alt-signin-divider">
+          <span>OR</span>
+        </div>
+
+        <!-- Google Sign-In -->
+        <button onclick="handleGoogleSignIn()" class="google-signin-btn">
+          <img
+            src="{{ url_for('static', filename='images/google-icon.png') }}"
+            alt="Google Sign-in"
+          />
+          Sign up with Google
+        </button>
+
+        <div id="google-signin-error-message" class="error-msg"></div>
+
+        <div class="login-link-container">
+          Already have an account?
+          <a href="{{ url_for('login') }}">Login</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+
+  <!-- Firebase Config (Optional if you're using Google Sign-In) -->
+  <script type="module" src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+  <script type="module">
+    import { googleSignIn } from "{{ url_for('static', filename='js/firebase-config.js') }}";
+
+    async function handleGoogleSignIn() {
+      try {
+        const response = await googleSignIn();
+
+        if (!response || !response.status) {
+          throw new Error("Invalid response from server");
+        }
+
+        // If user needs to set up business, redirect them to /setup_business
+        if (response.status === "setup") {
+          window.location.href = "{{ url_for('setup_business') }}";
+        } else if (response.status === "success") {
+          window.location.href = "{{ url_for('dashboard') }}";
+        } else {
+          document.getElementById("google-signin-error-message").innerText =
+            "Google Sign-In Failed. Please try again.";
+        }
+      } catch (error) {
+        document.getElementById("google-signin-error-message").innerText =
+          "An error occurred while signing in.";
+      }
+    }
+
+    window.handleGoogleSignIn = handleGoogleSignIn;
+  </script>
+</body>
+</html>
+
+
+--------------------
+File: ./templates/navbar_public.html
+Size: 4357 bytes
+--------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ponmo Business Manager</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link 
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" 
+    rel="stylesheet" 
+  />
+
+  <!-- Inline CSS for NavBar -->
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f4f4f4;
+      color: #333;
+    }
+    /* Navbar Styles */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #fff;
+      padding: 0.5rem 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 100;
+    }
+    .logo-img {
+      width: 80px;
+      margin-left: 1rem;
+    }
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .navbar-right a {
+      text-decoration: none;
+      color: #333;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      transition: background 0.3s;
+    }
+    .navbar-right a:hover {
+      background: #ddd;
+    }
+    /* Dropdown Styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown .dropbtn {
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      color: #333;
+      font-size: 1rem;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f9f9f9;
+      min-width: 150px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      z-index: 1;
+    }
+    .dropdown-content a {
+      color: #333;
+      padding: 0.75rem 1rem;
+      text-decoration: none;
+      display: block;
+      font-size: 0.9rem;
+    }
+    .dropdown-content a:hover {
+      background: #ddd;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    /* Hamburger (Mobile) */
+    .hamburger {
+      display: none;
+      font-size: 30px;
+      cursor: pointer;
+    }
+    .closebtn {
+      display: none;
+      font-size: 30px;
+      cursor: pointer;
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+    /* Responsive Styles */
+    @media screen and (max-width: 600px) {
+      .hamburger {
+        display: block;
+      }
+      .navbar-right {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100vh;
+        background-color: #fff;
+        transition: left 0.5s ease;
+        z-index: 200;
+      }
+      .navbar-right a {
+        font-size: 1.5rem;
+        padding: 1rem;
+      }
+      .dropdown-content {
+        position: relative;
+        box-shadow: none;
+      }
+      .closebtn {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <div class="navbar">
+    <img class="logo-img" src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Logo">
+    <span class="hamburger" id="hamburger">&#9776;</span>
+    <div class="navbar-right" id="navbarRight">
+      <span class="closebtn" id="closebtn">&times;</span>
+      <a href="{{ url_for('home') }}">Home</a>
+      <a href="#">About</a>
+
+      <!-- <div class="dropdown">
+        <a class="dropbtn" id="dropBtn">About</a>
+        <div class="dropdown-content">
+          <a href="#news1">About 1</a>
+          <a href="#news2">About 2</a>
+          <a href="#news3">More About</a>
+        </div>
+      </div> -->
+      <a href="#contact">Contact</a>
+      <a href="{{ url_for('login') }}">Login</a>
+    </div>
+  </div>
+
+  <!-- Your page content goes here -->
+
+  <script>
+    // JavaScript for toggling the mobile menu
+    const hamburger = document.getElementById('hamburger');
+    const navbarRight = document.getElementById('navbarRight');
+    const closebtn = document.getElementById('closebtn');
+
+    hamburger.addEventListener('click', () => {
+      navbarRight.style.left = '0';
+    });
+    closebtn.addEventListener('click', () => {
+      navbarRight.style.left = '-100%';
+    });
+  </script>
+</body>
+</html>
+
+
+--------------------
+File: ./templates/reports.html
+Size: 2565 bytes
+--------------------
+<!-- templates/reports.html -->
+{% extends "layout.html" %}
+{% block content %}
+<h2>Journal Entries Report</h2>
+
+<!-- Chart container -->
+<canvas id="journalChart" width="400" height="200"></canvas>
+
+<!-- Table of Journal Entries -->
+<h3 class="mt-4">Journal Entries</h3>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Reference</th>
+      <th>Total Debit</th>
+      <th>Total Credit</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entry in entries %}
+    <tr>
+      <td>{{ entry.date.strftime('%Y-%m-%d') }}</td>
+      <td>{{ entry.description }}</td>
+      <td>{{ entry.reference }}</td>
+      <td>
+        {% set debit_total = 0 %}
+        {% for line in entry.lines %}
+          {% set debit_total = debit_total + line.debit %}
+        {% endfor %}
+        {{ debit_total }}
+      </td>
+      <td>
+        {% set credit_total = 0 %}
+        {% for line in entry.lines %}
+          {% set credit_total = credit_total + line.credit %}
+        {% endfor %}
+        {{ credit_total }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<!-- Load Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Prepare data for the chart: group journal entries by date and sum debit amounts.
+  const entries = [
+    {% for entry in entries %}
+      {
+        date: "{{ entry.date.strftime('%Y-%m-%d') }}",
+        debit: {% set total = 0 %}
+                {% for line in entry.lines %}
+                  {% set total = total + line.debit %}
+                {% endfor %}
+                {{ total }}
+      },
+    {% endfor %}
+  ];
+
+  // Aggregate data by date.
+  const aggregated = {};
+  entries.forEach(e => {
+    if (aggregated[e.date]) {
+      aggregated[e.date] += e.debit;
+    } else {
+      aggregated[e.date] = e.debit;
+    }
+  });
+  const labels = Object.keys(aggregated);
+  const dataValues = Object.values(aggregated);
+
+  const ctx = document.getElementById('journalChart').getContext('2d');
+  const journalChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Debit by Date',
+        data: dataValues,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        fill: true,
+        tension: 0.1
+      }]
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: 'Date' } },
+        y: { title: { display: true, text: 'Total Debit' } }
+      }
+    }
+  });
+</script>
+{% endblock %}
+
+
+
+
+
+
+

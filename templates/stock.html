@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record Stock</h2>
+<form method="post" action="{{ url_for('stock') }}" onsubmit="showLoading()">
+  <!-- Date -->
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+  
+  <!-- Vendor -->
+  <div class="mb-3">
+    <label for="vendor" class="form-label">Vendor</label>
+    <select id="vendor" name="vendor" class="form-select" required>
+      <option value="" disabled selected>Select Vendor</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <!-- Quantity -->
+  <div class="mb-3">
+    <label for="quantity" class="form-label">Quantity of Incoming Stock</label>
+    <input type="number" id="quantity" name="quantity" class="form-control" step="any" required>
+  </div>
+  
+  <!-- Total Price -->
+  <div class="mb-3">
+    <label for="total_price" class="form-label">Total Price</label>
+    <input type="number" id="total_price" name="total_price" class="form-control" step="any" required>
+  </div>
+  
+  <!-- Amount Paid -->
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid (0 if purchased on credit)</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="any" value="0" required>
+  </div>
+  
+  <!-- Rate of Stock (computed) -->
+  <div class="mb-3">
+    <label for="stock_rate" class="form-label">Rate of Stock</label>
+    <input type="text" id="stock_rate" class="form-control" readonly>
+  </div>
+  
+  <button type="submit" id="submit-btn" class="btn btn-success">
+    <span id="button-text">Save Stock</span>
+    <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+  </button>
+</form>
+
+<script>
+  // Function to calculate and display the rate of stock (total price / quantity)
+  function calculateRate() {
+    var quantity = parseFloat(document.getElementById("quantity").value) || 0;
+    var totalPrice = parseFloat(document.getElementById("total_price").value) || 0;
+    var rateField = document.getElementById("stock_rate");
+    if (quantity > 0) {
+      rateField.value = (totalPrice / quantity).toFixed(2);
+    } else {
+      rateField.value = "";
+    }
+  }
+  
+  // Update the rate whenever quantity or total price changes
+  document.getElementById("quantity").addEventListener("input", calculateRate);
+  document.getElementById("total_price").addEventListener("input", calculateRate);
+</script>
+<script>
+    function showLoading() {
+      // Disable the button to prevent multiple submissions
+      document.getElementById("submit-btn").disabled = true;
+      
+      // Hide text and show loading spinner
+      document.getElementById("button-text").style.display = "none";
+      document.getElementById("loading-spinner").style.display = "inline-block";
+    }
+  </script>
+  
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record a Sale</h2>
+<form method="post" action="{{ url_for('sales_route') }}" onsubmit="showLoading()">
+
+  <!-- Date Input -->
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+
+  <!-- Customer Selection -->
+  <div class="mb-3">
+    <label for="customer" class="form-label">Customer</label>
+    <select id="customer" name="customer" class="form-select" required>
+      <option value="" disabled selected>Select Customer</option>
+      {% for customer in customers %}
+      <option value="{{ customer.id }}">{{ customer.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Vendor Selection -->
+  <div class="mb-3">
+    <label for="vendor" class="form-label">Vendor</label>
+    <select id="vendor" name="vendor" class="form-select" required>
+      <option value="" disabled selected>Select Vendor</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Product Selection -->
+  <h3>Select Products</h3>
+  <div id="product-list">
+    <div class="product-entry row g-2">
+      <div class="col-md-4">
+        <label>Product</label>
+        <select class="form-select product" name="product[]" onchange="updatePrice(this)">
+          <option value="" disabled selected>Select Product</option>
+          {% for product in products %}
+          <option value="{{ product.name }}" data-price1="{{ product.price1 }}" data-price2="{{ product.price2 }}">
+            {{ product.name }} - Owo (#{{ product.price1 }}) / Piece (#{{ product.price2 }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label>Owo Quantity</label>
+        <input type="number" class="form-control quantity1" name="quantity1[]" min="0" value="0" oninput="updateSubtotal(this)">
+      </div>
+      <div class="col-md-2">
+        <label>Piece Quantity</label>
+        <input type="number" class="form-control quantity2" name="quantity2[]" min="0" value="0" oninput="updateSubtotal(this)">
+      </div>
+      <div class="col-md-2">
+        <label>Subtotal</label>
+        <input type="text" class="form-control subtotal" name="subtotal[]" readonly>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-danger remove-product">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" id="add-product" class="btn btn-primary mt-3">+ Add Product</button>
+
+  <h3 class="mt-4">Total Price: #<span id="total-price">0</span></h3>
+  <input type="hidden" id="total-amount" name="total_amount" value="0">
+
+
+  <!-- Payment Method -->
+  <div class="mb-3">
+    <label for="payment_method" class="form-label">Payment Method</label>
+    <select id="payment_method" name="payment_method" class="form-select" required>
+      <option value="" disabled selected>Select Payment Method</option>
+      <option value="cash">Cash</option>
+      <option value="bank_transfer">Bank Transfer</option>
+      <option value="mobile_money">Mobile Money</option>
+    </select>
+  </div>
+  <!-- if bank transfer selected, choose bank name -->
+  <div id="bank-name-container" class="mb-3" style="display: none;">
+    <label for="bank_name" class="form-label">Bank Name</label>
+    <select id="bank_name" name="bank_name" class="form-select" required>
+      {% for bank in bank_names %}
+      <option value="{{ bank.name }}">{{ bank.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <script>
+    document.getElementById("payment_method").addEventListener("change", function () {
+      var bankNameContainer = document.getElementById("bank-name-container");
+      if (this.value === "bank_transfer") {
+        bankNameContainer.style.display = "block";
+        document.getElementById("bank_name").required = true;
+      } else {
+        bankNameContainer.style.display = "none";
+        document.getElementById("bank_name").required = false;
+      }
+    });
+  </script>
+
+
+  <!-- Amoumt Paid -->
+  <div class="mb-3">
+    <label for="amount_paid" class="form-label">Amount Paid</label>
+    <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
+  <button type="submit" id="submit-btn" class="btn btn-success">
+    <span id="button-text">Save Sale</span>
+    <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+  </button>
+
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // Function to update subtotal for each product entry
+    function updateSubtotal(input) {
+      let entry = input.closest(".product-entry");
+      let productSelect = entry.querySelector(".product");
+      let quantity1 = parseFloat(entry.querySelector(".quantity1").value) || 0;
+      let quantity2 = parseFloat(entry.querySelector(".quantity2").value) || 0;
+      let price1 = parseFloat(productSelect.selectedOptions[0]?.dataset.price1) || 0;
+      let price2 = parseFloat(productSelect.selectedOptions[0]?.dataset.price2) || 0;
+      
+      let subtotal = (quantity1 * price1) + (quantity2 * price2);
+      entry.querySelector(".subtotal").value = subtotal.toFixed(2);
+      updateTotalPrice();
+    }
+
+    // Function to update total price
+    function updateTotalPrice() {
+      let total = 0;
+      document.querySelectorAll(".subtotal").forEach(input => {
+        total += parseFloat(input.value) || 0;
+      });
+      document.getElementById("total-price").innerText = total.toFixed(2);
+      document.getElementById("total-amount").value = total.toFixed(2);
+    }
+
+    // Function to prevent duplicate product selection
+    function checkDuplicateProduct(select) {
+      let selectedProducts = Array.from(document.querySelectorAll(".product"))
+        .map(s => s.value)
+        .filter(value => value !== "");
+      
+      let duplicate = selectedProducts.filter(p => p === select.value).length > 1;
+      if (duplicate) {
+        alert("This product has already been selected. Choose another product.");
+        select.value = "";
+      }
+    }
+
+    // Function to add new product selection row
+    document.getElementById("add-product").addEventListener("click", function () {
+      let newEntry = document.querySelector(".product-entry").cloneNode(true);
+      newEntry.querySelector(".product").value = "";
+      newEntry.querySelector(".quantity1").value = 0;
+      newEntry.querySelector(".quantity2").value = 0;
+      newEntry.querySelector(".subtotal").value = "";
+      
+      newEntry.querySelector(".product").addEventListener("change", function () {
+        checkDuplicateProduct(this);
+      });
+      
+      newEntry.querySelector(".remove-product").addEventListener("click", function () {
+        newEntry.remove();
+        updateTotalPrice();
+      });
+
+      document.getElementById("product-list").appendChild(newEntry);
+    });
+
+    // Attach event listeners to all remove buttons
+    document.querySelectorAll(".remove-product").forEach(button => {
+      button.addEventListener("click", function () {
+        this.closest(".product-entry").remove();
+        updateTotalPrice();
+      });
+    });
+
+    // Function to show loading animation on form submit
+    function showLoading() {
+      document.getElementById("submit-btn").disabled = true;
+      document.getElementById("button-text").style.display = "none";
+      document.getElementById("loading-spinner").style.display = "inline-block";
+    }
+
+    // Event listener for quantity input changes
+    document.getElementById("product-list").addEventListener("input", function (event) {
+      if (event.target.classList.contains("quantity1") || event.target.classList.contains("quantity2")) {
+        updateSubtotal(event.target.closest(".product-entry"));
+      }
+    });
+
+    // Event listener for product selection change
+    document.getElementById("product-list").addEventListener("change", function (event) {
+      if (event.target.classList.contains("product")) {
+        checkDuplicateProduct(event.target);
+      }
+    });
+
+  });
+</script>
+<script>
+  function showLoading() {
+    // Disable the button to prevent multiple submissions
+    document.getElementById("submit-btn").disabled = true;
+    
+    // Hide text and show loading spinner
+    document.getElementById("button-text").style.display = "none";
+    document.getElementById("loading-spinner").style.display = "inline-block";
+  }
+</script>
+
+{% endblock %}

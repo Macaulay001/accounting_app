@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Record Production</h2>
+<form method="post" action="{{ url_for('production') }}" onsubmit="showLoading()">
+  <!-- Date Input -->
+  <div class="mb-3">
+    <label for="date" class="form-label">Date</label>
+    <input type="date" id="date" name="date" class="form-control" required>
+  </div>
+  
+  <!-- Vendor Selection -->
+  <div class="mb-3">
+    <label for="vendor" class="form-label">Vendor</label>
+    <select id="vendor" name="vendor" class="form-select" required>
+      <option value="" disabled selected>Select Vendor</option>
+      {% for vendor in vendors %}
+      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <!-- Current Stock Left (Read-only) -->
+  <div class="mb-3">
+    <label for="current_stock" class="form-label">Current Stock Left</label>
+    <input type="number" id="current_stock" name="current_stock" class="form-control" readonly value="0">
+  </div>
+  
+  <!-- Processed Today Input -->
+  <div class="mb-3">
+    <label for="processed" class="form-label">Stock Processed Today</label>
+    <input type="number" id="processed" name="processed" class="form-control" required>
+  </div>
+  
+  <!-- Remaining Stock (Computed, Read-only) -->
+  <div class="mb-3">
+    <label for="remaining" class="form-label">Remaining Stock</label>
+    <input type="number" id="remaining" name="remaining" class="form-control" readonly value="0">
+  </div>
+  
+  <button type="submit" id="submit-btn" class="btn btn-success">
+    <span id="button-text">Save Production</span>
+    <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+  </button>
+
+</form>
+
+<script>
+  // When vendor is selected, fetch the current stock from the server
+  document.getElementById("vendor").addEventListener("change", function () {
+    var vendorId = this.value;
+    if(vendorId) {
+        fetch("{{ url_for('vendor_stock', vendor_id='') }}" + vendorId)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("current_stock").value = data.current_stock || 0;
+          calculateRemaining();
+        })
+        .catch(error => console.error("Error fetching vendor stock:", error));
+    }
+  });
+
+  // When processed input changes, update the remaining stock
+  document.getElementById("processed").addEventListener("input", calculateRemaining);
+
+  function calculateRemaining() {
+    var currentStock = parseFloat(document.getElementById("current_stock").value) || 0;
+    var processed = parseFloat(document.getElementById("processed").value) || 0;
+    document.getElementById("remaining").value = currentStock - processed;
+  }
+</script>
+<script>
+    function showLoading() {
+      // Disable the button to prevent multiple submissions
+      document.getElementById("submit-btn").disabled = true;
+      
+      // Hide text and show loading spinner
+      document.getElementById("button-text").style.display = "none";
+      document.getElementById("loading-spinner").style.display = "inline-block";
+    }
+  </script>
+  
+{% endblock %}
