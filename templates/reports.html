@@ -51,7 +51,7 @@
             <td>{{ sale.date }}</td>
             <td><span class="text-red">-{{ sale.total_amount }}</span></td>
             <td>{{ sale.invoice_number or 'N/A' }}</td>
-            <td>{{ sale.vendor.name }}</td>
+            <td>{{ sale.vendor.name if sale.vendor else 'N/A' }}</td>
           </tr>
           <!-- If amount_paid > 0, list it as separate line (money in -> green) -->
           {% if sale.amount_paid and sale.amount_paid > 0 %}

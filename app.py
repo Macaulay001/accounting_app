@@ -944,7 +944,7 @@ def reports():
     context = {"report_type": report_type}
 
     if report_type == "customer":
-        # 1) Fetch all customers
+        # Fetch all customers
         customers = []
         for doc in user_data_collection.where("type", "==", "customer").stream():
             d = doc.to_dict()
@@ -952,23 +952,27 @@ def reports():
             customers.append(d)
         context["customers"] = customers
 
-        # 2) If a customer is selected, fetch data
+        # If a customer is selected, fetch data
         if selected_id:
             total_sales = 0.0
             total_sales_payments = 0.0  # sum of sale.amount_paid
             sales_records = []
-            # Query for "sale" docs linked to this customer
             for doc in user_data_collection.where("type", "==", "sale")\
                                            .where("customer_id", "==", selected_id).stream():
                 d = doc.to_dict()
                 d["id"] = doc.id
+                # Fetch vendor information
+                vendor_id = d.get("vendor_id")
+                if vendor_id:
+                    vendor_doc = user_data_collection.document(vendor_id).get()
+                    if vendor_doc.exists:
+                        d["vendor"] = vendor_doc.to_dict()
                 sales_records.append(d)
                 total_sales += float(d.get("total_amount", 0))
                 total_sales_payments += float(d.get("amount_paid", 0))
 
             total_deposits = 0.0
             deposit_records = []
-            # Query for "deposit" docs linked to this customer
             for doc in user_data_collection.where("type", "==", "deposit")\
                                            .where("customer_id", "==", selected_id).stream():
                 d = doc.to_dict()
@@ -976,43 +980,32 @@ def reports():
                 deposit_records.append(d)
                 total_deposits += float(d.get("amount", 0))
 
-            # Current balance: (all money in) - (all money out)
-            # In this logic: balance = (deposits + sale.amount_paid) - (sale.total_amount)
             money_in = total_deposits + total_sales_payments
             money_out = total_sales
             current_balance = money_in - money_out
 
-            # Build data for Chart.js (by date, for example)
-            # For simplicity, we create a dict of date -> netChange
-            # netChange = deposit.amount + sale.amount_paid - sale.total_amount
             daily_net = {}
-            # 1) Summarize sales as net negative (invoice) plus positive (amount_paid)
             for sale in sales_records:
                 date_str = sale.get("date", "")
                 if date_str not in daily_net:
                     daily_net[date_str] = 0.0
                 invoice = float(sale.get("total_amount", 0))
                 paid = float(sale.get("amount_paid", 0))
-                # negative invoice, positive payment
                 daily_net[date_str] += (paid - invoice)
 
-            # 2) Summarize deposits as positive
             for dep in deposit_records:
                 date_str = dep.get("date", "")
                 if date_str not in daily_net:
                     daily_net[date_str] = 0.0
                 daily_net[date_str] += float(dep.get("amount", 0))
 
-            # Convert daily_net to chart arrays
-            # Sort the dates so the chart is chronological
             sorted_dates = sorted(daily_net.keys())
             chart_labels = []
             chart_data = []
             running_balance = 0.0
             for date_str in sorted_dates:
-                # netChange for that date
                 net_change = daily_net[date_str]
-                running_balance += net_change  # cumulative
+                running_balance += net_change
                 chart_labels.append(date_str)
                 chart_data.append(round(running_balance, 2))
 
@@ -1029,10 +1022,7 @@ def reports():
             })
 
     elif report_type == "vendor":
-        # -----------------------------
-        # VENDOR LOGIC
-        # -----------------------------
-        # 1) Fetch all vendors for the dropdown
+        # Fetch all vendors
         vendors = []
         for doc in user_data_collection.where("type", "==", "vendor").stream():
             d = doc.to_dict()
@@ -1040,8 +1030,8 @@ def reports():
             vendors.append(d)
         context["vendors"] = vendors
 
+        # If a vendor is selected, fetch data
         if selected_id:
-            # 2) If a vendor is selected, compute stock in, production, etc.
             total_stock_in = 0.0
             stock_records = []
             for doc in user_data_collection.where("type", "==", "stock")\
@@ -1060,7 +1050,6 @@ def reports():
                 production_records.append(p)
                 total_produced += float(p.get("processed", 0))
 
-            # Summation of vendor expenses
             total_vendor_expenses = 0.0
             vendor_expenses_records = []
             for doc in user_data_collection.where("type", "==", "expense")\
@@ -1070,7 +1059,6 @@ def reports():
                 vendor_expenses_records.append(e)
                 total_vendor_expenses += float(e.get("amount", 0))
 
-            # Sales revenue for this vendor
             total_sales_revenue = 0.0
             sales_records = []
             for doc in user_data_collection.where("type", "==", "sale")\
@@ -1080,26 +1068,21 @@ def reports():
                 sales_records.append(sale)
                 total_sales_revenue += float(sale.get("total_amount", 0))
 
-            # Summation of total stock cost (quantity * rate)
             total_stock_cost = 0.0
             for st in stock_records:
                 qty = float(st.get("quantity", 0))
                 rate = float(st.get("rate", 0))
                 total_stock_cost += qty * rate
 
-            # Compute average cost
             average_cost = 0.0
             if total_stock_in > 0:
                 average_cost = total_stock_cost / total_stock_in
 
-            # Compute COGS and profit/loss
             cogs = total_produced * average_cost
             profit_or_loss = total_sales_revenue - cogs - total_vendor_expenses
 
-            # Current balance (stock in - produced)
             current_balance = total_stock_in - total_produced
 
-            # 3) Update context
             context.update({
                 "selected_vendor": selected_id,
                 "stock_records": stock_records,
@@ -1117,9 +1100,7 @@ def reports():
                 "profit_or_loss": profit_or_loss,
             })
 
-    # RENDER the 'reports.html' with context
-    return render_template("reports.html",user=session["user"], **context)
-
+    return render_template("reports.html", user=session["user"], **context)
 # ----------------------------------------------------------------------
 # Main Entry Point
 # ----------------------------------------------------------------------

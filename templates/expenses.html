@@ -8,11 +8,15 @@
 -->
 <form method="post" action="{{ url_for('expenses_route') }}" onsubmit="return handleFormSubmit(event)">
   <div class="mb-3">
-    <label for="date" class="form-label">Date</label>
-    <input type="date" id="date" name="date" class="form-control" required>
+    <div class="col-12 col-md-6">
+      <label for="date" class="form-label">Date</label>
+      <input type="date" id="date" name="date" class="form-control" required>
+    </div>
   </div>
+  
 
   <div class="mb-3">
+    <div class="col-12 col-md-6">
     <label for="expense_category" class="form-label">Expense Category</label>
     <select name="expense_category" id="expense_category" class="form-select" required>
       <option value="" disabled selected>Select Expense Category</option>
@@ -21,13 +25,16 @@
       <option value="personal">Personal Expenses</option>
     </select>
   </div>
+  </div>
 
   <div class="mb-3">
+    <div class="col-12 col-md-6">
     <label for="expense_type" class="form-label">Expense Type</label>
     <select id="expense_type" name="expense_type" class="form-select" required>
       <option value="" disabled selected>Select Expense Type</option>
       <!-- Options will be populated via AJAX -->
     </select>
+  </div>
   </div>
 
   <!-- Vendor dropdown for Awo category -->
@@ -74,6 +81,7 @@
   </script>
 
   <div class="mb-3">
+    <div class="col-12 col-md-6">
     <label for="payment_method" class="form-label">Payment Method</label>
     <select id="payment_method" name="payment_method" class="form-select" required>
       <option value="" disabled selected>Select Payment Method</option>
@@ -81,6 +89,7 @@
       <option value="bank_transfer">Bank Transfer</option>
       <option value="mobile_money">Mobile Money</option>
     </select>
+    </div>
   </div>
 
   <div id="bank-name-container" class="mb-3" style="display: none;">
@@ -106,8 +115,10 @@
   </script>
 
   <div class="mb-3">
+    <div class="col-12 col-md-6">
     <label for="amount_paid" class="form-label">Amount Paid</label>
     <input type="number" id="amount_paid" name="amount_paid" class="form-control" required>
+  </div>
   </div>
 
   <!-- The button includes spinner elements -->
