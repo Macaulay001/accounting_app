@@ -466,10 +466,10 @@ def deposit_route():
             datetime.strptime(date_str, '%Y-%m-%d')
             customer_id = request.form.get('customer')
             amount_str = request.form.get('amount_paid')
-            vendor_id = request.form.get('vendor')
-            vendor_doc = user_data_collection.document(vendor_id).get()
-            if not vendor_doc.exists or vendor_doc.to_dict().get("type") != "vendor":
-                raise ValueError("Invalid vendor selected")
+            # vendor_id = request.form.get('vendor')
+            # vendor_doc = user_data_collection.document(vendor_id).get()
+            # if not vendor_doc.exists or vendor_doc.to_dict().get("type") != "vendor":
+            #     raise ValueError("Invalid vendor selected")
             
             if not amount_str:
                 raise ValueError("Amount is required")
