@@ -87,12 +87,23 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Initialize Firebase Admin SDK and Firestore client
 import json
+import base64
 
 # Get Firebase credentials from environment variable
 firebase_auth_json = os.getenv('FIREBASE_AUTH_JSON')
 if firebase_auth_json:
-    # Parse JSON string from environment variable
-    firebase_creds = json.loads(firebase_auth_json)
+    try:
+        # Try to parse as JSON first
+        firebase_creds = json.loads(firebase_auth_json)
+    except json.JSONDecodeError:
+        try:
+            # If JSON fails, try base64 decode first
+            decoded_json = base64.b64decode(firebase_auth_json).decode('utf-8')
+            firebase_creds = json.loads(decoded_json)
+        except:
+            # If both fail, treat as raw JSON string
+            firebase_creds = json.loads(firebase_auth_json)
+    
     cred = credentials.Certificate(firebase_creds)
 else:
     # Fallback to file (for local development)
