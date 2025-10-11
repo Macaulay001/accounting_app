@@ -1,0 +1,254 @@
+{% extends "layout_accounting.html" %}
+
+{% block title %}Batch Profit & Loss Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">Batch Profit & Loss Detail</h2>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('profit_loss_analysis_route') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to P&L Report
+                    </a>
+                </div>
+            </div>
+
+            <!-- Batch Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Batch Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Batch ID:</strong></td>
+                                    <td><code>{{ batch_analysis.batch_id }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Vendor:</strong></td>
+                                    <td>{{ batch_analysis.vendor_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Purchase Date:</strong></td>
+                                    <td>
+                                        {% if batch_analysis.purchase_date %}
+                                            {{ batch_analysis.purchase_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{% if batch_analysis.status == 'sold' %}success{% elif batch_analysis.status == 'finished_goods' %}warning{% else %}secondary{% endif %}">
+                                            {{ batch_analysis.status.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Pieces Purchased:</strong></td>
+                                    <td>{{ "{:,}".format(batch_analysis.pieces_purchased) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pieces Sold:</strong></td>
+                                    <td>{{ "{:,}".format(batch_analysis.pieces_sold) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sales Revenue:</strong></td>
+                                    <td class="text-success">₦{{ "{:,.2f}".format(batch_analysis.sales_revenue) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Costs:</strong></td>
+                                    <td class="text-danger">₦{{ "{:,.2f}".format(batch_analysis.total_costs) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Purchase Cost</h6>
+                                <h4 class="text-info mb-0">₦{{ "{:,.2f}".format(batch_analysis.purchase_cost) }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Processing Cost</h6>
+                                <h4 class="text-warning mb-0">₦{{ "{:,.2f}".format(batch_analysis.processing_cost) }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Sales Revenue</h6>
+                                <h4 class="text-success mb-0">₦{{ "{:,.2f}".format(batch_analysis.sales_revenue) }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Net Profit/Loss</h6>
+                                <h4 class="{% if batch_analysis.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                                    ₦{{ "{:,.2f}".format(batch_analysis.profit_loss) }}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Profit Margin</h6>
+                                <h5 class="{% if batch_analysis.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                                    {{ "{:.1f}".format(batch_analysis.profit_margin) }}%
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Cost per Piece</h6>
+                                <h5 class="text-info mb-0">
+                                    ₦{{ "{:.2f}".format(batch_analysis.total_costs / batch_analysis.pieces_purchased) if batch_analysis.pieces_purchased > 0 else 0 }}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Cost Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Purchase Cost Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Raw Materials:</strong> ₦{{ "{:,.2f}".format(batch_analysis.purchase_cost) }}</li>
+                                <li><strong>Cost per Piece:</strong> ₦{{ "{:.2f}".format(batch_analysis.purchase_cost / batch_analysis.pieces_purchased) if batch_analysis.pieces_purchased > 0 else 0 }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Processing Cost Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Total Processing:</strong> ₦{{ "{:,.2f}".format(batch_analysis.processing_cost) }}</li>
+                                <li><strong>Cost per Piece:</strong> ₦{{ "{:.2f}".format(batch_analysis.processing_cost / batch_analysis.pieces_sold) if batch_analysis.pieces_sold > 0 else 0 }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ILE Groups Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">ILE Groups Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    {% if batch_analysis.ile_groups %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ILE Group</th>
+                                        <th class="text-end">Status</th>
+                                        <th class="text-end">Purchase Cost</th>
+                                        <th class="text-end">Processing Cost</th>
+                                        <th class="text-end">Total Costs</th>
+                                        <th class="text-end">Sales Revenue</th>
+                                        <th class="text-end">Profit/Loss</th>
+                                        <th class="text-end">Margin %</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ile_group in batch_analysis.ile_groups %}
+                                    <tr>
+                                        <td>
+                                            <strong>ILE {{ ile_group.ile_number }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ ile_group.pieces_per_ile }} pieces</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-{% if ile_group.status == 'sold' %}success{% elif ile_group.status == 'finished_goods' %}warning{% else %}secondary{% endif %}">
+                                                {{ ile_group.status.replace('_', ' ').title() }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(ile_group.purchase_cost) }}</td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(ile_group.processing_cost) }}</td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(ile_group.total_costs) }}</td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(ile_group.sales_revenue) }}</td>
+                                        <td class="text-end {% if ile_group.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ₦{{ "{:,.2f}".format(ile_group.profit_loss) }}
+                                        </td>
+                                        <td class="text-end {% if ile_group.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ "{:.1f}".format(ile_group.profit_margin) }}%
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('profit_loss_ile_analysis_route', batch_id=batch_analysis.batch_id, ile_number=ile_group.ile_number) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No ILE groups found for this batch.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Revenue Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Revenue Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Sales Performance</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Total Revenue:</strong> ₦{{ "{:,.2f}".format(batch_analysis.sales_revenue) }}</li>
+                                <li><strong>Revenue per Piece:</strong> ₦{{ "{:.2f}".format(batch_analysis.sales_revenue / batch_analysis.pieces_sold) if batch_analysis.pieces_sold > 0 else 0 }}</li>
+                                <li><strong>Sales Efficiency:</strong> {{ "{:.1f}".format((batch_analysis.pieces_sold / batch_analysis.pieces_purchased) * 100) if batch_analysis.pieces_purchased > 0 else 0 }}%</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Profitability Metrics</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Gross Profit:</strong> ₦{{ "{:,.2f}".format(batch_analysis.sales_revenue - batch_analysis.purchase_cost) }}</li>
+                                <li><strong>Net Profit:</strong> ₦{{ "{:,.2f}".format(batch_analysis.profit_loss) }}</li>
+                                <li><strong>Profit Margin:</strong> {{ "{:.1f}".format(batch_analysis.profit_margin) }}%</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

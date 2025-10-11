@@ -523,13 +523,23 @@ class OnboardingTour {
 
 // Initialize tour when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-  window.onboardingTour = new OnboardingTour();
+  console.log('Onboarding tour component loaded');
+  try {
+    window.onboardingTour = new OnboardingTour();
+    console.log('OnboardingTour instance created:', window.onboardingTour);
+  } catch (error) {
+    console.error('Error creating OnboardingTour:', error);
+  }
 });
 
 // Function to start the tour (call this after account creation)
 function startOnboardingTour() {
+  console.log('startOnboardingTour called');
   if (window.onboardingTour) {
+    console.log('Starting tour...');
     window.onboardingTour.show();
+  } else {
+    console.log('OnboardingTour instance not found');
   }
 }
 

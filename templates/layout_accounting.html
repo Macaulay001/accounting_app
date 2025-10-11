@@ -41,6 +41,36 @@
                             <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('alerts_route') }}">
+                            <i class="fas fa-bell me-1"></i>Alerts
+                        </a>
+                    </li>
+                    
+                    <!-- Add New Items -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-plus-circle me-1"></i>Add New
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('customers_route') }}">
+                                <i class="fas fa-user-plus me-2"></i>New Customer
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('vendors_route') }}">
+                                <i class="fas fa-truck me-2"></i>New Vendor
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('products_route') }}">
+                                <i class="fas fa-box me-2"></i>New Product
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('inventory_batches_route') }}">
+                                <i class="fas fa-layer-group me-2"></i>New Inventory Batch
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('expense_types_route') }}">
+                                <i class="fas fa-tags me-2"></i>New Expense Type
+                            </a></li>
+                        </ul>
+                    </li>
+                    
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-chart-line me-1"></i>Sales
@@ -77,6 +107,19 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-receipt me-1"></i>Expenses
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('expenses_route') }}">
+                                <i class="fas fa-plus me-2"></i>Record Expense
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('expense_types_route') }}">
+                                <i class="fas fa-tags me-2"></i>Manage Expense Types
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-chart-pie me-1"></i>Reports
                         </a>
                         <ul class="dropdown-menu">
@@ -87,8 +130,8 @@
                             <li><a class="dropdown-item" href="{{ url_for('financial_summary_route') }}">
                                 <i class="fas fa-chart-pie me-2"></i>Financial Summary
                             </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('profit_loss_route') }}">
-                                <i class="fas fa-chart-line me-2"></i>Profit & Loss
+                            <li><a class="dropdown-item" href="{{ url_for('profit_loss_analysis_route') }}">
+                                <i class="fas fa-chart-line me-2"></i>Profit & Loss Analysis
                             </a></li>
                             <li><a class="dropdown-item" href="{{ url_for('balance_sheet_route') }}">
                                 <i class="fas fa-balance-scale me-2"></i>Balance Sheet
@@ -142,10 +185,10 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-accounting-{{ category }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-accounting-{{ category }} alert-dismissible fade show persistent-alert" role="alert" id="alert-{{ loop.index }}">
                             <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" onclick="dismissAlert('alert-{{ loop.index }}')" aria-label="Close"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -182,14 +225,28 @@
     
     <!-- Custom JavaScript -->
     <script>
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
+        // Function to manually dismiss alerts
+        function dismissAlert(alertId) {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                alert.style.transition = 'opacity 0.3s ease-out';
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }
+        }
+        
+        // Prevent Bootstrap from auto-dismissing alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Remove any Bootstrap auto-dismiss behavior
+            const alerts = document.querySelectorAll('.persistent-alert');
+            alerts.forEach(alert => {
+                // Remove any existing event listeners that might auto-dismiss
+                alert.removeAttribute('data-bs-dismiss');
+                alert.removeAttribute('data-bs-autohide');
             });
-        }, 5000);
+        });
         
         // Format currency
         function formatCurrency(amount) {
@@ -251,6 +308,45 @@
             });
         }
     </script>
+    
+    <!-- Custom CSS for persistent alerts -->
+    <style>
+        .persistent-alert {
+            /* Ensure alerts don't auto-hide */
+            animation: none !important;
+            transition: none !important;
+        }
+        
+        .persistent-alert.fade {
+            /* Override Bootstrap fade behavior */
+            opacity: 1 !important;
+        }
+        
+        /* Custom alert styling */
+        .alert-accounting-success {
+            background-color: #d1edff;
+            border-color: #0ea5e9;
+            color: #0c4a6e;
+        }
+        
+        .alert-accounting-danger {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+            color: #7f1d1d;
+        }
+        
+        .alert-accounting-warning {
+            background-color: #fffbeb;
+            border-color: #f59e0b;
+            color: #78350f;
+        }
+        
+        .alert-accounting-info {
+            background-color: #f0f9ff;
+            border-color: #3b82f6;
+            color: #1e3a8a;
+        }
+    </style>
     
     {% block scripts %}{% endblock %}
 </body>

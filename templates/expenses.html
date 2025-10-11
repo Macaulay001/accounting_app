@@ -1,218 +1,246 @@
 {% extends "layout_accounting.html" %}
-{% block title %}Record Expenses - {{ user.business_name }}{% endblock %}
+
+{% block title %}Expenses - {{ user.business_name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <h1 class="mb-4">Record Expenses</h1>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-receipt me-2"></i>Expenses</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                    <i class="fas fa-plus me-2"></i>Record New Expense
+                </button>
+            </div>
 
-    <!-- Expense Form -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5>Record New Expense</h5>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Expenses Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Expenses</h5>
+                </div>
+                <div class="card-body">
+                    {% if expenses %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Payment Method</th>
+                                        <th>Reference</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for expense in expenses %}
+                                    <tr>
+                                        <td>
+                                            {% if expense.date %}
+                                                {{ expense.date.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ expense.expense_type_name }}</span>
+                                        </td>
+                                        <td>{{ expense.description }}</td>
+                                        <td class="text-end">
+                                            <strong class="text-danger">₦{{ "%.2f"|format(expense.amount) }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if expense.payment_method == 'cash' %}
+                                                <span class="badge bg-success">Cash</span>
+                                            {% elif expense.payment_method == 'bank_transfer' %}
+                                                <span class="badge bg-info">Bank Transfer</span>
+                                            {% elif expense.payment_method == 'check' %}
+                                                <span class="badge bg-warning">Check</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ expense.payment_method|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ expense.reference or 'N/A' }}</small>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    onclick="deleteExpense('{{ expense.id }}', '{{ expense.description }}')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Expenses Recorded</h5>
+                            <p class="text-muted">Start tracking your business expenses to get better insights into your costs.</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                                <i class="fas fa-plus me-2"></i>Record First Expense
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post" action="{{ url_for('expenses_route') }}">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="expense_date" class="form-label">Expense Date</label>
-                            <input type="date" id="expense_date" name="expense_date" class="form-control" 
-                                   value="{{ current_date.strftime('%Y-%m-%d') }}" required>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addExpenseModalLabel">
+                    <i class="fas fa-plus me-2"></i>Record New Expense
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('expenses_route') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expense_type_id" class="form-label">Expense Type *</label>
+                                <select class="form-select" id="expense_type_id" name="expense_type_id" required>
+                                    <option value="">Select expense type...</option>
+                                    {% for expense_type in expense_types %}
+                                        <option value="{{ expense_type.id }}">{{ expense_type.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if not expense_types %}
+                                    <div class="form-text text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        No expense types found. <a href="{{ url_for('expense_types_route') }}">Create one first</a>.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Amount (₦) *</label>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.01" min="0.01" required placeholder="0.00">
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="reference" class="form-label">Reference/Invoice Number</label>
-                            <input type="text" id="reference" name="reference" class="form-control" 
-                                   placeholder="e.g., INV-2024-001">
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  required placeholder="Describe what this expense is for..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="expense_date" class="form-label">Date *</label>
+                                <input type="date" class="form-control" id="expense_date" name="expense_date" 
+                                       value="{{ current_date.strftime('%Y-%m-%d') }}" required>
+                            </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label">Payment Method *</label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="cash" selected>Cash</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="check">Check</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="vendor_id" class="form-label">Vendor (Optional)</label>
+                                <select class="form-select" id="vendor_id" name="vendor_id">
+                                    <option value="">No vendor</option>
+                                    {% for vendor in vendors %}
+                                        <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reference" class="form-label">Reference (Optional)</label>
+                        <input type="text" class="form-control" id="reference" name="reference" 
+                               placeholder="Invoice number, receipt number, etc.">
+                        <div class="form-text">Optional reference number for tracking purposes.</div>
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="expense_type" class="form-label">Expense Type</label>
-                            <select id="expense_type" name="expense_type" class="form-control" required onchange="updateAccountOptions()">
-                                <option value="" disabled selected>Select Expense Type</option>
-                                <option value="processing_materials">Processing Materials (Wood, Salt, etc.)</option>
-                                <option value="utilities">Utilities (Electricity, Water, Gas)</option>
-                                <option value="labor">Labor Costs</option>
-                                <option value="rent">Rent & Facilities</option>
-                                <option value="transportation">Transportation</option>
-                                <option value="equipment">Equipment & Maintenance</option>
-                                <option value="other">Other Operating Expenses</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="account_code" class="form-label">Account Code</label>
-                            <select id="account_code" name="account_code" class="form-control" required>
-                                <option value="" disabled selected>Select Account</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <input type="text" id="description" name="description" class="form-control" 
-                                   placeholder="e.g., Wood for smoking, Salt for processing" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount (₦)</label>
-                            <input type="number" id="amount" name="amount" class="form-control" 
-                                   step="0.01" min="0" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="payment_method" class="form-label">Payment Method</label>
-                            <select id="payment_method" name="payment_method" class="form-control" required>
-                                <option value="cash" selected>Cash</option>
-                                <option value="bank_transfer">Bank Transfer</option>
-                                <option value="check">Check</option>
-                                <option value="credit_card">Credit Card</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="vendor" class="form-label">Vendor/Supplier (Optional)</label>
-                            <input type="text" id="vendor" name="vendor" class="form-control" 
-                                   placeholder="e.g., Local Wood Supplier">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="notes" class="form-label">Notes</label>
-                    <textarea id="notes" name="notes" class="form-control" rows="2" 
-                              placeholder="Additional notes about this expense"></textarea>
-                </div>
-
-                <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>Record Expense
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" {% if not expense_types %}disabled{% endif %}>
+                        <i class="fas fa-save me-2"></i>Record Expense
                     </button>
                 </div>
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Recent Expenses -->
-    <div class="card">
-        <div class="card-header">
-            <h5>Recent Expenses</h5>
-        </div>
-        <div class="card-body">
-            {% if expenses %}
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Amount</th>
-                            <th>Account</th>
-                            <th>Payment Method</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for expense in expenses %}
-                        <tr>
-                            <td>{{ expense['expense_date'].strftime('%Y-%m-%d') if expense['expense_date'] else 'N/A' }}</td>
-                            <td><span class="badge bg-info">{{ expense['expense_type'].replace('_', ' ').title() }}</span></td>
-                            <td>{{ expense['description'] }}</td>
-                            <td>{{ expense['amount']|currency }}</td>
-                            <td>{{ expense['account_code'] }}</td>
-                            <td>{{ expense['payment_method'].replace('_', ' ').title() }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteExpenseModal" tabindex="-1" aria-labelledby="deleteExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteExpenseModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Delete Expense
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            {% else %}
-            <div class="text-center py-4">
-                <p class="text-muted">No expenses recorded yet. Start by recording your first expense above.</p>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the expense <strong id="expenseDescription"></strong>?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. The expense and its journal entry will be permanently deleted.
+                </div>
             </div>
-            {% endif %}
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteExpenseForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
-// Account code mapping based on expense type
-const accountMapping = {
-    'processing_materials': [
-        { code: '5400', name: 'Raw Materials - Processing' },
-        { code: '5410', name: 'Wood & Fuel' },
-        { code: '5420', name: 'Salt & Seasonings' }
-    ],
-    'utilities': [
-        { code: '5500', name: 'Utilities Expense' },
-        { code: '5510', name: 'Electricity' },
-        { code: '5520', name: 'Water' },
-        { code: '5530', name: 'Gas' }
-    ],
-    'labor': [
-        { code: '5600', name: 'Labor Expense' },
-        { code: '5610', name: 'Wages & Salaries' },
-        { code: '5620', name: 'Overtime' }
-    ],
-    'rent': [
-        { code: '5700', name: 'Rent Expense' },
-        { code: '5710', name: 'Facility Rent' },
-        { code: '5720', name: 'Equipment Rent' }
-    ],
-    'transportation': [
-        { code: '5800', name: 'Transportation Expense' },
-        { code: '5810', name: 'Vehicle Fuel' },
-        { code: '5820', name: 'Delivery Costs' }
-    ],
-    'equipment': [
-        { code: '5900', name: 'Equipment & Maintenance' },
-        { code: '5910', name: 'Equipment Purchase' },
-        { code: '5920', name: 'Repairs & Maintenance' }
-    ],
-    'other': [
-        { code: '5990', name: 'Other Operating Expenses' },
-        { code: '5991', name: 'Miscellaneous' }
-    ]
-};
-
-function updateAccountOptions() {
-    const expenseType = document.getElementById('expense_type').value;
-    const accountSelect = document.getElementById('account_code');
+function deleteExpense(expenseId, expenseDescription) {
+    document.getElementById('expenseDescription').textContent = expenseDescription;
+    document.getElementById('deleteExpenseForm').action = `/delete-expense/${expenseId}`;
     
-    // Clear existing options
-    accountSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
-    
-    if (expenseType && accountMapping[expenseType]) {
-        accountMapping[expenseType].forEach(account => {
-            const option = document.createElement('option');
-            option.value = account.code;
-            option.textContent = `${account.code} - ${account.name}`;
-            accountSelect.appendChild(option);
-        });
-    }
+    const modal = new bootstrap.Modal(document.getElementById('deleteExpenseModal'));
+    modal.show();
 }
 
-// Initialize on page load
+// Set today's date as default
 document.addEventListener('DOMContentLoaded', function() {
-    updateAccountOptions();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expense_date').value = today;
 });
 </script>
 {% endblock %}

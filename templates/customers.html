@@ -8,7 +8,7 @@
         <h5>Add New Customer</h5>
     </div>
     <div class="card-body">
-        <form method="post" action="{{ url_for('customers_route') }}">
+        <form method="post" action="{{ url_for('customers_route') }}" onsubmit="return handleSubmit()">
             <div class="mb-3">
                 <label for="test_name" class="form-label">Customer Name</label>
                 <input type="text" class="form-control" id="test_name" name="test_name" required>
@@ -25,11 +25,46 @@
                 <label for="test_credit" class="form-label">Credit Limit (₦)</label>
                 <input type="number" class="form-control" id="test_credit" name="test_credit" step="0.01" value="0">
             </div>
+            
+            <!-- Opening Balance Section -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Opening Balance (for existing customers)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="opening_balance_type" class="form-label">Balance Type</label>
+                            <select class="form-select" id="opening_balance_type" name="opening_balance_type">
+                                <option value="none">No Opening Balance</option>
+                                <option value="debt">Customer Owes Us (Debt)</option>
+                                <option value="credit">We Owe Customer (Credit)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="opening_balance_amount" class="form-label">Amount (₦)</label>
+                            <input type="number" class="form-control" id="opening_balance_amount" name="opening_balance_amount" step="0.01" value="0" disabled>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <strong>Debt:</strong> Customer owes us money (red - waiting for payment)<br>
+                            <strong>Credit:</strong> We owe customer money (green - customer has credit)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
             <div class="mb-3">
                 <label for="test_address" class="form-label">Address</label>
                 <textarea class="form-control" id="test_address" name="test_address" rows="2"></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">Add Customer</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+                <span id="button-text">Add Customer</span>
+                <span id="loading-spinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Processing...
+                </span>
+            </button>
         </form>
     </div>
 </div>
@@ -49,6 +84,7 @@
                         <th>Phone</th>
                         <th>Email</th>
                         <th>Credit Limit</th>
+                        <th>Opening Balance</th>
                         <th>Current Balance</th>
                         <th>Actions</th>
                     </tr>
@@ -60,7 +96,25 @@
                         <td>{{ customer['phone_number'] or 'N/A' }}</td>
                         <td>{{ customer['email'] or 'N/A' }}</td>
                         <td>₦{{ "%.2f"|format(customer['credit_limit'] or 0) }}</td>
-                        <td>₦{{ "%.2f"|format(customer['current_balance'] or 0) }}</td>
+                        <td>
+                            {% if customer.get('opening_balance_type') == 'debt' %}
+                                <span class="text-danger">₦{{ "%.2f"|format(customer.get('opening_balance_amount', 0)) }}</span>
+                            {% elif customer.get('opening_balance_type') == 'credit' %}
+                                <span class="text-success">₦{{ "%.2f"|format(customer.get('opening_balance_amount', 0)) }}</span>
+                            {% else %}
+                                <span class="text-muted">₦0.00</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set current_balance = customer.get('current_balance', 0) %}
+                            {% if current_balance > 0 %}
+                                <span class="text-success">₦{{ "%.2f"|format(current_balance) }}</span>
+                            {% elif current_balance < 0 %}
+                                <span class="text-danger">₦{{ "%.2f"|format(current_balance) }}</span>
+                            {% else %}
+                                <span class="text-muted">₦0.00</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary" onclick="editCustomer('{{ customer['id'] }}')">Edit</button>
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer('{{ customer['id'] }}')">Delete</button>
@@ -77,32 +131,42 @@
 </div>
 
 <script>
-function handleSubmit() {
-    const name = document.getElementById('customer_name').value;
-    const phone = document.getElementById('phone_number').value;
-    const email = document.getElementById('email').value;
-    const address = document.getElementById('address').value;
-    const creditLimit = document.getElementById('credit_limit').value;
+// Handle opening balance type change
+document.addEventListener('DOMContentLoaded', function() {
+    const balanceTypeSelect = document.getElementById('opening_balance_type');
+    const amountInput = document.getElementById('opening_balance_amount');
     
-    console.log('=== FORM SUBMISSION DEBUG ===');
-    console.log('Raw name value:', name);
-    console.log('Name type:', typeof name);
-    console.log('Name length:', name ? name.length : 'null/undefined');
-    console.log('All form data:', {
-        name: name,
-        phone: phone,
-        email: email,
-        address: address,
-        creditLimit: creditLimit
+    balanceTypeSelect.addEventListener('change', function() {
+        if (this.value === 'none') {
+            amountInput.disabled = true;
+            amountInput.value = '0';
+        } else {
+            amountInput.disabled = false;
+            if (amountInput.value === '0') {
+                amountInput.focus();
+            }
+        }
     });
-    console.log('=============================');
+});
+
+function handleSubmit() {
+    console.log('=== FORM SUBMISSION DEBUG ===');
     
-    if (!name || name.trim() === '') {
+    const nameField = document.getElementById('test_name');
+    const name = nameField ? nameField.value : 'FIELD_NOT_FOUND';
+    
+    console.log('Name field element:', nameField);
+    console.log('Name field value:', name);
+    console.log('Name field type:', typeof name);
+    console.log('Name field length:', name ? name.length : 'null/undefined');
+    
+    if (!name || name === 'FIELD_NOT_FOUND' || name.trim() === '') {
+        console.log('Validation failed: Customer name is required');
         alert('Customer name is required!');
         return false;
     }
     
-    showLoading();
+    console.log('Validation passed, submitting form');
     return true;
 }
 

@@ -18,7 +18,9 @@ class JournalEntry(BaseModel):
                     date: datetime,
                     description: str,
                     reference: str,
-                    entries: List[Dict[str, Any]]) -> str:
+                    entries: List[Dict[str, Any]],
+                    batch_id: str = None,
+                    ile_number: int = None) -> str:
         """
         Create a journal entry with proper double-entry validation
         
@@ -54,7 +56,9 @@ class JournalEntry(BaseModel):
             'entries': entries,
             'total_debits': total_debits,
             'total_credits': total_credits,
-            'status': 'posted'  # posted, draft, reversed
+            'status': 'posted',  # posted, draft, reversed
+            'batch_id': batch_id,
+            'ile_number': ile_number
         }
         
         return self.create(journal_data)
@@ -127,17 +131,29 @@ class JournalEntry(BaseModel):
         
         # Determine account type for proper balance calculation
         account_info = CHART_OF_ACCOUNTS.get(account_code, {})
-        account_type = account_info.get('type', 'asset')
+        account_type = account_info.get('type', AccountType.ASSET)
         
         balance = 0.0
+        account_transactions = []  # DEBUG: Track transactions for this account
+        
         for entry in entries:
             for line in entry.get('entries', []):
                 if line.get('account_code') == account_code:
                     debit = line.get('debit', 0)
                     credit = line.get('credit', 0)
                     
+                    # DEBUG: Track this transaction
+                    account_transactions.append({
+                        'entry_id': entry.get('id', 'unknown'),
+                        'date': entry.get('date'),
+                        'description': entry.get('description', ''),
+                        'reference': entry.get('reference', ''),
+                        'debit': debit,
+                        'credit': credit
+                    })
+                    
                     # Calculate balance based on account type
-                    if account_type in ['asset', 'expense']:
+                    if account_type in [AccountType.ASSET, AccountType.EXPENSE]:
                         # Normal debit balance accounts
                         balance += debit - credit
                     else:

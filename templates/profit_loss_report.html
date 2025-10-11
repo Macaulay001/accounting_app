@@ -1,0 +1,357 @@
+{% extends "layout_accounting.html" %}
+
+{% block title %}Profit & Loss Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h3 mb-0">Profit & Loss Analysis</h2>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('reports_route') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filter Options -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Filter Options</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <!-- Date Range Filter -->
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ start_date or '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ end_date or '' }}">
+                        </div>
+                        
+                        <!-- Batch Filter -->
+                        <div class="col-md-4">
+                            <label for="from_batch_id" class="form-label">From Batch (Show this batch and all after)</label>
+                            <select class="form-control" id="from_batch_id" name="from_batch_id">
+                                <option value="">Select a batch...</option>
+                                {% for batch in all_batches %}
+                                <option value="{{ batch.id }}" {% if from_batch_id == batch.id %}selected{% endif %}>
+                                    {{ batch.vendor_name }} - {{ batch.raw_material_type.replace('_', ' ').title() }}
+                                    {% if batch.created_at %}
+                                        ({{ batch.created_at.strftime('%Y-%m-%d %H:%M') }})
+                                    {% elif batch.purchase_date %}
+                                        ({{ batch.purchase_date.strftime('%Y-%m-%d') }})
+                                    {% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">Apply Filter</button>
+                            <a href="{{ url_for('profit_loss_analysis_route') }}" class="btn btn-outline-secondary">Clear</a>
+                        </div>
+                    </form>
+                    
+                    <!-- Filter Description -->
+                    {% if from_batch_id %}
+                        {% for batch in all_batches %}
+                            {% if batch.id == from_batch_id %}
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Filter Active:</strong> Showing batches from 
+                                    <strong>{{ batch.vendor_name }}</strong> - 
+                                    {{ batch.raw_material_type.replace('_', ' ').title() }}
+                                    {% if batch.created_at %}
+                                        (created {{ batch.created_at.strftime('%Y-%m-%d %H:%M') }})
+                                    {% elif batch.purchase_date %}
+                                        (purchased {{ batch.purchase_date.strftime('%Y-%m-%d') }})
+                                    {% endif %}
+                                    onwards.
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Overall Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Overall Summary - {{ overall_summary.period }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Total Revenue</h6>
+                                <h4 class="text-success mb-0">₦{{ "{:,.2f}".format(overall_summary.total_sales_revenue) }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Total Costs</h6>
+                                <h4 class="text-danger mb-0">₦{{ "{:,.2f}".format(overall_summary.total_costs) }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Net Profit/Loss</h6>
+                                <h4 class="{% if overall_summary.overall_profit_loss >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                                    ₦{{ "{:,.2f}".format(overall_summary.overall_profit_loss) }}
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Profit Margin</h6>
+                                <h4 class="{% if overall_summary.overall_profit_margin >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                                    {{ "{:.1f}".format(overall_summary.overall_profit_margin) }}%
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Purchase Costs</h6>
+                                <h5 class="text-info mb-0">₦{{ "{:,.2f}".format(overall_summary.total_purchase_cost) }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 border rounded">
+                                <h6 class="text-muted mb-1">Processing Costs</h6>
+                                <h5 class="text-warning mb-0">₦{{ "{:,.2f}".format(overall_summary.total_processing_cost) }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendor Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Vendor Performance Analysis</h5>
+                </div>
+                <div class="card-body">
+                    {% if vendor_analysis %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th class="text-end">Revenue</th>
+                                        <th class="text-end">Purchase Cost</th>
+                                        <th class="text-end">Processing Cost</th>
+                                        <th class="text-end">Total Costs</th>
+                                        <th class="text-end">Profit/Loss</th>
+                                        <th class="text-end">Margin %</th>
+                                        <th class="text-end">Pieces Sold</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vendor_id, data in vendor_analysis.items() %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ data.vendor_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ data.batches|length }} batch(es)</small>
+                                        </td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(data.total_sales_revenue) }}</td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(data.total_purchase_cost) }}</td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(data.total_processing_cost) }}</td>
+                                        <td class="text-end">₦{{ "{:,.2f}".format(data.total_purchase_cost + data.total_processing_cost) }}</td>
+                                        <td class="text-end {% if data.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ₦{{ "{:,.2f}".format(data.profit_loss) }}
+                                        </td>
+                                        <td class="text-end {% if data.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ "{:.1f}".format(data.profit_margin) }}%
+                                        </td>
+                                        <td class="text-end">{{ "{:,}".format(data.total_pieces_sold) }}</td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        onclick="showVendorBatches('{{ vendor_id }}')">
+                                                    <i class="fas fa-list"></i> Batches
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Batch Details (Hidden by default) -->
+                                    <tr id="vendor-{{ vendor_id }}-batches" style="display: none;">
+                                        <td colspan="9">
+                                            <div class="p-3 bg-light">
+                                                <h6>Batch Details for {{ data.vendor_name }}</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Batch ID</th>
+                                                                <th class="text-end">Purchase Date</th>
+                                                                <th class="text-end">Revenue</th>
+                                                                <th class="text-end">Costs</th>
+                                                                <th class="text-end">Profit/Loss</th>
+                                                                <th class="text-end">Margin %</th>
+                                                                <th class="text-center">Status</th>
+                                                                <th class="text-center">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for batch in data.batches %}
+                                                            <tr>
+                                                                <td>
+                                                                    <code>{{ batch.batch_id[:8] }}...</code>
+                                                                </td>
+                                                                <td class="text-end">
+                                                                    {% if batch.purchase_date %}
+                                                                        {{ batch.purchase_date.strftime('%Y-%m-%d') }}
+                                                                    {% else %}
+                                                                        N/A
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td class="text-end">₦{{ "{:,.2f}".format(batch.sales_revenue) }}</td>
+                                                                <td class="text-end">₦{{ "{:,.2f}".format(batch.total_costs) }}</td>
+                                                                <td class="text-end {% if batch.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                    ₦{{ "{:,.2f}".format(batch.profit_loss) }}
+                                                                </td>
+                                                                <td class="text-end {% if batch.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                    {{ "{:.1f}".format(batch.profit_margin) }}%
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <span class="badge bg-{% if batch.status == 'sold' %}success{% elif batch.status == 'finished_goods' %}warning{% else %}secondary{% endif %}">
+                                                                        {{ batch.status.replace('_', ' ').title() }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <div class="btn-group btn-group-sm">
+                                                                        <button type="button" class="btn btn-outline-secondary" 
+                                                                                onclick="showBatchIleGroups('{{ batch.batch_id }}')">
+                                                                            <i class="fas fa-list"></i> ILE Groups
+                                                                        </button>
+                                                                        <a href="{{ url_for('profit_loss_batch_analysis_route', batch_id=batch.batch_id) }}" 
+                                                                           class="btn btn-outline-primary">
+                                                                            <i class="fas fa-eye"></i> Details
+                                                                        </a>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            
+                                                            <!-- ILE Groups for this batch (Hidden by default) -->
+                                                            <tr id="batch-{{ batch.batch_id }}-ile-groups" style="display: none;">
+                                                                <td colspan="8">
+                                                                    <div class="p-3 bg-white border rounded">
+                                                                        <h6 class="mb-3">ILE Groups in Batch {{ batch.batch_id[:8] }}...</h6>
+                                                                        {% if batch.ile_groups %}
+                                                                            <div class="table-responsive">
+                                                                                <table class="table table-sm table-bordered">
+                                                                                    <thead class="table-light">
+                                                                                        <tr>
+                                                                                            <th>ILE Group</th>
+                                                                                            <th class="text-end">Status</th>
+                                                                                            <th class="text-end">Purchase Cost</th>
+                                                                                            <th class="text-end">Processing Cost</th>
+                                                                                            <th class="text-end">Sales Revenue</th>
+                                                                                            <th class="text-end">Profit/Loss</th>
+                                                                                            <th class="text-end">Margin %</th>
+                                                                                            <th class="text-center">Actions</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                        {% for ile_group in batch.ile_groups %}
+                                                                                        <tr>
+                                                                                            <td>
+                                                                                                <strong>ILE {{ ile_group.ile_number }}</strong>
+                                                                                                <br>
+                                                                                                <small class="text-muted">{{ ile_group.pieces_per_ile }} pieces</small>
+                                                                                            </td>
+                                                                                            <td class="text-end">
+                                                                                                <span class="badge bg-{% if ile_group.status == 'sold' %}success{% elif ile_group.status == 'finished_goods' %}warning{% else %}secondary{% endif %}">
+                                                                                                    {{ ile_group.status.replace('_', ' ').title() }}
+                                                                                                </span>
+                                                                                            </td>
+                                                                                            <td class="text-end">₦{{ "{:,.2f}".format(ile_group.purchase_cost) }}</td>
+                                                                                            <td class="text-end">₦{{ "{:,.2f}".format(ile_group.processing_cost) }}</td>
+                                                                                            <td class="text-end">₦{{ "{:,.2f}".format(ile_group.sales_revenue) }}</td>
+                                                                                            <td class="text-end {% if ile_group.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                                                ₦{{ "{:,.2f}".format(ile_group.profit_loss) }}
+                                                                                            </td>
+                                                                                            <td class="text-end {% if ile_group.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                                                {{ "{:.1f}".format(ile_group.profit_margin) }}%
+                                                                                            </td>
+                                                                                            <td class="text-center">
+                                                                                                <a href="{{ url_for('profit_loss_ile_analysis_route', batch_id=batch.batch_id, ile_number=ile_group.ile_number) }}" 
+                                                                                                   class="btn btn-sm btn-outline-info">
+                                                                                                    <i class="fas fa-eye"></i> Details
+                                                                                                </a>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                        {% endfor %}
+                                                                                    </tbody>
+                                                                                </table>
+                                                                            </div>
+                                                                        {% else %}
+                                                                            <p class="text-muted">No ILE groups found for this batch.</p>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Data Available</h5>
+                            <p class="text-muted">No inventory batches or sales data found for the selected period.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showVendorBatches(vendorId) {
+    const row = document.getElementById('vendor-' + vendorId + '-batches');
+    if (row.style.display === 'none') {
+        row.style.display = 'table-row';
+    } else {
+        row.style.display = 'none';
+        // Also hide any expanded ILE groups for this vendor
+        const ileGroups = document.querySelectorAll('[id^="batch-"][id$="-ile-groups"]');
+        ileGroups.forEach(group => {
+            if (group.id.includes(vendorId) || group.closest('#vendor-' + vendorId + '-batches')) {
+                group.style.display = 'none';
+            }
+        });
+    }
+}
+
+function showBatchIleGroups(batchId) {
+    const row = document.getElementById('batch-' + batchId + '-ile-groups');
+    if (row.style.display === 'none') {
+        row.style.display = 'table-row';
+    } else {
+        row.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

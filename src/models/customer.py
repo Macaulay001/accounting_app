@@ -18,7 +18,9 @@ class Customer(BaseModel):
                        phone_number: Optional[str] = None,
                        email: Optional[str] = None,
                        address: Optional[str] = None,
-                       credit_limit: float = 0.0) -> str:
+                       credit_limit: float = 0.0,
+                       opening_balance_type: str = 'none',
+                       opening_balance_amount: float = 0.0) -> str:
         """Create a new customer"""
         customer_data = {
             'name': name,
@@ -26,6 +28,8 @@ class Customer(BaseModel):
             'email': email,
             'address': address,
             'credit_limit': credit_limit,
+            'opening_balance_type': opening_balance_type,
+            'opening_balance_amount': opening_balance_amount,
             'current_balance': 0.0,  # Will be calculated from journal entries
             'total_sales': 0.0,
             'total_payments': 0.0,
@@ -39,20 +43,34 @@ class Customer(BaseModel):
         return self.update(customer_id, data)
     
     def get_customer_balance(self, customer_id: str) -> float:
-        """Get customer's current account balance"""
-        customer = self.get_by_id(customer_id)
-        if not customer:
+        """Get customer's current account balance using centralized service"""
+        try:
+            from ..services.customer_balance_service import CustomerBalanceService
+            from ..models.customer import Customer
+            from ..models.vendor import Vendor
+            from ..models.product import Product
+            from ..models.journal_entry import JournalEntry
+            from ..models.inventory_batch import InventoryBatch
+            from ..models.customer_deposit import CustomerDeposit
+            
+            # Create models dict for the service
+            models = {
+                'customer': Customer(self.db, self.user_id),
+                'vendor': Vendor(self.db, self.user_id),
+                'product': Product(self.db, self.user_id),
+                'journal_entry': JournalEntry(self.db, self.user_id),
+                'inventory_batch': InventoryBatch(self.db, self.user_id),
+                'customer_deposit': CustomerDeposit(self.db, self.user_id)
+            }
+            
+            # Use centralized service
+            balance_service = CustomerBalanceService(models)
+            balance_info = balance_service.get_customer_balance_summary(customer_id)
+            return balance_info['current_balance']
+            
+        except Exception as e:
+            print(f"Error getting customer balance: {e}")
             return 0.0
-        
-        # Calculate balance from journal entries
-        from ..services.accounting_service import AccountingService
-        accounting_service = AccountingService(self.db, self.user_id)
-        
-        # Get all sales to this customer
-        sales_balance = accounting_service.get_account_balance("1200")  # Accounts Receivable
-        
-        # This is a simplified calculation - in practice, you'd track per-customer
-        return customer.get('current_balance', 0.0)
     
     def get_customer_sales_summary(self, customer_id: str, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> Dict[str, Any]:
         """Get sales summary for a customer"""

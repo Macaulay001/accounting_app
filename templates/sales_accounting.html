@@ -184,6 +184,101 @@
         </div>
     </div>
 </div>
+
+<!-- Recent Sales Transactions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Sales Transactions
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="reloadSales()" id="reload-sales-btn">
+                    <i class="fas fa-sync-alt me-1" id="reload-sales-icon"></i>Reload
+                </button>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                <div class="table-responsive">
+                    <table class="table table-accounting">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Batch/ILE</th>
+                                <th>Sales Amount</th>
+                                <th>Payment Received</th>
+                                <th>Outstanding</th>
+                                <th>Payment Method</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>{{ sale.date.strftime('%Y-%m-%d') if sale.date else 'N/A' }}</td>
+                                <td>
+                                    <code>{{ sale.invoice_number }}</code>
+                                </td>
+                                <td>
+                                    {% if sale.customer_name %}
+                                        <strong>{{ sale.customer_name }}</strong>
+                                        {% if sale.customer_id %}
+                                            <br><small class="text-muted">{{ sale.customer_id }}</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">Unknown Customer</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if sale.batch_id and sale.ile_number %}
+                                        <small class="text-muted">
+                                            Batch: {{ sale.batch_id[:8] }}...<br>
+                                            ILE: {{ sale.ile_number }}
+                                        </small>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-accounting">
+                                    <strong>₦{{ "{:,.2f}".format(sale.sales_amount) }}</strong>
+                                </td>
+                                <td class="text-accounting">
+                                    ₦{{ "{:,.2f}".format(sale.payment_received) }}
+                                </td>
+                                <td class="text-accounting {% if sale.outstanding_amount > 0 %}text-warning{% endif %}">
+                                    {% if sale.outstanding_amount > 0 %}
+                                        ₦{{ "{:,.2f}".format(sale.outstanding_amount) }}
+                                    {% else %}
+                                        <span class="text-success">₦0.00</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if sale.payment_method == 'cash' %}success{% elif sale.payment_method == 'bank' %}primary{% elif sale.payment_method == 'credit' %}warning{% else %}secondary{% endif %}">
+                                        {{ sale.payment_method.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if sale.status == 'completed' %}success{% else %}warning{% endif %}">
+                                        {{ sale.status.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No sales transactions found. Record your first sale above.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -228,8 +323,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const customerId = document.getElementById('customer').value;
         if (!customerId) return;
         fetch(`/api/customer/${customerId}/balances`).then(r=>r.json()).then(data=>{
-            if (!data.success) return;
-            window.__customerBalance = parseFloat(data.customer_balance||0);
+            console.log('Customer balance API response:', data);
+            if (!data.success) {
+                console.log('API returned success=false');
+                return;
+            }
+            window.__customerBalance = parseFloat(data.current_balance||0);
+            console.log('Parsed customer balance:', window.__customerBalance);
             document.getElementById('customer-balances').style.display = 'block';
             const prev = formatCurrency(window.__customerBalance);
             document.getElementById('prev-balance').textContent = prev;
@@ -237,7 +337,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (prevSummaryEl) prevSummaryEl.textContent = prev;
             // compute and show new balance immediately
             recalcBalances();
-        }).catch(()=>{});
+        }).catch(err=>{
+            console.error('Error fetching customer balance:', err);
+        });
     }
 
     // Ensure event is wired even if inline handler fails
@@ -373,6 +475,21 @@ function updateIleGroups() {
                 alert('Error loading ile groups. Please try again.');
             });
     }
+}
+
+// Reload sales table
+function reloadSales() {
+    const reloadBtn = document.getElementById('reload-sales-btn');
+    const reloadIcon = document.getElementById('reload-sales-icon');
+    
+    // Show loading state
+    reloadIcon.classList.add('fa-spin');
+    reloadBtn.disabled = true;
+    
+    // Reload the page to get fresh data
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
 }
 
 </script>

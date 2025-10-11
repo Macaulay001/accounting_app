@@ -436,11 +436,11 @@
 
                 {% elif report_type == 'sales_summary' %}
                     <div class="report-section">
-                        <h4 class="mb-3">Sales Summary</h4>
+                        <h4 class="mb-3">Sales Summary Report</h4>
                         
                         <!-- Summary Cards -->
                         <div class="row mb-4">
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="card bg-success text-white">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">Total Sales</h5>
@@ -448,38 +448,138 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-3">
                                 <div class="card bg-info text-white">
                                     <div class="card-body text-center">
-                                        <h5 class="card-title">Total Transactions</h5>
+                                        <h5 class="card-title">Total Payments</h5>
+                                        <h3>₦{{ "%.2f"|format(total_payments) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Outstanding</h5>
+                                        <h3>₦{{ "%.2f"|format(total_outstanding) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Transactions</h5>
                                         <h3>{{ total_transactions }}</h3>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Sales Records Table -->
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Reference</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for entry in sales_entries %}
-                                    <tr>
-                                        <td>{{ entry['date'].strftime('%Y-%m-%d') if entry['date'] else 'N/A' }}</td>
-                                        <td>{{ entry['description'] }}</td>
-                                        <td>{{ entry['reference'] }}</td>
-                                        <td>₦{{ "%.2f"|format(entry.get('total_credits', 0)) }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <!-- Customer Sales Summary -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-users me-2"></i>Sales by Customer
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Customer</th>
+                                                <th class="text-end">Total Sales</th>
+                                                <th class="text-end">Total Payments</th>
+                                                <th class="text-end">Outstanding</th>
+                                                <th class="text-center">Transactions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for customer in customer_sales %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ customer.customer_name }}</strong>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-success fw-bold">₦{{ "%.2f"|format(customer.total_sales) }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-info fw-bold">₦{{ "%.2f"|format(customer.total_payments) }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    {% if customer.outstanding > 0 %}
+                                                        <span class="text-warning fw-bold">₦{{ "%.2f"|format(customer.outstanding) }}</span>
+                                                    {% elif customer.outstanding < 0 %}
+                                                        <span class="text-success fw-bold">₦{{ "%.2f"|format(customer.outstanding) }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">₦0.00</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary">{{ customer.transaction_count }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Sales Records -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-receipt me-2"></i>Detailed Sales Records
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Customer</th>
+                                                <th>Invoice</th>
+                                                <th class="text-end">Sales Amount</th>
+                                                <th class="text-end">Payment Received</th>
+                                                <th class="text-end">Outstanding</th>
+                                                <th>Reference</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for entry in sales_entries %}
+                                            <tr>
+                                                <td>{{ entry.date.strftime('%Y-%m-%d') if entry.date else 'N/A' }}</td>
+                                                <td>
+                                                    <strong>{{ entry.customer_name }}</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ entry.reference }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-success fw-bold">₦{{ "%.2f"|format(entry.sales_amount) }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="text-info fw-bold">₦{{ "%.2f"|format(entry.payment_received) }}</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    {% if entry.outstanding_amount > 0 %}
+                                                        <span class="text-warning fw-bold">₦{{ "%.2f"|format(entry.outstanding_amount) }}</span>
+                                                    {% elif entry.outstanding_amount < 0 %}
+                                                        <span class="text-success fw-bold">₦{{ "%.2f"|format(entry.outstanding_amount) }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">₦0.00</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ entry.reference }}</small>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -523,6 +623,37 @@
                             </div>
                         </div>
 
+                        <!-- Sales Summary Overview -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>Sales Overview
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Total Sales Revenue</h6>
+                                            <h4 class="text-success">{{ report_data.summary.total_sales|currency }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Total Payments Received</h6>
+                                            <h4 class="text-info">{{ report_data.summary.total_payments_at_sale|currency }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Outstanding Receivables</h6>
+                                            <h4 class="text-warning">{{ (report_data.summary.total_sales - report_data.summary.total_payments_at_sale)|currency }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Individual Customer Reports -->
                         {% for customer in report_data.customers %}
                         <div class="card mb-4">
@@ -543,28 +674,53 @@
                             <div class="card-body">
                                 <!-- Customer Summary Stats -->
                                 <div class="row mb-4">
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Opening Balance</h6>
+                                            <h4 class="text-{% if customer.opening_balance > 0 %}success{% elif customer.opening_balance < 0 %}danger{% else %}secondary{% endif %}">
+                                                {{ customer.opening_balance|currency }}
+                                            </h4>
+                                            <small class="text-muted">
+                                                {% if customer.opening_balance_type == 'debt' %}
+                                                    Customer owes us
+                                                {% elif customer.opening_balance_type == 'credit' %}
+                                                    We owe customer
+                                                {% else %}
+                                                    No opening balance
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
                                         <div class="text-center">
                                             <h6 class="text-muted">Total Deposits</h6>
                                             <h4 class="text-success">{{ customer.total_deposits|currency }}</h4>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <div class="text-center">
                                             <h6 class="text-muted">Total Sales</h6>
                                             <h4 class="text-info">{{ customer.total_sales|currency }}</h4>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <div class="text-center">
                                             <h6 class="text-muted">Deposit Count</h6>
                                             <h4 class="text-primary">{{ customer.deposit_count }}</h4>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <div class="text-center">
                                             <h6 class="text-muted">Sales Count</h6>
                                             <h4 class="text-warning">{{ customer.sales_count }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Current Balance</h6>
+                                            <h4 class="text-{% if customer.current_balance > 0 %}success{% elif customer.current_balance < 0 %}danger{% else %}secondary{% endif %}">
+                                                {{ customer.current_balance|currency }}
+                                            </h4>
                                         </div>
                                     </div>
                                 </div>
@@ -581,6 +737,8 @@
                                                 <tr>
                                                     <th>Date</th>
                                                     <th>Amount</th>
+                                                    <th class="text-end">Balance Before</th>
+                                                    <th class="text-end">Balance After</th>
                                                     <th>Payment Method</th>
                                                     <th>Reference</th>
                                                     <th>Notes</th>
@@ -591,6 +749,12 @@
                                                 <tr>
                                                     <td>{{ deposit.deposit_date.strftime('%Y-%m-%d') if deposit.deposit_date else 'N/A' }}</td>
                                                     <td class="text-end fw-bold">{{ deposit.amount|currency }}</td>
+                                                    <td class="text-end">
+                                                        <span class="text-muted">{{ deposit.balance_before|currency }}</span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="text-success fw-bold">{{ deposit.balance_after|currency }}</span>
+                                                    </td>
                                                     <td>
                                                         <span class="badge bg-info">
                                                             {{ deposit.payment_method.replace('_', ' ').title() }}
@@ -617,28 +781,91 @@
                                         <i class="fas fa-chart-line me-2"></i>Sales History
                                     </h6>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-striped">
+                                        <table class="table table-sm table-striped table-hover">
                                             <thead class="table-info">
                                                 <tr>
                                                     <th>Date</th>
-                                                    <th>Amount</th>
-                                                    <th>Paid at Sale</th>
-                                                    <th>Reference</th>
-                                                    <th>Description</th>
+                                                    <th class="text-end">Sales Amount</th>
+                                                    <th class="text-end">Payment Received</th>
+                                                    <th class="text-end">Outstanding</th>
+                                                    <th class="text-end">Balance Before</th>
+                                                    <th class="text-end">Balance After</th>
+                                                    <th>Invoice/Reference</th>
+                                                    <th>Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {% for sale in customer.recent_sales %}
+                                                {% set outstanding = sale.amount - (sale.payment_at_sale or 0) %}
                                                 <tr>
-                                                    <td>{{ sale.date.strftime('%Y-%m-%d') if sale.date else 'N/A' }}</td>
-                                                    <td class="text-end fw-bold">{{ sale.amount|currency }}</td>
-                                                    <td class="text-end">{{ (sale.payment_at_sale or 0)|currency }}</td>
-                                                    <td>{{ sale.reference }}</td>
-                                                    <td>{{ sale.description or 'Sale of finished goods' }}</td>
+                                                    <td>
+                                                        <strong>{{ sale.date.strftime('%Y-%m-%d') if sale.date else 'N/A' }}</strong>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="text-success fw-bold">{{ sale.amount|currency }}</span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="text-info fw-bold">{{ (sale.payment_at_sale or 0)|currency }}</span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        {% if outstanding > 0 %}
+                                                            <span class="text-warning fw-bold">{{ outstanding|currency }}</span>
+                                                        {% elif outstanding < 0 %}
+                                                            <span class="text-success fw-bold">{{ outstanding|currency }}</span>
+                                                        {% else %}
+                                                            <span class="text-muted">₦0.00</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="text-muted">{{ sale.balance_before|currency }}</span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <span class="text-info fw-bold">{{ sale.balance_after|currency }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">{{ sale.reference }}</span>
+                                                    </td>
+                                                    <td>
+                                                        {% if outstanding > 0 %}
+                                                            <span class="badge bg-warning">Outstanding</span>
+                                                        {% elif outstanding < 0 %}
+                                                            <span class="badge bg-success">Overpaid</span>
+                                                        {% else %}
+                                                            <span class="badge bg-success">Paid</span>
+                                                        {% endif %}
+                                                    </td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>
                                         </table>
+                                    </div>
+                                    
+                                    <!-- Sales Summary for this customer -->
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center py-2">
+                                                    <h6 class="text-muted mb-1">Total Sales</h6>
+                                                    <h5 class="text-success mb-0">{{ customer.total_sales|currency }}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center py-2">
+                                                    <h6 class="text-muted mb-1">Total Payments</h6>
+                                                    <h5 class="text-info mb-0">{{ customer.total_payments_at_sale|currency }}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center py-2">
+                                                    <h6 class="text-muted mb-1">Outstanding</h6>
+                                                    <h5 class="text-warning mb-0">{{ (customer.total_sales - customer.total_payments_at_sale)|currency }}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 {% else %}

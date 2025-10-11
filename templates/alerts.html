@@ -1,0 +1,238 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Accounting Alerts - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-bell me-2"></i>Accounting Alerts</h2>
+                <button class="btn btn-outline-primary" onclick="refreshAlerts()">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                </button>
+            </div>
+
+            <!-- Alert Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card-accounting border-danger">
+                        <div class="card-body text-center">
+                            <i class="fas fa-exclamation-circle fa-2x text-danger mb-2"></i>
+                            <h4 class="text-danger">{{ alert_counts.critical }}</h4>
+                            <p class="mb-0">Critical Alerts</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-accounting border-warning">
+                        <div class="card-body text-center">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                            <h4 class="text-warning">{{ alert_counts.high }}</h4>
+                            <p class="mb-0">High Priority</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-accounting border-info">
+                        <div class="card-body text-center">
+                            <i class="fas fa-info-circle fa-2x text-info mb-2"></i>
+                            <h4 class="text-info">{{ alert_counts.medium }}</h4>
+                            <p class="mb-0">Medium Priority</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card-accounting border-secondary">
+                        <div class="card-body text-center">
+                            <i class="fas fa-lightbulb fa-2x text-secondary mb-2"></i>
+                            <h4 class="text-secondary">{{ alert_counts.low }}</h4>
+                            <p class="mb-0">Low Priority</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts List -->
+            {% if alerts %}
+                <div class="card-accounting">
+                    <div class="card-header-accounting">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>All Alerts ({{ alerts|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for alert in alerts %}
+                            <div class="list-group-item list-group-item-action alert-item" 
+                                 data-alert-id="{{ alert.id }}"
+                                 data-severity="{{ alert.severity.value }}">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="{{ alert.icon }} me-2 text-{{ alert.color }}"></i>
+                                            <h6 class="mb-0 text-{{ alert.color }}">
+                                                {{ alert.title }}
+                                            </h6>
+                                            <span class="badge bg-{{ alert.color }} ms-2">
+                                                {{ alert.severity.value.title() }}
+                                            </span>
+                                        </div>
+                                        <p class="mb-2">{{ alert.message }}</p>
+                                        <div class="alert-meta">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ alert.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                                <span class="ms-3">
+                                                    <i class="fas fa-tag me-1"></i>
+                                                    {{ alert.type.value.replace('_', ' ').title() }}
+                                                </span>
+                                            </small>
+                                        </div>
+                                        {% if alert.action_required %}
+                                        <div class="alert-action mt-2">
+                                            <small class="text-primary">
+                                                <i class="fas fa-tasks me-1"></i>
+                                                <strong>Action Required:</strong> {{ alert.action_required }}
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="alert-actions">
+                                        <button class="btn btn-sm btn-outline-secondary" 
+                                                onclick="dismissAlert('{{ alert.id }}')"
+                                                title="Dismiss Alert">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card-accounting">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h4 class="text-success">All Clear!</h4>
+                        <p class="text-muted">No alerts at this time. Your accounting system is running smoothly.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function refreshAlerts() {
+    // Reload the page to get fresh alerts
+    window.location.reload();
+}
+
+function dismissAlert(alertId) {
+    // For now, just remove the alert from the DOM
+    // In a full implementation, this would make an API call to dismiss the alert
+    const alertItem = document.querySelector(`[data-alert-id="${alertId}"]`);
+    if (alertItem) {
+        alertItem.style.transition = 'opacity 0.3s ease-out';
+        alertItem.style.opacity = '0';
+        setTimeout(() => {
+            alertItem.remove();
+            // Update alert counts
+            updateAlertCounts();
+        }, 300);
+    }
+}
+
+function updateAlertCounts() {
+    // Update the alert count cards
+    const alertItems = document.querySelectorAll('.alert-item');
+    const counts = {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0
+    };
+    
+    alertItems.forEach(item => {
+        const severity = item.getAttribute('data-severity');
+        if (counts.hasOwnProperty(severity)) {
+            counts[severity]++;
+        }
+    });
+    
+    // Update the count displays
+    document.querySelector('.border-danger h4').textContent = counts.critical;
+    document.querySelector('.border-warning h4').textContent = counts.high;
+    document.querySelector('.border-info h4').textContent = counts.medium;
+    document.querySelector('.border-secondary h4').textContent = counts.low;
+}
+
+// Add some visual enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to alert items
+    const alertItems = document.querySelectorAll('.alert-item');
+    alertItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+</script>
+
+<style>
+.alert-item {
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.alert-item[data-severity="critical"] {
+    border-left-color: #dc3545;
+}
+
+.alert-item[data-severity="high"] {
+    border-left-color: #fd7e14;
+}
+
+.alert-item[data-severity="medium"] {
+    border-left-color: #0dcaf0;
+}
+
+.alert-item[data-severity="low"] {
+    border-left-color: #6c757d;
+}
+
+.alert-meta {
+    font-size: 0.875rem;
+}
+
+.alert-action {
+    font-size: 0.875rem;
+}
+
+.alert-actions {
+    margin-left: 1rem;
+}
+
+.card-accounting.border-danger {
+    border-color: #dc3545 !important;
+}
+
+.card-accounting.border-warning {
+    border-color: #fd7e14 !important;
+}
+
+.card-accounting.border-info {
+    border-color: #0dcaf0 !important;
+}
+
+.card-accounting.border-secondary {
+    border-color: #6c757d !important;
+}
+</style>
+{% endblock %}

@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 # Import our new modular structure
 from src.services.accounting_service import AccountingService
+from src.services.customer_balance_service import CustomerBalanceService
 from src.models.customer import Customer
 from src.models.vendor import Vendor
 from src.models.product import Product
@@ -20,6 +21,52 @@ from src.models.journal_entry import JournalEntry
 from src.models.inventory_batch import InventoryBatch
 from src.models.vendor_payment import VendorPayment
 from src.models.customer_deposit import CustomerDeposit
+from src.models.expense_type import ExpenseType
+from src.models.expense import Expense
+
+# Helper functions for maintaining data consistency
+def delete_journal_entries_by_reference(reference, models):
+    """Helper function to delete journal entries by reference"""
+    try:
+        journal_entries = models['journal_entry'].get_all()
+        deleted_count = 0
+        found_count = 0
+        
+        for entry in journal_entries:
+            if entry.get('reference') == reference:
+                found_count += 1
+                success = models['journal_entry'].delete(entry['id'])
+                if success:
+                    deleted_count += 1
+                    print(f"Successfully deleted journal entry {entry['id']} with reference {reference}")
+                else:
+                    print(f"Failed to delete journal entry {entry['id']} with reference {reference}")
+        
+        print(f"Found {found_count} journal entries with reference {reference}, deleted {deleted_count}")
+        
+        # Return True if we found and deleted entries, or if no entries were found (which is OK)
+        return found_count == 0 or deleted_count > 0
+    except Exception as e:
+        print(f"Error deleting journal entries for reference {reference}: {e}")
+        return False
+
+def delete_journal_entries_by_description_pattern(pattern, models):
+    """Helper function to delete journal entries by description pattern"""
+    try:
+        journal_entries = models['journal_entry'].get_all()
+        deleted_count = 0
+        
+        for entry in journal_entries:
+            description = entry.get('description', '')
+            if pattern in description:
+                success = models['journal_entry'].delete(entry['id'])
+                if success:
+                    deleted_count += 1
+        
+        return deleted_count > 0
+    except Exception as e:
+        print(f"Error deleting journal entries for pattern {pattern}: {e}")
+        return False
 
 load_dotenv()
 
@@ -36,30 +83,6 @@ app.secret_key = os.getenv('SECRET_KEY', 'ponmo-accounting-app-secret-key-2025')
 def health_check():
     """Health check endpoint for Docker and Kubernetes"""
     return "OK", 200
-
-@app.route('/api/mark-tour-completed', methods=['POST'])
-@auth_required
-def mark_tour_completed():
-    """Mark onboarding tour as completed"""
-    try:
-        user_id = session["user"]["uid"]
-        
-        # Update user document in Firestore
-        user_ref = db.collection('users').document(user_id)
-        user_ref.update({
-            'onboarding_completed': True,
-            'tour_completed_at': datetime.utcnow()
-        })
-        
-        # Update session
-        if 'user' in session:
-            session['user']['onboarding_completed'] = True
-        
-        return {"status": "success", "message": "Tour marked as completed"}
-    
-    except Exception as e:
-        print(f"Error marking tour completed: {e}")
-        return {"status": "error", "message": str(e)}, 500
 
 # ----------------------------------------------------------------------
 # Custom Filters
@@ -155,6 +178,18 @@ def get_accounting_service():
     user_id = session["user"]["uid"]
     return AccountingService(db, user_id)
 
+def get_alert_service():
+    """Get alert service instance for current user"""
+    user_id = session["user"]["uid"]
+    from src.services.alert_service import AlertService
+    return AlertService(db, user_id)
+
+def get_customer_balance_service():
+    """Get customer balance service instance for current user"""
+    user_id = session["user"]["uid"]
+    models = get_models()
+    return CustomerBalanceService(models)
+
 def get_models():
     """Get model instances for current user"""
     user_id = session["user"]["uid"]
@@ -165,7 +200,9 @@ def get_models():
         'journal_entry': JournalEntry(db, user_id),
         'inventory_batch': InventoryBatch(db, user_id),
         'vendor_payment': VendorPayment(db, user_id),
-        'customer_deposit': CustomerDeposit(db, user_id)
+        'customer_deposit': CustomerDeposit(db, user_id),
+        'expense_type': ExpenseType(db, user_id),
+        'expense': Expense(db, user_id)
     }
 
 # ----------------------------------------------------------------------
@@ -175,6 +212,7 @@ def get_models():
 @app.route('/')
 def home():
     return render_template('home.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -279,35 +317,31 @@ def dashboard():
     # Get inventory batch data first
     inventory_batches = models['inventory_batch'].get_all()
     
-    # Calculate financial metrics from journal entries and inventory data
-    cash_balance = accounting_service.get_account_balance("1000") + accounting_service.get_account_balance("1100")
+    # Calculate financial metrics from journal entries (proper accounting approach)
+    cash_on_hand = accounting_service.get_account_balance("1000")
+    bank_balance = accounting_service.get_account_balance("1100")
+    cash_balance = cash_on_hand + bank_balance
+    
     receivables = accounting_service.get_account_balance("1200")
     
     # Calculate total revenue from sales journal entries
     total_revenue = accounting_service.get_account_balance("4000")  # Revenue account
     
-    # Calculate outstanding payables (what we owe vendors)
-    accounts_payable = accounting_service.get_account_balance("2000")
+    # Calculate outstanding payables from journal entries (proper accounting)
+    outstanding_payables = accounting_service.get_account_balance("2000")  # Accounts Payable
     
-    # Calculate actual outstanding payables by comparing total purchases vs payments
-    total_purchases = sum(batch.get('purchase_cost', 0) for batch in inventory_batches)
-    
-    # Calculate total payments across all vendors
-    all_payments = models['vendor_payment'].get_all()
-    total_payments = sum(payment.get('payment_amount', 0) for payment in all_payments)
-    
-    outstanding_payables = max(0, total_purchases - total_payments)
-    
-    # Calculate inventory value (current remaining inventory at cost)
-    total_inventory_value = 0
-    for batch in inventory_batches:
-        remaining_pieces = batch.get('current_pieces', 0)
-        total_pieces = batch.get('total_pieces', 1)
-        cost_per_piece = batch.get('purchase_cost', 0) / total_pieces if total_pieces > 0 else 0
-        total_inventory_value += remaining_pieces * cost_per_piece
+    # Calculate inventory value from journal entries (proper accounting)
+    raw_materials_value = accounting_service.get_account_balance("1300")  # Raw Materials
+    work_in_process_value = accounting_service.get_account_balance("1310")  # Work in Process  
+    finished_goods_value = accounting_service.get_account_balance("1320")  # Finished Goods
+    total_inventory_value = raw_materials_value + work_in_process_value + finished_goods_value
     
     # Get recent transactions from journal entries (created by inventory batches and sales)
     all_entries = models['journal_entry'].get_all(order_by='created_at')
+    
+    # Get customer data for name lookup
+    all_customers = models['customer'].get_all()
+    customer_map = {customer['id']: customer['name'] for customer in all_customers}
     
     # Convert journal entries to display format
     formatted_entries = []
@@ -317,11 +351,25 @@ def dashboard():
         total_credits = sum(line.get('credit', 0) for line in entry.get('entries', []))
         
         # Determine transaction type and amount
+        customer_name = None
         if 'Sale to customer' in description:
             transaction_type = 'sale'
             amount = total_credits
+            
+            # Extract customer ID and get name
+            import re
+            match = re.search(r'Sale to customer ([a-f0-9-]+)', description)
+            if match:
+                customer_id = match.group(1)
+                customer_name = customer_map.get(customer_id, customer_id)
         elif 'Purchase of raw materials' in description and 'Batch' in description:
             transaction_type = 'purchase'
+            amount = total_debits
+        elif 'Expense' in description or 'EXP-' in entry.get('reference', ''):
+            transaction_type = 'expense'
+            amount = total_debits
+        elif 'Production' in description:
+            transaction_type = 'production'
             amount = total_debits
         else:
             transaction_type = 'other'
@@ -333,6 +381,7 @@ def dashboard():
             'created_at': entry.get('created_at', datetime.min),
             'type': transaction_type,
             'description': description,
+            'customer_name': customer_name,
             'amount': amount,
             'total_debits': total_debits,
             'total_credits': total_credits,
@@ -340,12 +389,10 @@ def dashboard():
             'reference': entry.get('reference', '')
         })
     
+    
     # Sort by created_at (most recent first) for accurate chronological order
     formatted_entries.sort(key=lambda x: x.get('created_at', datetime.min), reverse=True)
     recent_entries = formatted_entries[:10]
-    
-    # Check if user needs onboarding tour
-    show_tour = not session["user"].get("onboarding_completed", True)
     
     return render_template("dashboard_accounting.html", 
                          user=session["user"],
@@ -355,8 +402,7 @@ def dashboard():
                          payables=outstanding_payables,
                          inventory_value=total_inventory_value,
                          recent_entries=recent_entries,
-                         current_date=datetime.now(),
-                         show_tour=show_tour)
+                         current_date=datetime.now())
 
 @app.route('/sales', methods=['GET', 'POST'])
 @auth_required
@@ -408,16 +454,17 @@ def sales_route():
                 sales_amount=sales_amount,
                 cost_of_goods_sold=0,  # No COGS calculation for now
                 invoice_number=invoice_number,
-                payment_received=payment_received
+                payment_received=payment_received,
+                payment_method=payment_method,
+                batch_id=batch_id,
+                ile_number=ile_number
             )
             
             # Auto-apply available deposit against remaining due (server-side authority)
             try:
-                _dep_info = models['customer_deposit'].get_customer_balance(customer_id)
-                if isinstance(_dep_info, dict):
-                    deposit_balance = float(_dep_info.get('current_balance', 0) or 0)
-                else:
-                    deposit_balance = float(_dep_info or 0)
+                customer_balance_service = get_customer_balance_service()
+                balance_info = customer_balance_service.get_customer_balance_summary(customer_id)
+                deposit_balance = balance_info['current_balance']
             except Exception:
                 deposit_balance = 0.0
             amount_due_after_cash = max(0.0, float(sales_amount) - float(payment_received))
@@ -452,10 +499,15 @@ def sales_route():
     products = models['product'].get_active_products()
     batches = models['inventory_batch'].get_all()
     
+    # Get recent sales transactions
+    accounting_service = get_accounting_service()
+    recent_sales = accounting_service.get_all_sales_transactions(limit=20)
+    
     return render_template('sales_accounting.html', 
                          customers=customers, 
                          products=products,
                          batches=batches,
+                         recent_sales=recent_sales,
                          current_date=datetime.now(),
                          user=session["user"])
 
@@ -492,49 +544,22 @@ def get_batch_ile_groups(batch_id):
 @app.route('/api/customer/<customer_id>/balances')
 @auth_required
 def get_customer_balances(customer_id):
-    """Return customer's deposit balance and AR balance"""
-    models = get_models()
+    """Return customer's balance information using centralized service"""
     try:
-        # print(f"[DEBUG] get_customer_balances called for customer_id={customer_id}")
-        # Deposit balance from CustomerDeposit model
-        deposit_info = models['customer_deposit'].get_customer_balance(customer_id)
-        if isinstance(deposit_info, dict):
-            deposit_balance = float(deposit_info.get('current_balance', 0) or 0)
-        else:
-            deposit_balance = float(deposit_info or 0)
-        # print(f"[DEBUG] Deposit balance fetched: raw={deposit_info} parsed={deposit_balance}")
+        # Use centralized customer balance service
+        customer_balance_service = get_customer_balance_service()
+        balance_info = customer_balance_service.get_customer_balance_summary(customer_id)
         
-        # Compute per-customer Accounts Receivable by parsing journal entries
-        all_entries = models['journal_entry'].get_all()
-        # print(f"[DEBUG] Total journal entries fetched: {len(all_entries) if all_entries else 0}")
-        ar_debits = 0.0
-        ar_credits = 0.0
-        needle = f"customer {customer_id}".lower()
-        matched = 0
-        for je in all_entries:
-            description = (je.get('description') or '').lower()
-            if needle in description:
-                matched += 1
-                for line in je.get('entries', []):
-                    if line.get('account_code') == '1200':
-                        ar_debits += float(line.get('debit', 0) or 0)
-                        ar_credits += float(line.get('credit', 0) or 0)
-        # print(f"[DEBUG] Matched entries for customer: {matched}")
-        # print(f"[DEBUG] AR debits sum: {ar_debits}, AR credits sum: {ar_credits}")
-        ar_balance = max(0.0, ar_debits - ar_credits)
-        print(f"[DEBUG] Computed AR balance: {ar_balance}")
-        
-        customer_balance = deposit_balance - ar_balance
-        print(f"[DEBUG] Computed customer balance (deposit - AR): {customer_balance}")
-        
-        return jsonify({
+        response_data = {
             'success': True,
-            'deposit_balance': deposit_balance,
-            'accounts_receivable': ar_balance,
-            'customer_balance': customer_balance
-        })
+            'current_balance': balance_info['current_balance'],
+            'opening_balance': balance_info['opening_balance'],
+            'opening_balance_type': balance_info['opening_balance_type']
+        }
+        
+        return jsonify(response_data)
+        
     except Exception as e:
-        print(f"[DEBUG] Error in get_customer_balances: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/production', methods=['GET', 'POST'])
@@ -674,6 +699,14 @@ def delete_production_record(batch_id, ile_number):
                     # Get the last production record
                     last_record = ile_group['production_records'][-1]
                     pieces_processed = last_record.get('pieces_processed', 0)
+                    production_reference = last_record.get('reference', '')
+                    
+                    # Delete the corresponding journal entry first
+                    if production_reference:
+                        journal_deleted = delete_journal_entries_by_reference(production_reference, models)
+                        if not journal_deleted:
+                            flash("Failed to delete journal entry for production record.", "danger")
+                            return redirect(url_for('production_route'))
                     
                     # Remove the last production record
                     ile_group['production_records'].pop()
@@ -690,7 +723,9 @@ def delete_production_record(batch_id, ile_number):
                     success = models['inventory_batch'].update(batch_id, batch)
                     
                     if success:
-                        flash(f"Production record deleted successfully. {pieces_processed} pieces restored to Ile {ile_number}.", "success")
+                        flash(f"Production record and journal entry deleted successfully. {pieces_processed} pieces restored to Ile {ile_number}.", "success")
+                        # Redirect to dashboard to show updated recent transactions
+                        return redirect(url_for('dashboard'))
                     else:
                         flash("Failed to delete production record.", "danger")
                 else:
@@ -767,19 +802,50 @@ def customer_deposits_route():
     
     # GET request - show form and recent deposits
     try:
-        # Get all customers
-        customers = models['customer'].get_all()
+        # Get customers and their balances using centralized service
+        customer_balance_service = get_customer_balance_service()
+        customers_with_balance = customer_balance_service.get_all_customers_balance()
         
-        # Get customer balances
-        customer_balances = models['customer_deposit'].get_all_customer_balances()
+        # Extract customers and create customer_balances list for template compatibility
+        customers = []
+        customer_balances = []
+        for i, item in enumerate(customers_with_balance):
+            try:
+                customer = item['customer']
+                balance_info = item['balance']
+                
+                # Check if balance_info has the expected structure
+                if not isinstance(balance_info, dict):
+                    continue
+                
+                if 'total_deposits' not in balance_info:
+                    print(f"ERROR: balance_info missing total_deposits: {balance_info.keys()}")
+                    continue
+                
+                customers.append(customer)
+                customer_balances.append({
+                    'customer_id': customer['id'],
+                    'customer_name': customer['name'],
+                    'current_balance': balance_info['current_balance'],
+                    'total_deposits': balance_info['total_deposits'],
+                    'deposit_count': len(balance_info.get('deposits', []))
+                })
+            except Exception as e:
+                print(f"ERROR processing customer {i}: {e}")
+                continue
         
-        # Get recent deposits (last 20)
+        # Get recent deposits (last 20) with customer names
         recent_deposits = []
         all_deposits = models['customer_deposit'].get_all()
         if all_deposits:
             # Sort by created_at (most recent first)
             all_deposits.sort(key=lambda x: x.get('created_at', datetime.min), reverse=True)
             recent_deposits = all_deposits[:20]
+            
+            # Add customer names to deposits
+            customer_map = {customer['id']: customer['name'] for customer in customers}
+            for deposit in recent_deposits:
+                deposit['customer_name'] = customer_map.get(deposit.get('customer_id'), 'Unknown Customer')
         
         return render_template('customer_deposits.html',
                              customers=customers,
@@ -792,81 +858,6 @@ def customer_deposits_route():
         print(f"Error loading customer deposits: {e}")
         flash(f'Error loading customer deposits: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
-
-
-@app.route('/use-customer-deposit', methods=['POST'])
-@auth_required
-def use_customer_deposit_route():
-    """Use customer deposit for a sale transaction"""
-    models = get_models()
-    accounting_service = get_accounting_service()
-    
-    try:
-        # Get form data
-        customer_id = request.form.get('customer_id')
-        sale_amount = float(request.form.get('sale_amount', 0))
-        invoice_number = request.form.get('invoice_number', '').strip()
-        sale_date_str = request.form.get('sale_date')
-        
-        # Validate required fields
-        if not customer_id or not sale_amount or not sale_date_str:
-            flash('Customer, sale amount, and date are required', 'error')
-            return redirect(url_for('customer_deposits_route'))
-        
-        if sale_amount <= 0:
-            flash('Sale amount must be greater than zero', 'error')
-            return redirect(url_for('customer_deposits_route'))
-        
-        # Parse date
-        try:
-            sale_date = datetime.strptime(sale_date_str, '%Y-%m-%d')
-        except ValueError:
-            flash('Invalid date format', 'error')
-            return redirect(url_for('customer_deposits_route'))
-        
-        # Check customer deposit balance
-        customer_balance = models['customer_deposit'].get_customer_balance(customer_id)
-        if customer_balance['current_balance'] < sale_amount:
-            flash(f"Insufficient customer deposit balance. Available: {customer_balance['current_balance']:,.2f}, Required: {sale_amount:,.2f}", "error")
-            return redirect(url_for('customer_deposits_route'))
-        
-        # Generate invoice number if not provided
-        if not invoice_number:
-            invoice_number = f"INV-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        
-        # Record the sale with full payment from deposit
-        journal_entry_id = accounting_service.record_sale(
-            customer_id=customer_id,
-            date=sale_date,
-            sales_amount=sale_amount,
-            cost_of_goods_sold=0,  # No COGS calculation for now
-            invoice_number=invoice_number,
-            payment_received=sale_amount  # Full payment from deposit
-        )
-        
-        # Record the deposit usage (debit customer deposits, credit cash)
-        deposit_usage_id = accounting_service.record_customer_deposit_usage(
-            customer_id=customer_id,
-            amount=sale_amount,
-            date=sale_date,
-            reference=f"Used for sale {invoice_number}"
-        )
-        
-        # Also record the usage in the customer deposit model
-        models['customer_deposit'].record_deposit_usage(
-            customer_id=customer_id,
-            amount=sale_amount,
-            usage_date=sale_date,
-            reference=f"Used for sale {invoice_number}"
-        )
-        
-        flash(f"Sale recorded successfully using customer deposit of {sale_amount:,.2f}. Invoice: {invoice_number}", "success")
-        return redirect(url_for('customer_deposits_route'))
-        
-    except Exception as e:
-        print(f"Error using customer deposit: {e}")
-        flash(f'Error processing deposit usage: {str(e)}', 'error')
-        return redirect(url_for('customer_deposits_route'))
 
 
 @app.route('/vendor-payments', methods=['GET', 'POST'])
@@ -960,6 +951,96 @@ def vendor_payments_route():
                          recent_payments=recent_payments,
                          batch_payment_status=batch_payment_status,
                          current_date=datetime.now(),
+                         user=session["user"])
+
+@app.route('/profit-loss-analysis')
+@auth_required
+def profit_loss_analysis_route():
+    """Comprehensive Profit & Loss analysis by vendor, batch, and ILE pack"""
+    accounting_service = get_accounting_service()
+    models = get_models()
+    
+    # Get filter parameters from query parameters
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    from_batch_id = request.args.get('from_batch_id')
+    
+    start_date = None
+    end_date = None
+    
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        except ValueError:
+            flash("Invalid date format. Please use YYYY-MM-DD format.", "danger")
+    
+    # Get all batches for the batch filter dropdown
+    all_batches = models['inventory_batch'].get_all()
+    
+    # Generate overall P&L summary
+    overall_summary = accounting_service.generate_overall_profit_loss_summary(start_date, end_date, from_batch_id)
+    
+    # Generate vendor-specific analysis
+    vendor_analysis = accounting_service.generate_profit_loss_by_vendor(start_date, end_date, from_batch_id)
+    
+    return render_template('profit_loss_report.html',
+                         overall_summary=overall_summary,
+                         vendor_analysis=vendor_analysis,
+                         all_batches=all_batches,
+                         start_date=start_date_str,
+                         end_date=end_date_str,
+                         from_batch_id=from_batch_id,
+                         user=session["user"])
+
+@app.route('/profit-loss-analysis/batch/<batch_id>')
+@auth_required
+def profit_loss_batch_analysis_route(batch_id):
+    """Detailed Profit & Loss analysis for a specific batch"""
+    accounting_service = get_accounting_service()
+    
+    batch_analysis = accounting_service.generate_profit_loss_by_batch(batch_id)
+    
+    if 'error' in batch_analysis:
+        flash(batch_analysis['error'], "danger")
+        return redirect(url_for('profit_loss_analysis_route'))
+    
+    return render_template('profit_loss_batch_detail.html',
+                         batch_analysis=batch_analysis,
+                         user=session["user"])
+
+@app.route('/profit-loss-analysis/batch/<batch_id>/ile/<int:ile_number>')
+@auth_required
+def profit_loss_ile_analysis_route(batch_id, ile_number):
+    """Profit & Loss analysis for a specific ILE pack"""
+    accounting_service = get_accounting_service()
+    
+    ile_analysis = accounting_service.generate_profit_loss_by_ile_pack(batch_id, ile_number)
+    
+    if 'error' in ile_analysis:
+        flash(ile_analysis['error'], "danger")
+        return redirect(url_for('profit_loss_analysis_route'))
+    
+    return render_template('profit_loss_ile_detail.html',
+                         ile_analysis=ile_analysis,
+                         batch_id=batch_id,
+                         user=session["user"])
+
+@app.route('/alerts')
+@auth_required
+def alerts_route():
+    """Display all accounting alerts"""
+    alert_service = get_alert_service()
+    
+    # Get all alerts
+    all_alerts = alert_service.get_all_alerts()
+    
+    # Get alert counts by severity
+    alert_counts = alert_service.get_alert_count_by_severity()
+    
+    return render_template('alerts.html',
+                         alerts=all_alerts,
+                         alert_counts=alert_counts,
                          user=session["user"])
 
 @app.route('/reports')
@@ -1199,31 +1280,104 @@ def generate_production_summary_report(models, start_date, end_date):
     }
 
 def generate_sales_summary_report(models, start_date, end_date):
-    """Generate sales summary report"""
+    """Generate comprehensive sales summary report with all available sales data"""
     # Get all journal entries that are sales
     journal_entries = models['journal_entry'].get_all()
     sales_entries = []
     
     for entry in journal_entries:
-        if 'Sale to customer' in entry.get('description', ''):
+        if 'Sale to customer' in entry.get('description', '') and 'Invoice' in entry.get('description', ''):
             # Filter by date range if provided
             if start_date and end_date:
                 entry_date = entry.get('date', datetime.min)
                 if not _compare_dates(entry_date, start_date, end_date):
                     continue
             
-            # Calculate total credits for this entry
-            total_credits = sum(line.get('credit', 0) for line in entry.get('entries', []))
-            entry['total_credits'] = total_credits
+            # Extract customer ID from description
+            description = entry.get('description', '')
+            customer_id = None
+            if 'Sale to customer' in description:
+                try:
+                    # Extract customer ID from description like "Sale to customer abc123 - Invoice INV-123"
+                    parts = description.split('Sale to customer ')[1].split(' - Invoice')[0]
+                    customer_id = parts.strip()
+                except:
+                    pass
+            
+            # Calculate sales amount and payment received
+            sales_amount = 0
+            payment_received = 0
+            
+            for line in entry.get('entries', []):
+                if line.get('account_code') == '4000':  # Revenue account
+                    sales_amount = line.get('credit', 0)
+                elif line.get('account_code') in ['1000', '1100']:  # Cash/Bank accounts
+                    payment_received += line.get('debit', 0)
+            
+            # Get customer name
+            customer_name = 'Unknown Customer'
+            if customer_id:
+                customer = models['customer'].get_by_id(customer_id)
+                if customer:
+                    customer_name = customer.get('name', 'Unknown Customer')
+            
+            # Add enhanced data to entry
+            entry['sales_amount'] = sales_amount
+            entry['payment_received'] = payment_received
+            entry['customer_id'] = customer_id
+            entry['customer_name'] = customer_name
+            entry['outstanding_amount'] = sales_amount - payment_received
+            
             sales_entries.append(entry)
     
-    # Calculate totals
-    total_sales = sum(entry.get('total_credits', 0) for entry in sales_entries)
+    # Sort by date (newest first)
+    sales_entries.sort(key=lambda x: x.get('date', datetime.min), reverse=True)
+    
+    # Calculate comprehensive totals
+    total_sales = sum(entry.get('sales_amount', 0) for entry in sales_entries)
+    total_payments = sum(entry.get('payment_received', 0) for entry in sales_entries)
+    total_outstanding = total_sales - total_payments
+    
+    # Group by customer
+    customer_sales = {}
+    for entry in sales_entries:
+        customer_id = entry.get('customer_id', 'unknown')
+        customer_name = entry.get('customer_name', 'Unknown Customer')
+        
+        if customer_id not in customer_sales:
+            customer_sales[customer_id] = {
+                'customer_name': customer_name,
+                'total_sales': 0,
+                'total_payments': 0,
+                'outstanding': 0,
+                'transaction_count': 0,
+                'transactions': []
+            }
+        
+        customer_sales[customer_id]['total_sales'] += entry.get('sales_amount', 0)
+        customer_sales[customer_id]['total_payments'] += entry.get('payment_received', 0)
+        customer_sales[customer_id]['outstanding'] += entry.get('outstanding_amount', 0)
+        customer_sales[customer_id]['transaction_count'] += 1
+        customer_sales[customer_id]['transactions'].append(entry)
+    
+    # Sort customers by total sales (highest first)
+    customer_sales_list = sorted(customer_sales.values(), key=lambda x: x['total_sales'], reverse=True)
+    
+    # Get additional data for context
+    customers = models['customer'].get_all()
+    products = models['product'].get_active_products()
+    batches = models['inventory_batch'].get_all()
     
     return {
         'sales_entries': sales_entries,
+        'customer_sales': customer_sales_list,
         'total_sales': total_sales,
-        'total_transactions': len(sales_entries)
+        'total_payments': total_payments,
+        'total_outstanding': total_outstanding,
+        'total_transactions': len(sales_entries),
+        'customers': customers,
+        'products': products,
+        'batches': batches
     }
 
 def generate_customer_summary_report(models, start_date=None, end_date=None, customer_id=None):
@@ -1260,9 +1414,26 @@ def generate_customer_summary_report(models, start_date=None, end_date=None, cus
             customer_deposits = [d for d in deposits if d.get('customer_id') == customer_id]
             total_deposits = sum(d.get('amount', 0) for d in customer_deposits)
             
-            # Calculate sales for this customer (from journal entries)
+            # Calculate sales and opening balances for this customer (from journal entries)
             customer_sales = []
             total_sales = 0
+            opening_balance = 0
+            
+            # Calculate opening balance from journal entries
+            customer_name_lower = customer_name.lower()
+            for entry in all_sales:
+                description = (entry.get('description') or '').lower()
+                reference = (entry.get('reference') or '').lower()
+                
+                # Check if this is an opening balance entry for this customer
+                if (f"open-{customer_id}" in reference or 
+                    customer_name_lower in description and "opening balance" in description):
+                    for line in entry.get('entries', []):
+                        if line.get('account_code') == '1200':  # Accounts Receivable
+                            opening_balance += float(line.get('debit', 0) or 0)
+                            opening_balance -= float(line.get('credit', 0) or 0)
+            
+            # Calculate regular sales with enhanced data
             for sale in sales:
                 # Check if this sale is for this customer by looking at the description
                 description = sale.get('description', '')
@@ -1270,35 +1441,94 @@ def generate_customer_summary_report(models, start_date=None, end_date=None, cus
                 if f"Sale to customer {customer_id}" in description:
                     amount = 0
                     payment_at_sale = 0
+                    
+                    # Extract invoice number from description
+                    invoice_number = sale.get('reference', '')
+                    if 'Invoice' in description:
+                        try:
+                            invoice_part = description.split('Invoice ')[1]
+                            invoice_number = invoice_part.strip()
+                        except:
+                            pass
+                    
                     for entry in sale.get('entries', []):
                         if entry.get('account_code') == '4000':  # Revenue account
                             amount = entry.get('credit', 0)
                         if entry.get('account_code') in ('1000', '1100'):
                             payment_at_sale += entry.get('debit', 0) or 0
+                    
                     if amount > 0:
+                        outstanding_amount = amount - payment_at_sale
                         customer_sales.append({
                             'date': sale.get('date'),
                             'created_at': sale.get('created_at', sale.get('date')),
                             'amount': amount,
+                            'payment_at_sale': payment_at_sale,
+                            'outstanding_amount': outstanding_amount,
                             'reference': sale.get('reference', ''),
+                            'invoice_number': invoice_number,
                             'description': description,
-                            'payment_at_sale': payment_at_sale
+                            'status': 'Paid' if outstanding_amount == 0 else ('Overpaid' if outstanding_amount < 0 else 'Outstanding')
                         })
                         total_sales += amount
             
             # Treat payments at time of sale as deposit-equivalent inflows for balance calc
             total_payments_at_sale = sum(s.get('payment_at_sale', 0) for s in customer_sales)
             total_inflows = total_deposits + total_payments_at_sale
-            # Balance heuristic: inflows (deposits + payments) minus sales billed
-            current_balance = total_inflows - total_sales
+            # Current balance = opening balance + inflows - sales billed
+            current_balance = opening_balance + total_inflows - total_sales
             
-            # Sort deposits and sales by date (most recent first)
+            # Combine all transactions and sort chronologically (oldest first for balance calculation)
+            all_transactions = []
+            
+            # Add deposits as transactions
+            for deposit in customer_deposits:
+                all_transactions.append({
+                    'type': 'deposit',
+                    'date': deposit.get('created_at', deposit.get('deposit_date', datetime.min)),
+                    'amount': deposit.get('amount', 0),
+                    'payment_at_sale': 0,
+                    'data': deposit
+                })
+            
+            # Add sales as transactions
+            for sale in customer_sales:
+                all_transactions.append({
+                    'type': 'sale',
+                    'date': sale.get('created_at', sale.get('date', datetime.min)),
+                    'amount': sale.get('amount', 0),
+                    'payment_at_sale': sale.get('payment_at_sale', 0),
+                    'data': sale
+                })
+            
+            # Sort all transactions by date (oldest first for correct balance calculation)
+            all_transactions.sort(key=lambda x: x['date'])
+            
+            # Calculate running balance chronologically
+            running_balance = opening_balance
+            
+            for transaction in all_transactions:
+                transaction['data']['balance_before'] = running_balance
+                
+                if transaction['type'] == 'deposit':
+                    # Deposit increases customer balance (customer has credit)
+                    running_balance += transaction['amount']
+                elif transaction['type'] == 'sale':
+                    # Sale decreases balance (customer owes more), but payment increases balance
+                    running_balance -= transaction['amount']  # Customer owes more
+                    running_balance += transaction['payment_at_sale']  # Customer pays
+                
+                transaction['data']['balance_after'] = running_balance
+            
+            # Now sort deposits and sales separately for display (most recent first)
             sorted_deposits = sorted(customer_deposits, key=lambda x: x.get('created_at', datetime.min), reverse=True)
             sorted_sales = sorted(customer_sales, key=lambda x: x.get('created_at', datetime.min), reverse=True)
             
             customer_stats.append({
                 'customer_id': customer_id,
                 'customer_name': customer_name,
+                'opening_balance': opening_balance,
+                'opening_balance_type': customer.get('opening_balance_type', 'none'),
                 'total_deposits': total_deposits,
                 'total_payments_at_sale': total_payments_at_sale,
                 'total_inflows': total_inflows,
@@ -1316,6 +1546,7 @@ def generate_customer_summary_report(models, start_date=None, end_date=None, cus
         # Calculate totals
         total_deposits = sum(c['total_deposits'] for c in customer_stats)
         total_sales = sum(c['total_sales'] for c in customer_stats)
+        total_payments_at_sale = sum(c['total_payments_at_sale'] for c in customer_stats)
         total_balance = sum(c['current_balance'] for c in customer_stats)
         
         return {
@@ -1326,6 +1557,7 @@ def generate_customer_summary_report(models, start_date=None, end_date=None, cus
                     'total_customers': len(customer_stats),
                     'total_deposits': total_deposits,
                     'total_sales': total_sales,
+                    'total_payments_at_sale': total_payments_at_sale,
                     'total_balance': total_balance
                 }
             }
@@ -1417,15 +1649,28 @@ def customers_route():
             address = request.form.get('test_address', '')
             credit_limit = float(request.form.get('test_credit', 0))
             
+            # Opening balance fields
+            opening_balance_type = request.form.get('opening_balance_type', 'none')
+            opening_balance_amount = float(request.form.get('opening_balance_amount', 0))
+            
             # Debug: Print form data
-            print(f"DEBUG - Form data: name='{name}', phone='{phone_number}', email='{email}', address='{address}', credit_limit={credit_limit}")
-            print(f"DEBUG - Name type: {type(name)}, Name repr: {repr(name)}")
-            print(f"DEBUG - All form keys: {list(request.form.keys())}")
-            print(f"DEBUG - Raw form data: {dict(request.form)}")
             
             # Validate name is not empty
             if not name or name.strip() == '':
                 flash("Customer name is required.", "danger")
+                return redirect(url_for('customers_route'))
+            
+            # Check for duplicate customer name
+            existing_customers = models['customer'].get_all()
+            customer_name_lower = name.strip().lower()
+            for existing_customer in existing_customers:
+                if existing_customer.get('name', '').lower() == customer_name_lower:
+                    flash(f"Customer with name '{name.strip()}' already exists. Please use a different name.", "danger")
+                    return redirect(url_for('customers_route'))
+            
+            # Validate opening balance
+            if opening_balance_type != 'none' and opening_balance_amount <= 0:
+                flash("Opening balance amount must be greater than 0 when balance type is selected.", "danger")
                 return redirect(url_for('customers_route'))
             
             customer_id = models['customer'].create_customer(
@@ -1433,8 +1678,37 @@ def customers_route():
                 phone_number=phone_number,
                 email=email,
                 address=address,
-                credit_limit=credit_limit
+                credit_limit=credit_limit,
+                opening_balance_type=opening_balance_type,
+                opening_balance_amount=opening_balance_amount
             )
+            
+            # Create journal entry for opening balance if applicable
+            if opening_balance_type != 'none' and opening_balance_amount > 0:
+                accounting_service = get_accounting_service()
+                
+                if opening_balance_type == 'debt':
+                    # Customer owes us - Debit Accounts Receivable, Credit Opening Balance Equity
+                    accounting_service.journal_entry_model.create_entry(
+                        date=datetime.now(),
+                        description=f"Opening balance - {name.strip()} (Customer owes us)",
+                        entries=[
+                            {'account_code': '1200', 'debit': opening_balance_amount, 'credit': 0},  # Accounts Receivable
+                            {'account_code': '3100', 'debit': 0, 'credit': opening_balance_amount}   # Opening Balance Equity
+                        ],
+                        reference=f"OPEN-{customer_id}"
+                    )
+                elif opening_balance_type == 'credit':
+                    # We owe customer - Debit Opening Balance Equity, Credit Accounts Receivable (negative)
+                    accounting_service.journal_entry_model.create_entry(
+                        date=datetime.now(),
+                        description=f"Opening balance - {name.strip()} (We owe customer)",
+                        entries=[
+                            {'account_code': '3100', 'debit': opening_balance_amount, 'credit': 0},   # Opening Balance Equity
+                            {'account_code': '1200', 'debit': 0, 'credit': opening_balance_amount}     # Accounts Receivable (credit = negative balance)
+                        ],
+                        reference=f"OPEN-{customer_id}"
+                    )
             
             flash(f"Customer '{name.strip()}' created successfully.", "success")
             return redirect(url_for('customers_route'))
@@ -1442,8 +1716,22 @@ def customers_route():
         except Exception as e:
             flash(f"Error creating customer: {str(e)}", "danger")
     
-    # Get all customers
-    customers = models['customer'].get_all()
+    # Get all customers with centralized balance calculation
+    customer_balance_service = get_customer_balance_service()
+    customers_with_balance = customer_balance_service.get_all_customers_balance()
+    
+    # Extract customers and add current_balance to each customer object
+    customers = []
+    for item in customers_with_balance:
+        customer = item['customer']
+        balance_info = item['balance']
+        customer['current_balance'] = balance_info['current_balance']
+        customers.append(customer)
+        
+        # Debug: Print customer data
+    
+    # Sort customers by creation date (most recent first)
+    customers.sort(key=lambda x: x.get('created_at', datetime.min), reverse=True)
     
     return render_template('customers.html', 
                          customers=customers, 
@@ -1465,7 +1753,6 @@ def vendors_route():
             payment_terms = request.form.get('vendor_payment', 'net_30')
             
             # Debug: Print form data
-            print(f"DEBUG - Vendor form data: name='{name}', phone='{phone_number}', email='{email}', address='{address}', contact_person='{contact_person}', payment_terms='{payment_terms}'")
             
             # Validate name is not empty
             if not name or name.strip() == '':
@@ -1490,6 +1777,9 @@ def vendors_route():
     # Get all vendors
     vendors = models['vendor'].get_all()
     
+    # Sort vendors by creation date (most recent first)
+    vendors.sort(key=lambda x: x.get('created_at', datetime.min), reverse=True)
+    
     return render_template('vendors.html', 
                          vendors=vendors, 
                          user=session["user"])
@@ -1510,7 +1800,6 @@ def products_route():
             category = request.form.get('product_category', 'ponmo')
             
             # Debug: Print form data
-            print(f"DEBUG - Product form data: name='{name}', description='{description}', wholesale_price={wholesale_price}, retail_price={retail_price}, unit_of_measure='{unit_of_measure}', category='{category}'")
             
             # Validate name is not empty
             if not name or name.strip() == '':
@@ -1534,6 +1823,9 @@ def products_route():
     
     # Get all products
     products = models['product'].get_all()
+    
+    # Sort products by creation date (most recent first)
+    products.sort(key=lambda x: x.get('created_at', datetime.min), reverse=True)
     
     return render_template('products.html', 
                          products=products, 
@@ -1584,7 +1876,7 @@ def setup_business():
 
         session.pop("pending_user", None)
 
-        flash("Business details saved successfully! Let's get you started with a quick tour.", "success")
+        flash("Business details saved successfully!", "success")
         return redirect(url_for("dashboard"))
 
     return render_template("setup_business.html", user=pending_user)
@@ -1609,7 +1901,6 @@ def reset_password():
 @app.route('/auth', methods=['POST'])
 def authorize():
     """Google OAuth authentication"""
-    print("=== AUTH DEBUG START ===")
     print(f"Request method: {request.method}")
     print(f"Request content type: {request.content_type}")
     print(f"Request JSON: {request.json}")
@@ -1667,11 +1958,9 @@ def authorize():
             "phone_number": user_data["phone_number"],
         }
 
-        print("=== AUTH DEBUG END - SUCCESS ===")
         return {"status": "success"}
 
     except Exception as e:
-        print(f"=== AUTH DEBUG END - ERROR ===")
         print(f"Exception type: {type(e).__name__}")
         print(f"Exception message: {str(e)}")
         print(f"Exception details: {e}")
@@ -1693,27 +1982,53 @@ def stock_route():
 def expenses_route():
     """Record expenses with proper accounting"""
     accounting_service = get_accounting_service()
+    models = get_models()
     
     if request.method == 'POST':
         try:
             # Get form data
             expense_date_str = request.form.get('expense_date')
-            expense_type = request.form.get('expense_type')
-            account_code = request.form.get('account_code')
+            expense_type_id = request.form.get('expense_type_id')
             description = request.form.get('description')
             amount = float(request.form.get('amount', 0))
             payment_method = request.form.get('payment_method', 'cash')
-            vendor = request.form.get('vendor', '')
-            notes = request.form.get('notes', '')
+            vendor_id = request.form.get('vendor_id', '').strip() or None
             reference = request.form.get('reference', f"EXP-{datetime.now().strftime('%Y%m%d%H%M%S')}")
             
             # Validate date
-            expense_date = datetime.strptime(expense_date_str, '%Y-%m-%d')
+            try:
+                expense_date = datetime.strptime(expense_date_str, '%Y-%m-%d')
+            except ValueError:
+                expense_date = datetime.now()
+                flash("Invalid date format. Using current date.", "warning")
             
             # Validate amount
             if amount <= 0:
                 flash("Expense amount must be greater than 0.", "danger")
                 return redirect(url_for('expenses_route'))
+            
+            if not expense_type_id:
+                flash("Expense type is required.", "danger")
+                return redirect(url_for('expenses_route'))
+            
+            if not description:
+                flash("Expense description is required.", "danger")
+                return redirect(url_for('expenses_route'))
+            
+            # Get expense type to determine account code
+            expense_type = models['expense_type'].get_by_id(expense_type_id)
+            account_code = expense_type.get('account_code', '5000') if expense_type else '5000'
+            
+            # Create expense record
+            expense_id = models['expense'].create_expense(
+                expense_type_id=expense_type_id,
+                amount=amount,
+                description=description,
+                date=expense_date,
+                payment_method=payment_method,
+                reference=reference,
+                vendor_id=vendor_id
+            )
             
             # Record the expense using accounting service
             journal_entry_id = accounting_service.record_expense(
@@ -1731,23 +2046,32 @@ def expenses_route():
         except Exception as e:
             flash(f"Error recording expense: {str(e)}", "danger")
     
-    # Get recent expenses for display
-    models = get_models()
-    expenses = []  # Placeholder - would need to implement expense model
+    # Get all expenses with expense type names
+    expenses = models['expense'].get_all()
+    expense_types = models['expense_type'].get_active_types()
+    vendors = models['vendor'].get_all()
+    
+    # Add expense type names to expenses
+    expense_type_map = {et['id']: et['name'] for et in expense_types}
+    for expense in expenses:
+        expense['expense_type_name'] = expense_type_map.get(expense.get('expense_type_id'), 'Unknown')
+    
+    # Sort expenses by date (newest first)
+    expenses.sort(key=lambda x: x.get('date', datetime.min), reverse=True)
     
     return render_template('expenses.html', 
                          expenses=expenses,
+                         expense_types=expense_types,
+                         vendors=vendors,
                          current_date=datetime.now(),
                          user=session["user"])
 
 @app.route('/debug-form', methods=['POST'])
 def debug_form():
     """Debug form submission"""
-    print("=== DEBUG FORM SUBMISSION ===")
     print(f"Form data: {dict(request.form)}")
     print(f"Request method: {request.method}")
     print(f"Content type: {request.content_type}")
-    print("=============================")
     return f"Form data received: {dict(request.form)}"
 
 @app.route('/delete-vendor/<vendor_id>', methods=['POST'])
@@ -1812,9 +2136,27 @@ def edit_customer(customer_id):
             address = request.form.get('test_address', '')
             credit_limit = float(request.form.get('test_credit', 0))
             
+            # Opening balance fields
+            opening_balance_type = request.form.get('opening_balance_type', 'none')
+            opening_balance_amount = float(request.form.get('opening_balance_amount', 0))
+            
             # Validate name is not empty
             if not name or name.strip() == '':
                 flash("Customer name is required.", "danger")
+                return redirect(url_for('edit_customer', customer_id=customer_id))
+            
+            # Check for duplicate customer name (excluding current customer)
+            existing_customers = models['customer'].get_all()
+            customer_name_lower = name.strip().lower()
+            for existing_customer in existing_customers:
+                if (existing_customer.get('id') != customer_id and 
+                    existing_customer.get('name', '').lower() == customer_name_lower):
+                    flash(f"Customer with name '{name.strip()}' already exists. Please use a different name.", "danger")
+                    return redirect(url_for('edit_customer', customer_id=customer_id))
+            
+            # Validate opening balance
+            if opening_balance_type != 'none' and opening_balance_amount <= 0:
+                flash("Opening balance amount must be greater than 0 when balance type is selected.", "danger")
                 return redirect(url_for('edit_customer', customer_id=customer_id))
             
             # Update customer
@@ -1823,7 +2165,9 @@ def edit_customer(customer_id):
                 'phone_number': phone_number,
                 'email': email,
                 'address': address,
-                'credit_limit': credit_limit
+                'credit_limit': credit_limit,
+                'opening_balance_type': opening_balance_type,
+                'opening_balance_amount': opening_balance_amount
             })
             
             if success:
@@ -1997,6 +2341,9 @@ def inventory_batches_route():
     batches = models['inventory_batch'].get_all()
     vendors = models['vendor'].get_all()
     
+    # Sort batches by creation date (most recent first)
+    batches.sort(key=lambda x: x.get('created_at', x.get('purchase_date', datetime.min)), reverse=True)
+    
     return render_template('inventory_batches.html', 
                          batches=batches, 
                          vendors=vendors, 
@@ -2059,6 +2406,8 @@ def delete_batch(batch_id):
         
         if success:
             flash(f"Inventory batch deleted successfully. {deleted_entries} associated journal entries also deleted.", "success")
+            # Redirect to dashboard to show updated recent transactions
+            return redirect(url_for('dashboard'))
         else:
             flash("Failed to delete inventory batch.", "danger")
             
@@ -2282,8 +2631,128 @@ def financial_summary_route():
         return redirect(url_for('dashboard'))
 
 # ----------------------------------------------------------------------
+# Expense Management Routes
+# ----------------------------------------------------------------------
+
+@app.route('/expense-types', methods=['GET', 'POST'])
+@auth_required
+def expense_types_route():
+    """Manage expense types"""
+    models = get_models()
+    
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name', '').strip()
+            description = request.form.get('description', '').strip()
+            account_code = request.form.get('account_code', '5000').strip()
+            
+            if not name:
+                flash("Expense type name is required.", "danger")
+                return redirect(url_for('expense_types_route'))
+            
+            # Check for duplicate expense type name
+            existing_types = models['expense_type'].get_all()
+            name_lower = name.lower()
+            for existing_type in existing_types:
+                if existing_type.get('name', '').lower() == name_lower:
+                    flash(f"Expense type '{name}' already exists. Please use a different name.", "danger")
+                    return redirect(url_for('expense_types_route'))
+            
+            expense_type_id = models['expense_type'].create_expense_type(
+                name=name,
+                description=description,
+                account_code=account_code
+            )
+            
+            flash(f"Expense type '{name}' created successfully.", "success")
+            return redirect(url_for('expense_types_route'))
+            
+        except Exception as e:
+            flash(f"Error creating expense type: {str(e)}", "danger")
+    
+    # Get all expense types
+    expense_types = models['expense_type'].get_all()
+    
+    return render_template('expense_types.html', 
+                         expense_types=expense_types, 
+                         user=session["user"])
+
+
+@app.route('/delete-expense-type/<expense_type_id>', methods=['POST'])
+@auth_required
+def delete_expense_type(expense_type_id):
+    """Delete an expense type"""
+    try:
+        models = get_models()
+        success = models['expense_type'].deactivate_expense_type(expense_type_id)
+        if success:
+            flash("Expense type deactivated successfully.", "success")
+        else:
+            flash("Failed to deactivate expense type.", "danger")
+    except Exception as e:
+        flash(f"Error deactivating expense type: {str(e)}", "danger")
+    
+    return redirect(url_for('expense_types_route'))
+
+@app.route('/delete-expense/<expense_id>', methods=['POST'])
+@auth_required
+def delete_expense(expense_id):
+    """Delete an expense and its corresponding journal entry"""
+    try:
+        models = get_models()
+        
+        # First, get the expense record to find the journal entry reference
+        expense = models['expense'].get_by_id(expense_id)
+        if not expense:
+            flash("Expense not found.", "danger")
+            return redirect(url_for('expenses_route'))
+        
+        # Get the reference from the expense record
+        expense_reference = expense.get('reference', '')
+        print(f"Attempting to delete expense {expense_id} with reference: {expense_reference}")
+        
+        # Delete the corresponding journal entry using helper function
+        journal_deleted = False
+        if expense_reference:
+            print(f"Looking for journal entries with reference: {expense_reference}")
+            journal_deleted = delete_journal_entries_by_reference(expense_reference, models)
+            print(f"Journal deletion result: {journal_deleted}")
+            if not journal_deleted:
+                # Try alternative approach - look for expense-related journal entries
+                print(f"Trying alternative deletion approach for expense {expense_id}")
+                alternative_deleted = delete_journal_entries_by_description_pattern(f"Expense: {expense.get('description', '')}", models)
+                if alternative_deleted:
+                    journal_deleted = True
+                    print(f"Alternative deletion successful")
+                else:
+                    print(f"Warning: Could not delete journal entry for expense {expense_id} with reference {expense_reference}")
+                    flash("Warning: Expense deleted but journal entry may still exist. Please check your accounting records.", "warning")
+        else:
+            print(f"No reference found for expense {expense_id}, skipping journal entry deletion")
+        
+        # Then delete the expense record
+        expense_success = models['expense'].delete(expense_id)
+        print(f"Expense deletion result: {expense_success}")
+        
+        if expense_success:
+            if expense_reference and journal_deleted:
+                flash("Expense and corresponding journal entry deleted successfully.", "success")
+            else:
+                flash("Expense deleted successfully.", "success")
+            # Redirect to dashboard to show updated recent transactions
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Failed to delete expense record.", "danger")
+            
+    except Exception as e:
+        print(f"Error in delete_expense: {str(e)}")
+        flash(f"Error deleting expense: {str(e)}", "danger")
+    
+    return redirect(url_for('expenses_route'))
+
+# ----------------------------------------------------------------------
 # Main Entry Point
 # ----------------------------------------------------------------------
 if __name__ == '__main__':
-    # app.run(debug=True, port=5001)
-    app.run(debug=False)
+    app.run(debug=True, port=5000)
+    # app.run(debug=False)

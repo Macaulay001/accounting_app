@@ -291,3 +291,4 @@ $RECYCLE.BIN/
 .directory
 .Trash-*
 .nfs*
+t.env

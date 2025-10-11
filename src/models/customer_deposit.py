@@ -40,12 +40,40 @@ class CustomerDeposit(BaseModel):
         return self.create(deposit_data)
     
     def get_customer_balance(self, customer_id: str) -> Dict[str, Any]:
-        """Get current account balance for a customer"""
-        
-        # Get all deposits for this customer
-        deposits = self.get_all(filters=[('customer_id', '==', customer_id)])
-        
-        if not deposits:
+        """Get current account balance for a customer using centralized service"""
+        try:
+            from ..services.customer_balance_service import CustomerBalanceService
+            from ..models.customer import Customer
+            from ..models.vendor import Vendor
+            from ..models.product import Product
+            from ..models.journal_entry import JournalEntry
+            from ..models.inventory_batch import InventoryBatch
+            from ..models.customer_deposit import CustomerDeposit
+            
+            # Create models dict for the service
+            models = {
+                'customer': Customer(self.db, self.user_id),
+                'vendor': Vendor(self.db, self.user_id),
+                'product': Product(self.db, self.user_id),
+                'journal_entry': JournalEntry(self.db, self.user_id),
+                'inventory_batch': InventoryBatch(self.db, self.user_id),
+                'customer_deposit': CustomerDeposit(self.db, self.user_id)
+            }
+            
+            # Use centralized service
+            balance_service = CustomerBalanceService(models)
+            balance_info = balance_service.get_customer_balance(customer_id)
+            
+            return {
+                'customer_id': customer_id,
+                'current_balance': balance_info['current_balance'],
+                'total_deposits': balance_info['total_deposits'],
+                'total_used': balance_info['total_deposits'] - balance_info['current_balance'],
+                'deposit_count': len(balance_info['deposits'])
+            }
+            
+        except Exception as e:
+            print(f"Error getting customer balance: {e}")
             return {
                 'customer_id': customer_id,
                 'current_balance': 0.0,
@@ -53,21 +81,6 @@ class CustomerDeposit(BaseModel):
                 'total_used': 0.0,
                 'deposit_count': 0
             }
-        
-        # Calculate balances
-        total_deposits = sum(deposit.get('amount', 0) for deposit in deposits)
-        # Note: total_used would be calculated from sales that used deposits
-        # For now, we'll assume it's 0 and calculate it separately
-        total_used = 0.0  # This will be calculated from sales records
-        current_balance = total_deposits - total_used
-        
-        return {
-            'customer_id': customer_id,
-            'current_balance': current_balance,
-            'total_deposits': total_deposits,
-            'total_used': total_used,
-            'deposit_count': len(deposits)
-        }
     
     def get_customer_deposits(self, customer_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Get recent deposits for a customer (most recent first)"""

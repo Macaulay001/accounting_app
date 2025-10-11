@@ -30,6 +30,9 @@
     </div>
 </div>
 
+<!-- Cache busting comment to force refresh -->
+<!-- Cache bust: v2.0 - Fixed deletion refresh issues -->
+
 <!-- Financial Overview Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -114,20 +117,6 @@
                 <div>
                     <div class="widget-value amount-neutral">{{ receivables|currency }}</div>
                     <div class="widget-label">Accounts Receivable</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="dashboard-widget">
-            <div class="d-flex align-items-center">
-                <div class="widget-icon inventory me-3">
-                    <i class="fas fa-warehouse"></i>
-                </div>
-                <div>
-                    <div class="widget-value amount-neutral">{{ inventory_value|currency }}</div>
-                    <div class="widget-label">Inventory Value</div>
                 </div>
             </div>
         </div>
@@ -323,14 +312,21 @@
                         </thead>
                         <tbody>
                             {% for entry in recent_entries %}
-                            <tr>
+                            <tr class="{% if entry.get('recently_updated') %}recent-transaction-updated{% endif %}">
                                 <td>{{ entry['date'].strftime('%Y-%m-%d') if entry['date'] else 'N/A' }}</td>
                                 <td>
-                                    <span class="badge bg-{% if entry['type'] == 'sale' %}success{% elif entry['type'] == 'purchase' %}primary{% elif entry['type'] == 'production' %}warning{% else %}info{% endif %}">
+                                    <span class="badge bg-{% if entry['type'] == 'sale' %}success{% elif entry['type'] == 'purchase' %}primary{% elif entry['type'] == 'production' %}warning{% elif entry['type'] == 'expense' %}danger{% else %}info{% endif %}">
                                         {{ entry['type'].title() }}
                                     </span>
                                 </td>
-                                <td>{{ entry['description'] or 'N/A' }}</td>
+                                <td>
+                                    {% if entry['type'] == 'sale' and entry.get('customer_name') %}
+                                        <strong>{{ entry['customer_name'] }}</strong>
+                                        <br><small class="text-muted">{{ entry['description'] or 'N/A' }}</small>
+                                    {% else %}
+                                        {{ entry['description'] or 'N/A' }}
+                                    {% endif %}
+                                </td>
                                 <td class="text-accounting">
                                     {{ entry['amount']|currency }}
                                 </td>
@@ -357,19 +353,22 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-// Trigger onboarding tour for new users
-{% if show_tour %}
-document.addEventListener('DOMContentLoaded', function() {
-    // Small delay to ensure page is fully loaded
-    setTimeout(function() {
-        if (window.startOnboardingTour) {
-            window.startOnboardingTour();
-        }
-    }, 1000);
-});
-{% endif %}
-</script>
+<style>
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.recent-transaction-updated {
+    background-color: #d4edda !important;
+    transition: background-color 0.3s ease;
+}
+
+.recent-transaction-updated:hover {
+    background-color: #c3e6cb !important;
+}
+</style>
 <script>
 function refreshDashboard() {
     location.reload();
@@ -394,13 +393,25 @@ function reloadTransactions() {
     }, 500); // Small delay to show the loading state
 }
 
-
 // Auto-refresh dashboard every 5 minutes
 setInterval(function() {
-    // Only refresh if no modal is open
-    if (!document.querySelector('.modal.show')) {
+    // Only refresh if no modal is open and user is on dashboard
+    if (!document.querySelector('.modal.show') && window.location.pathname === '/') {
+        console.log('Auto-refreshing dashboard...');
         location.reload();
     }
 }, 300000); // 5 minutes
+
+// Add visual feedback for successful deletions
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we have a success message about deletion
+    const successMessages = document.querySelectorAll('.alert-success');
+    successMessages.forEach(function(message) {
+        if (message.textContent.includes('deleted successfully')) {
+            // Add a subtle animation to indicate recent change
+            message.style.animation = 'pulse 2s ease-in-out';
+        }
+    });
+});
 </script>
 {% endblock %}

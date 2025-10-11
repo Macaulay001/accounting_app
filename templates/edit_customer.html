@@ -24,6 +24,36 @@
                 <label for="test_credit" class="form-label">Credit Limit (₦)</label>
                 <input type="number" class="form-control" id="test_credit" name="test_credit" step="0.01" value="{{ customer['credit_limit'] or 0 }}">
             </div>
+            
+            <!-- Opening Balance Section -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Opening Balance (for existing customers)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="opening_balance_type" class="form-label">Balance Type</label>
+                            <select class="form-select" id="opening_balance_type" name="opening_balance_type">
+                                <option value="none" {% if customer.get('opening_balance_type') == 'none' %}selected{% endif %}>No Opening Balance</option>
+                                <option value="debt" {% if customer.get('opening_balance_type') == 'debt' %}selected{% endif %}>Customer Owes Us (Debt)</option>
+                                <option value="credit" {% if customer.get('opening_balance_type') == 'credit' %}selected{% endif %}>We Owe Customer (Credit)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="opening_balance_amount" class="form-label">Amount (₦)</label>
+                            <input type="number" class="form-control" id="opening_balance_amount" name="opening_balance_amount" step="0.01" value="{{ customer.get('opening_balance_amount', 0) }}">
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <strong>Debt:</strong> Customer owes us money (red - waiting for payment)<br>
+                            <strong>Credit:</strong> We owe customer money (green - customer has credit)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
             <div class="mb-3">
                 <label for="test_address" class="form-label">Address</label>
                 <textarea class="form-control" id="test_address" name="test_address" rows="2">{{ customer['address'] or '' }}</textarea>
@@ -35,4 +65,26 @@
         </form>
     </div>
 </div>
+
+<script>
+// Handle opening balance type change
+document.addEventListener('DOMContentLoaded', function() {
+    const balanceTypeSelect = document.getElementById('opening_balance_type');
+    const amountInput = document.getElementById('opening_balance_amount');
+    
+    balanceTypeSelect.addEventListener('change', function() {
+        if (this.value === 'none') {
+            amountInput.disabled = true;
+            amountInput.value = '0';
+        } else {
+            amountInput.disabled = false;
+        }
+    });
+    
+    // Initialize state on page load
+    if (balanceTypeSelect.value === 'none') {
+        amountInput.disabled = true;
+    }
+});
+</script>
 {% endblock %}
