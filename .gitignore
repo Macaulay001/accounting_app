@@ -159,6 +159,7 @@ temp/
 .tmp/
 
 # Firebase
+firebase-auth.json
 firebase-debug.log
 .firebase/
 
