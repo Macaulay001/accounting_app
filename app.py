@@ -37,6 +37,30 @@ def health_check():
     """Health check endpoint for Docker and Kubernetes"""
     return "OK", 200
 
+@app.route('/api/mark-tour-completed', methods=['POST'])
+@auth_required
+def mark_tour_completed():
+    """Mark onboarding tour as completed"""
+    try:
+        user_id = session["user"]["uid"]
+        
+        # Update user document in Firestore
+        user_ref = db.collection('users').document(user_id)
+        user_ref.update({
+            'onboarding_completed': True,
+            'tour_completed_at': datetime.utcnow()
+        })
+        
+        # Update session
+        if 'user' in session:
+            session['user']['onboarding_completed'] = True
+        
+        return {"status": "success", "message": "Tour marked as completed"}
+    
+    except Exception as e:
+        print(f"Error marking tour completed: {e}")
+        return {"status": "error", "message": str(e)}, 500
+
 # ----------------------------------------------------------------------
 # Custom Filters
 # ----------------------------------------------------------------------
@@ -320,6 +344,9 @@ def dashboard():
     formatted_entries.sort(key=lambda x: x.get('created_at', datetime.min), reverse=True)
     recent_entries = formatted_entries[:10]
     
+    # Check if user needs onboarding tour
+    show_tour = not session["user"].get("onboarding_completed", True)
+    
     return render_template("dashboard_accounting.html", 
                          user=session["user"],
                          cash_balance=cash_balance,
@@ -328,7 +355,8 @@ def dashboard():
                          payables=outstanding_payables,
                          inventory_value=total_inventory_value,
                          recent_entries=recent_entries,
-                         current_date=datetime.now())
+                         current_date=datetime.now(),
+                         show_tour=show_tour)
 
 @app.route('/sales', methods=['GET', 'POST'])
 @auth_required
@@ -1550,12 +1578,13 @@ def setup_business():
             "uid": user_id,
             "email": user_email,
             "business_name": business_name,
-            "phone_number": phone_number
+            "phone_number": phone_number,
+            "onboarding_completed": False  # Track onboarding status
         }
 
         session.pop("pending_user", None)
 
-        flash("Business details saved successfully! Redirecting to dashboard...", "success")
+        flash("Business details saved successfully! Let's get you started with a quick tour.", "success")
         return redirect(url_for("dashboard"))
 
     return render_template("setup_business.html", user=pending_user)

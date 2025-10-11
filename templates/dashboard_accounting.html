@@ -358,6 +358,19 @@
 
 {% block scripts %}
 <script>
+// Trigger onboarding tour for new users
+{% if show_tour %}
+document.addEventListener('DOMContentLoaded', function() {
+    // Small delay to ensure page is fully loaded
+    setTimeout(function() {
+        if (window.startOnboardingTour) {
+            window.startOnboardingTour();
+        }
+    }, 1000);
+});
+{% endif %}
+</script>
+<script>
 function refreshDashboard() {
     location.reload();
 }

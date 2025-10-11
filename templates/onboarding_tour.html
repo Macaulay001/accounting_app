@@ -1,0 +1,572 @@
+<!-- Onboarding Tour Component -->
+<div id="onboarding-tour" class="tour-overlay" style="display: none;">
+  <div class="tour-backdrop"></div>
+  <div class="tour-container">
+    <div class="tour-content">
+      <div class="tour-header">
+        <h3 class="tour-title">Welcome to PonmoPro! 🎉</h3>
+        <p class="tour-subtitle">Let's get you started with a quick tour</p>
+        <div class="tour-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%"></div>
+          </div>
+          <span class="progress-text">Step 1 of 4</span>
+        </div>
+      </div>
+      
+      <div class="tour-body">
+        <div class="tour-step" data-step="1">
+          <div class="step-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <h4>Add Your Products</h4>
+          <p>Start by adding the ponmo products you process. This helps track inventory and sales accurately.</p>
+          <div class="step-actions">
+            <button class="btn btn-outline-secondary tour-skip">Skip Tour</button>
+            <button class="btn btn-primary tour-next">Add Products</button>
+          </div>
+        </div>
+        
+        <div class="tour-step" data-step="2" style="display: none;">
+          <div class="step-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h4>Add Your Customers</h4>
+          <p>Create customer profiles to track sales, manage deposits, and maintain customer relationships.</p>
+          <div class="step-actions">
+            <button class="btn btn-outline-secondary tour-back">Back</button>
+            <button class="btn btn-primary tour-next">Add Customers</button>
+          </div>
+        </div>
+        
+        <div class="tour-step" data-step="3" style="display: none;">
+          <div class="step-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <h4>Add Your Vendors</h4>
+          <p>Set up your raw material suppliers to track purchases and manage vendor relationships.</p>
+          <div class="step-actions">
+            <button class="btn btn-outline-secondary tour-back">Back</button>
+            <button class="btn btn-primary tour-next">Add Vendors</button>
+          </div>
+        </div>
+        
+        <div class="tour-step" data-step="4" style="display: none;">
+          <div class="step-icon">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <h4>Create Inventory Batch</h4>
+          <p>Record your first batch of raw materials to start tracking production and inventory.</p>
+          <div class="step-actions">
+            <button class="btn btn-outline-secondary tour-back">Back</button>
+            <button class="btn btn-primary tour-next">Create Batch</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="tour-footer">
+        <div class="tour-dots">
+          <span class="dot active" data-step="1"></span>
+          <span class="dot" data-step="2"></span>
+          <span class="dot" data-step="3"></span>
+          <span class="dot" data-step="4"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Onboarding Tour Styles */
+.tour-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tour-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.tour-container {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.tour-content {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: tourSlideIn 0.3s ease-out;
+}
+
+@keyframes tourSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.tour-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.tour-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.tour-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem;
+}
+
+.tour-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tour-body {
+  padding: 2rem;
+}
+
+.tour-step {
+  text-align: center;
+}
+
+.step-icon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  animation: iconPulse 2s infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.step-icon i {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.tour-step h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.tour-step p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.step-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tour-footer {
+  padding: 1rem 2rem 2rem;
+  text-align: center;
+}
+
+.tour-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background: #667eea;
+  transform: scale(1.2);
+}
+
+.dot:hover {
+  background: #9ca3af;
+}
+
+/* Tour Button Styles */
+.tour-next, .tour-back, .tour-skip {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.tour-next {
+  background: #667eea;
+  color: white;
+}
+
+.tour-next:hover {
+  background: #5a67d8;
+  transform: translateY(-2px);
+}
+
+.tour-back, .tour-skip {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.tour-back:hover, .tour-skip:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tour-container {
+    width: 95%;
+  }
+  
+  .tour-header {
+    padding: 1.5rem;
+  }
+  
+  .tour-body {
+    padding: 1.5rem;
+  }
+  
+  .step-actions {
+    flex-direction: column;
+  }
+  
+  .tour-next, .tour-back, .tour-skip {
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+class OnboardingTour {
+  constructor() {
+    this.currentStep = 1;
+    this.totalSteps = 4;
+    this.tourData = {
+      1: { url: '/products', title: 'Add Products' },
+      2: { url: '/customers', title: 'Add Customers' },
+      3: { url: '/vendors', title: 'Add Vendors' },
+      4: { url: '/stock', title: 'Create Inventory Batch' }
+    };
+    this.init();
+  }
+
+  init() {
+    this.bindEvents();
+    this.updateProgress();
+  }
+
+  bindEvents() {
+    // Next button
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tour-next')) {
+        e.preventDefault();
+        this.nextStep();
+      }
+    });
+
+    // Back button
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tour-back')) {
+        e.preventDefault();
+        this.prevStep();
+      }
+    });
+
+    // Skip button
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tour-skip')) {
+        e.preventDefault();
+        this.skipTour();
+      }
+    });
+
+    // Dot navigation
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('dot')) {
+        const step = parseInt(e.target.dataset.step);
+        this.goToStep(step);
+      }
+    });
+
+    // Close on backdrop click
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('tour-backdrop')) {
+        this.skipTour();
+      }
+    });
+  }
+
+  show() {
+    const tour = document.getElementById('onboarding-tour');
+    if (tour) {
+      tour.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  hide() {
+    const tour = document.getElementById('onboarding-tour');
+    if (tour) {
+      tour.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+
+  nextStep() {
+    if (this.currentStep < this.totalSteps) {
+      this.currentStep++;
+      this.updateStep();
+      this.updateProgress();
+    } else {
+      this.completeTour();
+    }
+  }
+
+  prevStep() {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+      this.updateStep();
+      this.updateProgress();
+    }
+  }
+
+  goToStep(step) {
+    this.currentStep = step;
+    this.updateStep();
+    this.updateProgress();
+  }
+
+  updateStep() {
+    // Hide all steps
+    document.querySelectorAll('.tour-step').forEach(step => {
+      step.style.display = 'none';
+    });
+
+    // Show current step
+    const currentStepEl = document.querySelector(`[data-step="${this.currentStep}"]`);
+    if (currentStepEl) {
+      currentStepEl.style.display = 'block';
+    }
+
+    // Update dots
+    document.querySelectorAll('.dot').forEach(dot => {
+      dot.classList.remove('active');
+    });
+    const currentDot = document.querySelector(`.dot[data-step="${this.currentStep}"]`);
+    if (currentDot) {
+      currentDot.classList.add('active');
+    }
+
+    // Update button text for last step
+    const nextBtn = document.querySelector('.tour-next');
+    if (nextBtn) {
+      if (this.currentStep === this.totalSteps) {
+        nextBtn.textContent = 'Complete Setup';
+      } else {
+        const stepData = this.tourData[this.currentStep + 1];
+        nextBtn.textContent = stepData ? stepData.title : 'Next';
+      }
+    }
+  }
+
+  updateProgress() {
+    const progress = (this.currentStep / this.totalSteps) * 100;
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+
+    if (progressFill) {
+      progressFill.style.width = `${progress}%`;
+    }
+
+    if (progressText) {
+      progressText.textContent = `Step ${this.currentStep} of ${this.totalSteps}`;
+    }
+  }
+
+  skipTour() {
+    this.markTourCompleted();
+    this.hide();
+  }
+
+  completeTour() {
+    this.markTourCompleted();
+    this.hide();
+    
+    // Show completion message
+    this.showCompletionMessage();
+  }
+
+  markTourCompleted() {
+    // Mark tour as completed in user profile
+    fetch('/api/mark-tour-completed', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ completed: true })
+    }).catch(error => {
+      console.log('Tour completion not tracked:', error);
+    });
+  }
+
+  showCompletionMessage() {
+    // Create a toast notification
+    const toast = document.createElement('div');
+    toast.className = 'tour-completion-toast';
+    toast.innerHTML = `
+      <div class="toast-content">
+        <i class="fas fa-check-circle"></i>
+        <span>Great! You're all set up. Start by adding your first products!</span>
+      </div>
+    `;
+    
+    // Add toast styles
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      z-index: 10000;
+      animation: slideInRight 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Remove toast after 5 seconds
+    setTimeout(() => {
+      toast.style.animation = 'slideOutRight 0.3s ease-out';
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 300);
+    }, 5000);
+  }
+}
+
+// Initialize tour when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  window.onboardingTour = new OnboardingTour();
+});
+
+// Function to start the tour (call this after account creation)
+function startOnboardingTour() {
+  if (window.onboardingTour) {
+    window.onboardingTour.show();
+  }
+}
+
+// Add CSS for toast animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  
+  .tour-completion-toast .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .tour-completion-toast i {
+    font-size: 1.25rem;
+  }
+`;
+document.head.appendChild(style);
+</script>
