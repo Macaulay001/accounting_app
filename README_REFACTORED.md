@@ -106,7 +106,7 @@ CREDIT: 1320 - Finished Goods Inventory   ₦1,200
 ### **1. Installation**
 ```bash
 # Install dependencies
-pip install -r requirements_updated.txt
+pip install -r requirements.txt
 
 # Set up environment variables
 cp .env.example .env

@@ -11,7 +11,7 @@
 
 2. **Install New Dependencies**
    ```bash
-   pip install -r requirements_updated.txt
+   pip install -r requirements.txt
    ```
 
 ### **Phase 2: Data Migration**

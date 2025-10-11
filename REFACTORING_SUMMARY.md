@@ -111,7 +111,7 @@ accounting_app/
 │   └── accounting-dashboard.css  # Professional styling
 ├── app.py            # New main application
 ├── config.py                    # Configuration management
-└── requirements_updated.txt     # Updated dependencies
+└── requirements.txt     # Updated dependencies
 ```
 
 ## 🧮 **Chart of Accounts Implementation**
