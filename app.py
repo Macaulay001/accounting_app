@@ -1536,7 +1536,7 @@ def setup_business():
         flash("Business details saved successfully! Redirecting to dashboard...", "success")
         return redirect(url_for("dashboard"))
 
-    return render_template("setup_business.html")
+    return render_template("setup_business.html", user=pending_user)
 
 @app.route('/terms')
 def terms():
@@ -2234,4 +2234,4 @@ def financial_summary_route():
 # Main Entry Point
 # ----------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
