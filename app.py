@@ -86,7 +86,18 @@ app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Initialize Firebase Admin SDK and Firestore client
-cred = credentials.Certificate("firebase-auth.json")
+import json
+
+# Get Firebase credentials from environment variable
+firebase_auth_json = os.getenv('FIREBASE_AUTH_JSON')
+if firebase_auth_json:
+    # Parse JSON string from environment variable
+    firebase_creds = json.loads(firebase_auth_json)
+    cred = credentials.Certificate(firebase_creds)
+else:
+    # Fallback to file (for local development)
+    cred = credentials.Certificate("firebase-auth.json")
+
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -2234,4 +2245,5 @@ def financial_summary_route():
 # Main Entry Point
 # ----------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # app.run(debug=True, port=5001)
+    app.run(debug=False)
