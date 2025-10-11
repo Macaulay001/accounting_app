@@ -1,0 +1,52 @@
+{% extends "layout_accounting.html" %}
+{% block content %}
+<h2>Edit Product</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Edit Product Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('edit_product', product_id=product['id']) }}">
+            <div class="mb-3">
+                <label for="product_name" class="form-label">Product Name</label>
+                <input type="text" class="form-control" id="product_name" name="product_name" required value="{{ product['name'] }}">
+            </div>
+            <div class="mb-3">
+                <label for="product_category" class="form-label">Category</label>
+                <select class="form-select" id="product_category" name="product_category">
+                    <option value="ponmo" {% if product['category'] == 'ponmo' %}selected{% endif %}>Ponmo</option>
+                    <option value="raw_materials" {% if product['category'] == 'raw_materials' %}selected{% endif %}>Raw Materials</option>
+                    <option value="processing" {% if product['category'] == 'processing' %}selected{% endif %}>Processing</option>
+                    <option value="other" {% if product['category'] == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="product_wholesale" class="form-label">Wholesale Price (Owo) - ₦</label>
+                <input type="number" class="form-control" id="product_wholesale" name="product_wholesale" step="0.01" required value="{{ product['wholesale_price'] or 0 }}">
+            </div>
+            <div class="mb-3">
+                <label for="product_retail" class="form-label">Retail Price (Piece) - ₦</label>
+                <input type="number" class="form-control" id="product_retail" name="product_retail" step="0.01" required value="{{ product['retail_price'] or 0 }}">
+            </div>
+            <div class="mb-3">
+                <label for="product_unit" class="form-label">Unit of Measure</label>
+                <select class="form-select" id="product_unit" name="product_unit">
+                    <option value="piece" {% if product['unit_of_measure'] == 'piece' %}selected{% endif %}>Piece</option>
+                    <option value="kg" {% if product['unit_of_measure'] == 'kg' %}selected{% endif %}>Kilogram</option>
+                    <option value="lb" {% if product['unit_of_measure'] == 'lb' %}selected{% endif %}>Pound</option>
+                    <option value="dozen" {% if product['unit_of_measure'] == 'dozen' %}selected{% endif %}>Dozen</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="product_description" class="form-label">Description</label>
+                <textarea class="form-control" id="product_description" name="product_description" rows="2">{{ product['description'] or '' }}</textarea>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Update Product</button>
+                <a href="{{ url_for('products_route') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

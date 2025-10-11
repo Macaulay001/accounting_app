@@ -1,0 +1,168 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Edit Inventory Batch - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">Edit Inventory Batch: {{ batch['id'][:8] }}...</h1>
+
+    <!-- Edit Batch Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Edit Inventory Batch Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('edit_batch', batch_id=batch['id']) }}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="purchase_date" class="form-label">Purchase Date</label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date" 
+                                   value="{{ batch['purchase_date'].strftime('%Y-%m-%d') if batch['purchase_date'] else current_date.strftime('%Y-%m-%d') }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="vendor_id" class="form-label">Vendor</label>
+                            <select class="form-select" id="vendor_id" name="vendor_id" required>
+                                <option value="" disabled>Select Vendor</option>
+                                {% for vendor in vendors %}
+                                    <option value="{{ vendor['id'] }}" {% if vendor['id'] == batch['vendor_id'] %}selected{% endif %}>
+                                        {{ vendor['name'] }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="raw_material_type" class="form-label">Raw Material Type</label>
+                            <select id="raw_material_type" name="raw_material_type" class="form-select" required>
+                                <option value="cow_skin" {% if batch['raw_material_type'] == 'cow_skin' %}selected{% endif %}>Cow Skin</option>
+                                <option value="goat_skin" {% if batch['raw_material_type'] == 'goat_skin' %}selected{% endif %}>Goat Skin</option>
+                                <option value="other" {% if batch['raw_material_type'] == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="reference" class="form-label">Reference/Invoice Number</label>
+                            <input type="text" class="form-control" id="reference" name="reference" 
+                                   value="{{ batch.get('reference', '') }}" placeholder="e.g., INV-2024-001">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="total_ile" class="form-label">Number of Ile Packs</label>
+                            <input type="number" class="form-control" id="total_ile" name="total_ile" 
+                                   min="1" value="{{ batch['total_ile'] }}" required onchange="calculateTotalPieces()">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="pieces_per_ile" class="form-label">Pieces per Ile</label>
+                            <input type="number" class="form-control" id="pieces_per_ile" name="pieces_per_ile" 
+                                   min="1" value="{{ batch['pieces_per_ile'] }}" required onchange="calculateTotalPieces()">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="total_pieces_display" class="form-label">Total Pieces</label>
+                            <input type="text" class="form-control" id="total_pieces_display" readonly 
+                                   value="{{ batch['total_pieces'] }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="purchase_cost" class="form-label">Total Cost (₦)</label>
+                            <input type="number" class="form-control" id="purchase_cost" name="purchase_cost" 
+                                   step="0.01" min="0" value="{{ batch['purchase_cost'] }}" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select id="payment_method" name="payment_method" class="form-select" required>
+                                <option value="accounts_payable" {% if batch.get('payment_method') == 'accounts_payable' %}selected{% endif %}>On Credit (Accounts Payable)</option>
+                                <option value="cash" {% if batch.get('payment_method') == 'cash' %}selected{% endif %}>Cash Payment</option>
+                                <option value="bank_transfer" {% if batch.get('payment_method') == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Current Status</label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-{% if batch['status'] == 'raw_material' %}secondary{% elif batch['status'] == 'in_production' %}warning{% elif batch['status'] == 'finished_goods' %}info{% elif batch['status'] == 'sold' %}success{% else %}light{% endif %}">
+                                    {{ batch['status'].replace('_', ' ').title() }}
+                                </span>
+                                <small class="text-muted ms-2">(Status cannot be changed here)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Remaining Pieces</label>
+                            <div class="form-control-plaintext">
+                                <span class="badge bg-{% if batch['current_pieces'] > 0 %}success{% else %}danger{% endif %}">
+                                    {{ batch['current_pieces'] }} pieces
+                                </span>
+                                <small class="text-muted ms-2">(Updated automatically based on sales)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Created</label>
+                            <div class="form-control-plaintext">
+                                {{ batch['created_at'].strftime('%Y-%m-%d %H:%M') if batch['created_at'] else 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update Batch
+                        </button>
+                        <a href="{{ url_for('inventory_batches_route') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('batch_details_route', batch_id=batch['id']) }}" class="btn btn-outline-info">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateTotalPieces() {
+    const totalIle = parseInt(document.getElementById('total_ile').value) || 0;
+    const piecesPerIle = parseInt(document.getElementById('pieces_per_ile').value) || 0;
+    const totalPieces = totalIle * piecesPerIle;
+    document.getElementById('total_pieces_display').value = totalPieces;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculateTotalPieces();
+});
+</script>
+{% endblock %}

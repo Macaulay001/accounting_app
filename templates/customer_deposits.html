@@ -1,0 +1,340 @@
+{% extends "layout_accounting.html" %}
+
+{% block title %}Customer Deposits{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-hand-holding-usd me-2"></i>Customer Deposits & Account Management</h2>
+                <div>
+                    <a href="{{ url_for('sales_route') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-shopping-cart me-1"></i>Record Sale
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Customer Deposit Form -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Record Customer Deposit
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="depositForm">
+                        <div class="mb-3">
+                            <label for="customer_id" class="form-label">Customer *</label>
+                            <select class="form-select" id="customer_id" name="customer_id" required>
+                                <option value="">Select Customer</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer['id'] }}">{{ customer['name'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Deposit Amount *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₦</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.01" min="0" required placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deposit_date" class="form-label">Deposit Date *</label>
+                            <input type="date" class="form-control" id="deposit_date" name="deposit_date" 
+                                   value="{{ current_date.strftime('%Y-%m-%d') }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-select" id="payment_method" name="payment_method">
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="check">Check</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="reference" class="form-label">Reference Number</label>
+                            <input type="text" class="form-control" id="reference" name="reference" 
+                                   placeholder="Optional reference number">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="Additional notes about this deposit"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-save me-2"></i>Record Deposit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Account Balances -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Customer Account Balances
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if customer_balances %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Customer</th>
+                                    <th class="text-end">Current Balance</th>
+                                    <th class="text-end">Total Deposits</th>
+                                    <th class="text-end">Deposits Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for balance in customer_balances %}
+                                <tr>
+                                    <td>
+                                        {% set customer_name = '' %}
+                                        {% for customer in customers %}
+                                            {% if customer['id'] == balance['customer_id'] %}
+                                                {% set customer_name = customer['name'] %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ customer_name }}
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge bg-{% if balance['current_balance'] > 0 %}success{% else %}secondary{% endif %}">
+                                            {{ balance['current_balance']|currency }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">{{ balance['total_deposits']|currency }}</td>
+                                    <td class="text-end">{{ balance['deposit_count'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No customer deposits recorded yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Use Customer Deposits for Sales -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Use Deposits for Sales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Apply customer deposits to sales transactions</p>
+                    <form method="POST" action="{{ url_for('use_customer_deposit_route') }}" id="useDepositForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="use_customer_id" class="form-label">Customer</label>
+                                    <select class="form-select" id="use_customer_id" name="customer_id" required onchange="updateCustomerBalance()">
+                                        <option value="">Select Customer</option>
+                                        {% for customer in customers %}
+                                        <option value="{{ customer['id'] }}">{{ customer['name'] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sale_amount" class="form-label">Sale Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₦</span>
+                                        <input type="number" class="form-control" id="sale_amount" name="sale_amount" 
+                                               step="0.01" min="0" required placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="invoice_number" class="form-label">Invoice Number</label>
+                                    <input type="text" class="form-control" id="invoice_number" name="invoice_number" 
+                                           placeholder="INV-20240101-001">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sale_date" class="form-label">Sale Date</label>
+                                    <input type="date" class="form-control" id="sale_date" name="sale_date" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Customer Balance Display -->
+                        <div class="alert alert-info" id="balance_info" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Available Balance:</strong>
+                                    <span id="available_balance" class="ms-2">₦0.00</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>After Sale:</strong>
+                                    <span id="remaining_balance" class="ms-2">₦0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100" id="use_deposit_btn" disabled>
+                            <i class="fas fa-check me-2"></i>Use Deposit for Sale
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Deposits -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Deposits
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_deposits %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for deposit in recent_deposits %}
+                                <tr>
+                                    <td>{{ deposit['deposit_date'].strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% set customer_name = '' %}
+                                        {% for customer in customers %}
+                                            {% if customer['id'] == deposit['customer_id'] %}
+                                                {% set customer_name = customer['name'] %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ customer_name }}
+                                    </td>
+                                    <td class="text-end">{{ deposit['amount']|currency }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ deposit['payment_method'].replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ deposit['reference'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-receipt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No recent deposits</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default for both forms
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('deposit_date').value = today;
+    document.getElementById('sale_date').value = today;
+    
+    // Format currency inputs
+    const amountInput = document.getElementById('amount');
+    const saleAmountInput = document.getElementById('sale_amount');
+    
+    amountInput.addEventListener('input', function() {
+        if (this.value) {
+            this.value = parseFloat(this.value).toFixed(2);
+        }
+    });
+    
+    saleAmountInput.addEventListener('input', function() {
+        if (this.value) {
+            this.value = parseFloat(this.value).toFixed(2);
+            updateCustomerBalance();
+        }
+    });
+});
+
+// Customer balance data (would typically be fetched from API)
+const customerBalances = {
+    {% for balance in customer_balances %}
+    "{{ balance.customer_id }}": {{ balance.current_balance }},
+    {% endfor %}
+};
+
+function updateCustomerBalance() {
+    const customerId = document.getElementById('use_customer_id').value;
+    const saleAmount = parseFloat(document.getElementById('sale_amount').value) || 0;
+    const balanceInfo = document.getElementById('balance_info');
+    const useDepositBtn = document.getElementById('use_deposit_btn');
+    
+    if (customerId && customerBalances[customerId] !== undefined) {
+        const availableBalance = customerBalances[customerId];
+        const remainingBalance = availableBalance - saleAmount;
+        
+        document.getElementById('available_balance').textContent = formatCurrency(availableBalance);
+        document.getElementById('remaining_balance').textContent = formatCurrency(remainingBalance);
+        
+        balanceInfo.style.display = 'block';
+        
+        // Enable/disable button based on sufficient balance
+        if (saleAmount > 0 && saleAmount <= availableBalance) {
+            useDepositBtn.disabled = false;
+            useDepositBtn.innerHTML = '<i class="fas fa-check me-2"></i>Use Deposit for Sale';
+        } else if (saleAmount > availableBalance) {
+            useDepositBtn.disabled = true;
+            useDepositBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Insufficient Balance';
+        } else {
+            useDepositBtn.disabled = true;
+            useDepositBtn.innerHTML = '<i class="fas fa-check me-2"></i>Use Deposit for Sale';
+        }
+    } else {
+        balanceInfo.style.display = 'none';
+        useDepositBtn.disabled = true;
+    }
+}
+
+function formatCurrency(amount) {
+    return '₦' + parseFloat(amount).toLocaleString('en-NG', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+</script>
+{% endblock %}

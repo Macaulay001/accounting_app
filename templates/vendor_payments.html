@@ -1,0 +1,256 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Vendor Payments - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card me-2"></i>Vendor Payment Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Payment Recording Form -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="form-label-accounting mb-3">Record New Payment</h6>
+                        <form method="post" action="{{ url_for('vendor_payments_route') }}" class="form-accounting">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="batch_id" class="form-label-accounting">Inventory Batch</label>
+                                        <select id="batch_id" name="batch_id" class="form-control-accounting" required onchange="updateBatchInfo()">
+                                            <option value="" disabled selected>Select Batch</option>
+                                            {% for batch in batches %}
+                                            <option value="{{ batch['id'] }}" 
+                                                    data-vendor="{{ batch['vendor_name'] }}"
+                                                    data-cost="{{ batch['purchase_cost'] }}"
+                                                    data-paid="{{ batch_payment_status[loop.index0]['total_paid'] }}">
+                                                {{ batch['vendor_name'] }} - {{ batch['raw_material_type'].replace('_', ' ').title() }} 
+                                                ({{ batch['purchase_cost']|currency }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="payment_amount" class="form-label-accounting">Payment Amount (₦)</label>
+                                        <input type="number" id="payment_amount" name="payment_amount" 
+                                               class="form-control-accounting" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="payment_date" class="form-label-accounting">Payment Date</label>
+                                        <input type="date" id="payment_date" name="payment_date" 
+                                               class="form-control-accounting" required 
+                                               value="{{ current_date.strftime('%Y-%m-%d') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="payment_method" class="form-label-accounting">Payment Method</label>
+                                        <select id="payment_method" name="payment_method" class="form-control-accounting" required>
+                                            <option value="cash" selected>Cash</option>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="check">Check</option>
+                                            <option value="mobile_money">Mobile Money</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="reference" class="form-label-accounting">Reference</label>
+                                        <input type="text" id="reference" name="reference" 
+                                               class="form-control-accounting" placeholder="Check #, Transfer ref, etc.">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label-accounting">Notes (Optional)</label>
+                                <textarea id="notes" name="notes" class="form-control-accounting" rows="2" 
+                                          placeholder="Additional payment details..."></textarea>
+                            </div>
+                            
+                            <!-- Batch Payment Info -->
+                            <div id="batch-info" class="alert alert-info" style="display: none;">
+                                <h6>Batch Payment Information</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>Vendor:</strong> <span id="batch-vendor"></span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Total Cost:</strong> ₦<span id="batch-cost"></span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Amount Paid:</strong> ₦<span id="batch-paid"></span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Outstanding:</strong> ₦<span id="batch-outstanding"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Record Payment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Payment Status Overview -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="form-label-accounting mb-3">Payment Status Overview</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th>Batch ID</th>
+                                        <th>Material Type</th>
+                                        <th>Total Cost</th>
+                                        <th>Amount Paid</th>
+                                        <th>Outstanding</th>
+                                        <th>Payment %</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for status in batch_payment_status %}
+                                    <tr>
+                                        <td>{{ status['batch']['vendor_name'] }}</td>
+                                        <td><code>{{ status['batch']['id'][:8] }}...</code></td>
+                                        <td>{{ status['batch']['raw_material_type'].replace('_', ' ').title() }}</td>
+                                        <td>{{ status['batch']['purchase_cost']|currency }}</td>
+                                        <td>{{ status['total_paid']|currency }}</td>
+                                        <td class="{% if status['outstanding_balance'] > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ status['outstanding_balance']|currency }}
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar {% if status['is_fully_paid'] %}bg-success{% else %}bg-warning{% endif %}" 
+                                                     style="width: {{ status['payment_percentage'] }}%">
+                                                    {{ "%.1f"|format(status['payment_percentage']) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if status['is_fully_paid'] %}
+                                                <span class="badge bg-success">Fully Paid</span>
+                                            {% elif status['total_paid'] > 0 %}
+                                                <span class="badge bg-warning">Partial</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Unpaid</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Payments -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="form-label-accounting mb-3">Recent Payments</h6>
+                        {% if recent_payments %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Vendor</th>
+                                        <th>Batch ID</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Reference</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in recent_payments %}
+                                    <tr>
+                                        <td>{{ payment['payment_date'].strftime('%Y-%m-%d') if payment['payment_date'] else 'N/A' }}</td>
+                                        <td>
+                                            {% for batch in batches %}
+                                                {% if batch['id'] == payment['batch_id'] %}
+                                                    {{ batch['vendor_name'] }}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td><code>{{ payment['batch_id'][:8] }}...</code></td>
+                                        <td>{{ payment['payment_amount']|currency }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if payment['payment_method'] == 'cash' %}success{% elif payment['payment_method'] == 'bank_transfer' %}primary{% elif payment['payment_method'] == 'check' %}info{% else %}secondary{% endif %}">
+                                                {{ payment['payment_method'].replace('_', ' ').title() }}
+                                            </span>
+                                        </td>
+                                        <td>{{ payment['reference'] or 'N/A' }}</td>
+                                        <td>{{ payment['notes'] or 'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No payments recorded yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+function updateBatchInfo() {
+    const batchSelect = document.getElementById('batch_id');
+    const batchInfo = document.getElementById('batch-info');
+    const batchVendor = document.getElementById('batch-vendor');
+    const batchCost = document.getElementById('batch-cost');
+    const batchPaid = document.getElementById('batch-paid');
+    const batchOutstanding = document.getElementById('batch-outstanding');
+    
+    if (batchSelect.value) {
+        const selectedOption = batchSelect.selectedOptions[0];
+        const vendor = selectedOption.dataset.vendor;
+        const cost = parseFloat(selectedOption.dataset.cost);
+        const paid = parseFloat(selectedOption.dataset.paid);
+        const outstanding = cost - paid;
+        
+        batchVendor.textContent = vendor;
+        batchCost.textContent = cost.toFixed(2);
+        batchPaid.textContent = paid.toFixed(2);
+        batchOutstanding.textContent = outstanding.toFixed(2);
+        
+        batchInfo.style.display = 'block';
+        
+        // Set max payment amount to outstanding balance
+        const paymentAmountInput = document.getElementById('payment_amount');
+        paymentAmountInput.max = outstanding;
+        paymentAmountInput.placeholder = `Max: ₦${outstanding.toFixed(2)}`;
+    } else {
+        batchInfo.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateBatchInfo();
+});
+</script>
+{% endblock %}

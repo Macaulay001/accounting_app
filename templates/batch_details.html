@@ -1,0 +1,137 @@
+{% extends "layout_accounting.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Batch Details: {{ batch['vendor_name'] }}</h1>
+    <a href="{{ url_for('inventory_batches_route') }}" class="btn btn-secondary">← Back to Batches</a>
+</div>
+
+<!-- Batch Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Total Ile Packs</h5>
+                <h3 class="text-primary">{{ batch['total_ile'] }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Total Pieces</h5>
+                <h3 class="text-info">{{ batch['total_pieces'] }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Remaining Pieces</h5>
+                <h3 class="text-{% if batch['current_pieces'] > 0 %}success{% else %}danger{% endif %}">{{ batch['current_pieces'] }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Purchase Cost</h5>
+                <h3 class="text-warning">₦{{ "{:,.2f}".format(batch['purchase_cost']) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profitability Metrics -->
+{% if profitability %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Profitability Metrics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Cost per Piece:</strong> ₦{{ "{:.2f}".format(profitability['cost_per_piece']) }}
+            </div>
+            <div class="col-md-3">
+                <strong>Sold Pieces:</strong> {{ profitability['sold_pieces'] }}
+            </div>
+            <div class="col-md-3">
+                <strong>Completion Rate:</strong> {{ "{:.1f}".format(profitability['completion_rate']) }}%
+            </div>
+            <div class="col-md-3">
+                <strong>Status:</strong> 
+                <span class="badge bg-{% if batch['status'] == 'raw_material' %}secondary{% elif batch['status'] == 'in_production' %}warning{% elif batch['status'] == 'finished_goods' %}info{% elif batch['status'] == 'sold' %}success{% else %}light{% endif %}">
+                    {{ batch['status'].replace('_', ' ').title() }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Ile Groups Details -->
+<div class="card">
+    <div class="card-header">
+        <h5>Ile Groups Breakdown</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Ile Number</th>
+                        <th>Total Pieces</th>
+                        <th>Remaining Pieces</th>
+                        <th>Status</th>
+                        <th>Production Date</th>
+                        <th>Completion Date</th>
+                        <th>Sales Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ile_group in batch['ile_groups'] %}
+                    <tr>
+                        <td><strong>Ile {{ ile_group['ile_number'] }}</strong></td>
+                        <td>{{ ile_group['pieces'] }}</td>
+                        <td>
+                            <span class="badge bg-{% if ile_group['remaining_pieces'] > 0 %}success{% else %}danger{% endif %}">
+                                {{ ile_group['remaining_pieces'] }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if ile_group['status'] == 'raw_material' %}secondary{% elif ile_group['status'] == 'in_production' %}warning{% elif ile_group['status'] == 'finished_goods' %}info{% elif ile_group['status'] == 'sold' %}success{% else %}light{% endif %}">
+                                {{ ile_group['status'].replace('_', ' ').title() }}
+                            </span>
+                        </td>
+                        <td>{{ ile_group['production_date'].strftime('%Y-%m-%d') if ile_group['production_date'] else 'N/A' }}</td>
+                        <td>{{ ile_group['completion_date'].strftime('%Y-%m-%d') if ile_group['completion_date'] else 'N/A' }}</td>
+                        <td>{{ ile_group['sales_date'].strftime('%Y-%m-%d') if ile_group['sales_date'] else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Information -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Batch Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Vendor:</strong> {{ batch['vendor_name'] }}</p>
+                <p><strong>Material Type:</strong> {{ batch['raw_material_type'].replace('_', ' ').title() }}</p>
+                <p><strong>Purchase Date:</strong> {{ batch['purchase_date'].strftime('%B %d, %Y') if batch['purchase_date'] else 'N/A' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Batch ID:</strong> <code>{{ batch['id'] }}</code></p>
+                <p><strong>Created:</strong> {{ batch['created_at'].strftime('%B %d, %Y at %I:%M %p') if batch['created_at'] else 'N/A' }}</p>
+                <p><strong>Last Updated:</strong> {{ batch['updated_at'].strftime('%B %d, %Y at %I:%M %p') if batch['updated_at'] else 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

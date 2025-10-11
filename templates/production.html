@@ -1,82 +1,277 @@
-{% extends "layout.html" %}
+{% extends "layout_accounting.html" %}
+{% block title %}Record Production - {{ user.business_name }}{% endblock %}
+
 {% block content %}
-<h2>Record Production</h2>
-<form method="post" action="{{ url_for('production') }}" onsubmit="showLoading()">
-  <!-- Date Input -->
-  <div class="mb-3">
-    <label for="date" class="form-label">Date</label>
-    <input type="date" id="date" name="date" class="form-control" required>
-  </div>
-  
-  <!-- Vendor Selection -->
-  <div class="mb-3">
-    <label for="vendor" class="form-label">Vendor</label>
-    <select id="vendor" name="vendor" class="form-select" required>
-      <option value="" disabled selected>Select Vendor</option>
-      {% for vendor in vendors %}
-      <option value="{{ vendor.id }}">{{ vendor.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  
-  <!-- Current Stock Left (Read-only) -->
-  <div class="mb-3">
-    <label for="current_stock" class="form-label">Current Stock Left</label>
-    <input type="number" id="current_stock" name="current_stock" class="form-control" readonly value="0">
-  </div>
-  
-  <!-- Processed Today Input -->
-  <div class="mb-3">
-    <label for="processed" class="form-label">Stock Processed Today</label>
-    <input type="number" id="processed" name="processed" class="form-control" required>
-  </div>
-  
-  <!-- Remaining Stock (Computed, Read-only) -->
-  <div class="mb-3">
-    <label for="remaining" class="form-label">Remaining Stock</label>
-    <input type="number" id="remaining" name="remaining" class="form-control" readonly value="0">
-  </div>
-  
-  <button type="submit" id="submit-btn" class="btn btn-success">
-    <span id="button-text">Save Production</span>
-    <span id="loading-spinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
-  </button>
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">Record Production Process</h1>
 
-</form>
+    <div class="card">
+        <div class="card-header">
+            <h5>Process Raw Materials</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('production_route') }}">
+                <!-- Production Date -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="production_date" class="form-label">Production Date</label>
+                        <input type="date" class="form-control" id="production_date" name="production_date" 
+                               value="{{ current_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="reference" class="form-label">Reference/Job Number</label>
+                        <input type="text" class="form-control" id="reference" name="reference" 
+                               placeholder="e.g., PROD-2024-001">
+                    </div>
+                </div>
+
+                <!-- Inventory Batch Selection -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="batch_id" class="form-label">Inventory Batch</label>
+                        <select class="form-control" id="batch_id" name="batch_id" required onchange="loadIleGroups()">
+                            <option value="">Select Inventory Batch</option>
+                            {% for batch in batches %}
+                            <option value="{{ batch['id'] }}">
+                                {{ batch['vendor_name'] }} - {{ batch['raw_material_type'].replace('_', ' ').title() }} 
+                                ({{ batch['current_pieces'] }} pieces remaining)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="ile_number" class="form-label">Ile Group</label>
+                        <select class="form-control" id="ile_number" name="ile_number" required>
+                            <option value="">Select Ile Group</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Production Details -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="pieces_processed" class="form-label">Pieces Processed</label>
+                        <input type="number" class="form-control" id="pieces_processed" name="pieces_processed" 
+                               min="1" value="0" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="remaining_pieces" class="form-label">Remaining Pieces</label>
+                        <input type="number" class="form-control" id="remaining_pieces" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="processing_cost" class="form-label">Estimated Processing Cost (₦)</label>
+                        <input type="number" class="form-control" id="processing_cost" name="processing_cost" 
+                               step="0.01" min="0" value="0">
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="alert alert-info mb-3">
+                    <strong>Important:</strong> Processing costs (labor, utilities, materials) should be recorded separately in the <a href="{{ url_for('expenses_route') }}" class="alert-link">Expenses</a> page when purchased. The processing cost here is for tracking purposes only and won't create duplicate accounting entries.
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                    <button type="button" class="btn btn-success" id="submit-btn" onclick="submitForm()">
+                        <i class="fas fa-save me-1"></i>Record Production
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Production Records -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>Recent Production Records</h5>
+        </div>
+        <div class="card-body">
+            {% if production_records %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vendor</th>
+                            <th>Batch ID</th>
+                            <th>Ile Group</th>
+                            <th>Pieces Processed</th>
+                            <th>Processing Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in production_records %}
+                        <tr>
+                            <td>{{ record['production_date'].strftime('%Y-%m-%d') if record['production_date'] else 'N/A' }}</td>
+                            <td>{{ record['vendor_name'] }}</td>
+                            <td><code>{{ record['batch_id'][:8] }}...</code></td>
+                            <td>{{ record['ile_number'] }}</td>
+                            <td>{{ record['pieces_processed'] }}</td>
+                            <td>{{ record['processing_cost']|currency }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteProductionRecord('{{ record['batch_id'] }}', {{ record['ile_number'] }}, '{{ record['vendor_name'] }} - Ile {{ record['ile_number'] }}')"
+                                        title="Delete Production Record">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted">No production records found. Start by recording your first production batch above.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 
 <script>
-  // When vendor is selected, fetch the current stock from the server
-  document.getElementById("vendor").addEventListener("change", function () {
-    var vendorId = this.value;
-    if(vendorId) {
-        fetch("{{ url_for('vendor_stock', vendor_id='') }}" + vendorId)
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById("current_stock").value = data.current_stock || 0;
-          calculateRemaining();
-        })
-        .catch(error => console.error("Error fetching vendor stock:", error));
+// Load ile groups when batch is selected
+function loadIleGroups() {
+    const batchSelect = document.getElementById('batch_id');
+    const ileSelect = document.getElementById('ile_number');
+    
+    // Clear ile groups
+    ileSelect.innerHTML = '<option value="">Select Ile Group</option>';
+    
+    if (batchSelect.value) {
+        const batchId = batchSelect.value;
+        
+        fetch(`/api/batch/${batchId}/ile-groups`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    data.ile_groups.forEach(ileGroup => {
+                        const option = document.createElement('option');
+                        option.value = ileGroup.ile_number;
+                        option.textContent = `Ile ${ileGroup.ile_number} (${ileGroup.remaining_pieces} pieces remaining)`;
+                        option.dataset.remainingPieces = ileGroup.remaining_pieces;
+                        ileSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Error loading ile groups:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     }
-  });
+}
 
-  // When processed input changes, update the remaining stock
-  document.getElementById("processed").addEventListener("input", calculateRemaining);
+// Update remaining pieces when pieces processed changes
+function updateRemainingPieces() {
+    const ileSelect = document.getElementById('ile_number');
+    const piecesProcessedInput = document.getElementById('pieces_processed');
+    const remainingPiecesInput = document.getElementById('remaining_pieces');
+    
+    if (ileSelect.selectedIndex > 0 && piecesProcessedInput.value) {
+        const selectedOption = ileSelect.options[ileSelect.selectedIndex];
+        const totalRemaining = parseInt(selectedOption.dataset.remainingPieces) || 0;
+        const piecesProcessed = parseInt(piecesProcessedInput.value) || 0;
+        
+        if (piecesProcessed > totalRemaining) {
+            alert(`Cannot process ${piecesProcessed} pieces. Only ${totalRemaining} pieces remaining in this ile group.`);
+            piecesProcessedInput.value = totalRemaining;
+            remainingPiecesInput.value = 0;
+        } else {
+            remainingPiecesInput.value = totalRemaining - piecesProcessed;
+        }
+    }
+}
 
-  function calculateRemaining() {
-    var currentStock = parseFloat(document.getElementById("current_stock").value) || 0;
-    var processed = parseFloat(document.getElementById("processed").value) || 0;
-    document.getElementById("remaining").value = currentStock - processed;
-  }
+// Submit form function - using the working test button logic
+function submitForm() {
+    console.log('Submit button clicked');
+    
+    // Get all form fields
+    const productionDate = document.getElementById('production_date');
+    const batchId = document.getElementById('batch_id');
+    const ileNumber = document.getElementById('ile_number');
+    const piecesProcessed = document.getElementById('pieces_processed');
+    const processingCost = document.getElementById('processing_cost');
+    const reference = document.getElementById('reference');
+    
+    console.log('Form field values:', {
+        production_date: productionDate?.value,
+        batch_id: batchId?.value,
+        ile_number: ileNumber?.value,
+        pieces_processed: piecesProcessed?.value,
+        processing_cost: processingCost?.value,
+        reference: reference?.value
+    });
+    
+    // Validate required fields
+    if (!batchId?.value || !ileNumber?.value || !piecesProcessed?.value || !productionDate?.value) {
+        alert('Please fill in all required fields.');
+        return false;
+    }
+    
+    // Show loading state
+    showLoading();
+    
+    // Submit the form
+    const form = document.querySelector('form');
+    if (form) {
+        console.log('Submitting form...');
+        form.submit();
+    }
+}
+
+// Show loading state
+function showLoading() {
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    }
+}
+
+// Delete production record function
+function deleteProductionRecord(batchId, ileNumber, recordDescription) {
+    if (confirm(`Are you sure you want to delete this production record?\n\n${recordDescription}\n\nThis action cannot be undone.`)) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete-production-record/${batchId}/${ileNumber}`;
+        
+        // Add CSRF token if needed
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken.getAttribute('content');
+            form.appendChild(csrfInput);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Add event listeners when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const ileSelect = document.getElementById('ile_number');
+    const piecesProcessedInput = document.getElementById('pieces_processed');
+    
+    if (ileSelect) {
+        ileSelect.addEventListener('change', function() {
+            piecesProcessedInput.value = 0;
+            updateRemainingPieces();
+        });
+    }
+    
+    if (piecesProcessedInput) {
+        piecesProcessedInput.addEventListener('input', updateRemainingPieces);
+    }
+});
 </script>
-<script>
-    function showLoading() {
-      // Disable the button to prevent multiple submissions
-      document.getElementById("submit-btn").disabled = true;
-      
-      // Hide text and show loading spinner
-      document.getElementById("button-text").style.display = "none";
-      document.getElementById("loading-spinner").style.display = "inline-block";
-    }
-  </script>
-  
 {% endblock %}

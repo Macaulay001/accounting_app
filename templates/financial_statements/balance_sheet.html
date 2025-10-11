@@ -1,0 +1,472 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Balance Sheet - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<!-- Balance Sheet Header -->
+<div class="dashboard-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-balance-scale me-3"></i>
+                    Balance Sheet
+                </h1>
+                <p class="mb-0 fs-5">
+                    <i class="fas fa-calendar me-2"></i>
+                    As of {{ balance_sheet.as_of_date.strftime('%B %d, %Y') }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-light" onclick="exportBalanceSheet()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter by Date
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="as_of_date" class="form-label">As of Date</label>
+                        <input type="date" class="form-control" id="as_of_date" name="as_of_date" 
+                               value="{{ balance_sheet.as_of_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Generate
+                        </button>
+                        <a href="{{ url_for('balance_sheet_route') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Balance Sheet Summary -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon assets mb-2">
+                    <i class="fas fa-building fa-2x"></i>
+                </div>
+                <div class="summary-value text-primary">{{ balance_sheet.assets.total_assets|currency }}</div>
+                <div class="summary-label">Total Assets</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon liabilities mb-2">
+                    <i class="fas fa-credit-card fa-2x"></i>
+                </div>
+                <div class="summary-value text-warning">{{ balance_sheet.liabilities.total_liabilities|currency }}</div>
+                <div class="summary-label">Total Liabilities</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon equity mb-2">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+                <div class="summary-value text-success">{{ balance_sheet.equity.total_equity|currency }}</div>
+                <div class="summary-label">Total Equity</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Balance Sheet Status -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Balance Sheet Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="balance-item">
+                            <div class="balance-label">Assets</div>
+                            <div class="balance-value">{{ balance_sheet.assets.total_assets|currency }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="balance-item">
+                            <div class="balance-label">Liabilities + Equity</div>
+                            <div class="balance-value">{{ balance_sheet.total_liabilities_and_equity|currency }}</div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="balance-status">
+                            <div class="status-label">Balance Status</div>
+                            <div class="status-value">
+                                {% if balance_sheet.is_balanced %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check-circle me-1"></i>Balanced
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Out of Balance
+                                        <br><small>Difference: {{ balance_sheet.balancing_difference|currency }}</small>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Balance Sheet Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Balance Sheet Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-accounting">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Account</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ASSETS SECTION -->
+                            <tr class="table-primary">
+                                <th colspan="2">ASSETS</th>
+                            </tr>
+                            
+                            <!-- Current Assets -->
+                            <tr class="table-info">
+                                <th class="ps-3">Current Assets</th>
+                                <th class="text-end">{{ balance_sheet.assets.total_current_assets|currency }}</th>
+                            </tr>
+                            {% for asset in balance_sheet.assets.current_assets %}
+                            <tr>
+                                <td class="ps-5">{{ asset.account_name }}</td>
+                                <td class="text-end">{{ asset.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Fixed Assets -->
+                            <tr class="table-info">
+                                <th class="ps-3">Fixed Assets</th>
+                                <th class="text-end">{{ balance_sheet.assets.total_fixed_assets|currency }}</th>
+                            </tr>
+                            {% for asset in balance_sheet.assets.fixed_assets %}
+                            <tr>
+                                <td class="ps-5">{{ asset.account_name }}</td>
+                                <td class="text-end">{{ asset.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Total Assets -->
+                            <tr class="table-primary">
+                                <th>TOTAL ASSETS</th>
+                                <th class="text-end">{{ balance_sheet.assets.total_assets|currency }}</th>
+                            </tr>
+                            
+                            <!-- LIABILITIES SECTION -->
+                            <tr class="table-warning">
+                                <th colspan="2">LIABILITIES</th>
+                            </tr>
+                            
+                            <!-- Current Liabilities -->
+                            <tr class="table-light">
+                                <th class="ps-3">Current Liabilities</th>
+                                <th class="text-end">{{ balance_sheet.liabilities.total_current_liabilities|currency }}</th>
+                            </tr>
+                            {% for liability in balance_sheet.liabilities.current_liabilities %}
+                            <tr>
+                                <td class="ps-5">{{ liability.account_name }}</td>
+                                <td class="text-end">{{ liability.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Long-term Liabilities -->
+                            {% if balance_sheet.liabilities.long_term_liabilities %}
+                            <tr class="table-light">
+                                <th class="ps-3">Long-term Liabilities</th>
+                                <th class="text-end">{{ balance_sheet.liabilities.total_long_term_liabilities|currency }}</th>
+                            </tr>
+                            {% for liability in balance_sheet.liabilities.long_term_liabilities %}
+                            <tr>
+                                <td class="ps-5">{{ liability.account_name }}</td>
+                                <td class="text-end">{{ liability.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                            
+                            <!-- Total Liabilities -->
+                            <tr class="table-warning">
+                                <th>TOTAL LIABILITIES</th>
+                                <th class="text-end">{{ balance_sheet.liabilities.total_liabilities|currency }}</th>
+                            </tr>
+                            
+                            <!-- EQUITY SECTION -->
+                            <tr class="table-success">
+                                <th colspan="2">EQUITY</th>
+                            </tr>
+                            {% for equity in balance_sheet.equity.accounts %}
+                            <tr>
+                                <td class="ps-3">{{ equity.account_name }}</td>
+                                <td class="text-end">{{ equity.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Total Equity -->
+                            <tr class="table-success">
+                                <th>TOTAL EQUITY</th>
+                                <th class="text-end">{{ balance_sheet.equity.total_equity|currency }}</th>
+                            </tr>
+                            
+                            <!-- Total Liabilities and Equity -->
+                            <tr class="table-dark">
+                                <th>TOTAL LIABILITIES & EQUITY</th>
+                                <th class="text-end">{{ balance_sheet.total_liabilities_and_equity|currency }}</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Ratios -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Financial Ratios
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="ratio-item">
+                            <div class="ratio-label">Current Ratio</div>
+                            <div class="ratio-value">
+                                {% if balance_sheet.liabilities.total_current_liabilities > 0 %}
+                                    {{ "%.2f"|format(balance_sheet.assets.total_current_assets / balance_sheet.liabilities.total_current_liabilities) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="ratio-description">Current Assets ÷ Current Liabilities</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="ratio-item">
+                            <div class="ratio-label">Debt-to-Equity Ratio</div>
+                            <div class="ratio-value">
+                                {% if balance_sheet.equity.total_equity > 0 %}
+                                    {{ "%.2f"|format(balance_sheet.liabilities.total_liabilities / balance_sheet.equity.total_equity) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="ratio-description">Total Liabilities ÷ Total Equity</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="ratio-item">
+                            <div class="ratio-label">Equity Ratio</div>
+                            <div class="ratio-value">
+                                {% if balance_sheet.assets.total_assets > 0 %}
+                                    {{ "%.1f"|format(balance_sheet.equity.total_equity / balance_sheet.assets.total_assets * 100) }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="ratio-description">Total Equity ÷ Total Assets</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generated Info -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="text-muted text-center">
+            <small>
+                <i class="fas fa-clock me-1"></i>
+                Generated on {{ balance_sheet.generated_at.strftime('%B %d, %Y at %I:%M %p') }}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportBalanceSheet() {
+    // TODO: Implement CSV/Excel export functionality
+    alert('Export functionality coming soon!');
+}
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('printing');
+});
+</script>
+
+<style>
+@media print {
+    .btn-group, .card-header-accounting .btn {
+        display: none !important;
+    }
+    
+    .card-accounting {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .table-accounting {
+        font-size: 12px;
+    }
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.summary-icon.assets {
+    background: linear-gradient(135deg, #007bff, #6f42c1);
+    color: white;
+}
+
+.summary-icon.liabilities {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.summary-icon.equity {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.balance-item {
+    margin-bottom: 1rem;
+}
+
+.balance-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.balance-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #007bff;
+}
+
+.balance-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.status-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.status-value {
+    text-align: right;
+}
+
+.ratio-item {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.ratio-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.ratio-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #007bff;
+    margin-bottom: 0.25rem;
+}
+
+.ratio-description {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,333 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Trial Balance - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<!-- Trial Balance Header -->
+<div class="dashboard-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-balance-scale me-3"></i>
+                    Trial Balance
+                </h1>
+                <p class="mb-0 fs-5">
+                    <i class="fas fa-calendar me-2"></i>
+                    As of {{ trial_balance.as_of_date.strftime('%B %d, %Y') }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-light" onclick="exportTrialBalance()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter by Date
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="as_of_date" class="form-label">As of Date</label>
+                        <input type="date" class="form-control" id="as_of_date" name="as_of_date" 
+                               value="{{ trial_balance.as_of_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Generate
+                        </button>
+                        <a href="{{ url_for('trial_balance_route') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trial Balance Summary -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Debits</div>
+                            <div class="summary-value text-primary">{{ trial_balance.total_debits|currency }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="summary-item">
+                            <div class="summary-label">Total Credits</div>
+                            <div class="summary-value text-primary">{{ trial_balance.total_credits|currency }}</div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="summary-item">
+                            <div class="summary-label">Balance Status</div>
+                            <div class="summary-value">
+                                {% if trial_balance.is_balanced %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Balanced
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Out of Balance
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Account Types
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="account-type-summary">
+                    {% set asset_total = 0 %}
+                    {% set liability_total = 0 %}
+                    {% set equity_total = 0 %}
+                    {% set revenue_total = 0 %}
+                    {% set expense_total = 0 %}
+                    
+                    {% for account in trial_balance.trial_balance %}
+                        {% if account.account_type == 'ASSET' %}
+                            {% set asset_total = asset_total + account.net_balance %}
+                        {% elif account.account_type == 'LIABILITY' %}
+                            {% set liability_total = liability_total + account.net_balance %}
+                        {% elif account.account_type == 'EQUITY' %}
+                            {% set equity_total = equity_total + account.net_balance %}
+                        {% elif account.account_type == 'REVENUE' %}
+                            {% set revenue_total = revenue_total + account.net_balance %}
+                        {% elif account.account_type == 'EXPENSE' %}
+                            {% set expense_total = expense_total + account.net_balance %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <div class="type-item">
+                        <span class="type-label">Assets:</span>
+                        <span class="type-value">{{ asset_total|currency }}</span>
+                    </div>
+                    <div class="type-item">
+                        <span class="type-label">Liabilities:</span>
+                        <span class="type-value">{{ liability_total|currency }}</span>
+                    </div>
+                    <div class="type-item">
+                        <span class="type-label">Equity:</span>
+                        <span class="type-value">{{ equity_total|currency }}</span>
+                    </div>
+                    <div class="type-item">
+                        <span class="type-label">Revenue:</span>
+                        <span class="type-value">{{ revenue_total|currency }}</span>
+                    </div>
+                    <div class="type-item">
+                        <span class="type-label">Expenses:</span>
+                        <span class="type-value">{{ expense_total|currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trial Balance Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Trial Balance Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-accounting table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Account Code</th>
+                                <th>Account Name</th>
+                                <th>Type</th>
+                                <th class="text-end">Debit Balance</th>
+                                <th class="text-end">Credit Balance</th>
+                                <th class="text-end">Net Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in trial_balance.trial_balance %}
+                            <tr>
+                                <td>
+                                    <code>{{ account.account_code }}</code>
+                                </td>
+                                <td>{{ account.account_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if account.account_type == 'ASSET' %}primary{% elif account.account_type == 'LIABILITY' %}warning{% elif account.account_type == 'EQUITY' %}success{% elif account.account_type == 'REVENUE' %}info{% else %}danger{% endif %}">
+                                        {{ account.account_type }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    {% if account.debit_balance > 0 %}
+                                        {{ account.debit_balance|currency }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if account.credit_balance > 0 %}
+                                        {{ account.credit_balance|currency }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <strong class="{% if account.net_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ account.net_balance|currency }}
+                                    </strong>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <th colspan="3">TOTALS</th>
+                                <th class="text-end">{{ trial_balance.total_debits|currency }}</th>
+                                <th class="text-end">{{ trial_balance.total_credits|currency }}</th>
+                                <th class="text-end">
+                                    <strong>{{ (trial_balance.total_debits - trial_balance.total_credits)|currency }}</strong>
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generated Info -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="text-muted text-center">
+            <small>
+                <i class="fas fa-clock me-1"></i>
+                Generated on {{ trial_balance.generated_at.strftime('%B %d, %Y at %I:%M %p') }}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportTrialBalance() {
+    // TODO: Implement CSV/Excel export functionality
+    alert('Export functionality coming soon!');
+}
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('printing');
+});
+</script>
+
+<style>
+@media print {
+    .btn-group, .card-header-accounting .btn {
+        display: none !important;
+    }
+    
+    .card-accounting {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .table-accounting {
+        font-size: 12px;
+    }
+    
+    .summary-item, .type-item {
+        margin-bottom: 0.5rem;
+    }
+}
+
+.summary-item {
+    margin-bottom: 1rem;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.account-type-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.type-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.type-item:last-child {
+    border-bottom: none;
+}
+
+.type-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.type-value {
+    font-weight: 700;
+    color: #007bff;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounting-app
+  namespace: accounting-app
+  labels:
+    app: accounting-app
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: accounting-app
+  template:
+    metadata:
+      labels:
+        app: accounting-app
+        version: v1
+    spec:
+      containers:
+      - name: accounting-app
+        image: macdims/ponmo-accounting:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: FLASK_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: FLASK_ENV
+        - name: FLASK_APP
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: FLASK_APP
+        - name: FIREBASE_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: accounting-app-secrets
+              key: firebase-project-id
+        - name: FIREBASE_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: accounting-app-secrets
+              key: firebase-database-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: accounting-app-secrets
+              key: secret-key
+        - name: SESSION_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: SESSION_TYPE
+        - name: SESSION_PERMANENT
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: SESSION_PERMANENT
+        - name: SESSION_USE_SIGNER
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: SESSION_USE_SIGNER
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: DATABASE_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: accounting-app-config
+              key: LOG_LEVEL
+        volumeMounts:
+        - name: firebase-auth
+          mountPath: /app/firebase-auth.json
+          subPath: firebase-auth.json
+          readOnly: true
+        - name: app-data
+          mountPath: /app/instance
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: firebase-auth
+        secret:
+          secretName: accounting-app-secrets
+          items:
+          - key: firebase-auth.json
+            path: firebase-auth.json
+      - name: app-data
+        emptyDir: {}
+      restartPolicy: Always

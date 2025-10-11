@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounting-app-service
+  namespace: accounting-app
+  labels:
+    app: accounting-app
+spec:
+  selector:
+    app: accounting-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP
+  type: ClusterIP

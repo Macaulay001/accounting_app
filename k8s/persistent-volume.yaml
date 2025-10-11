@@ -1,0 +1,15 @@
+# Optional: Persistent Volume for SQLite database
+# Only use if you need persistent storage for the database
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: accounting-app-pvc
+  namespace: accounting-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Uncomment and configure storage class for your cloud provider
+  # storageClassName: your-storage-class

@@ -1,0 +1,539 @@
+/* Ponmo Business Manager - Professional Accounting Dashboard CSS */
+
+:root {
+    /* Color Palette */
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    
+    /* Ponmo Theme Colors */
+    --ponmo-brown: #8B4513;
+    --ponmo-light: #D2B48C;
+    --ponmo-dark: #654321;
+    
+    /* Accounting Colors */
+    --revenue-green: #28a745;
+    --expense-red: #dc3545;
+    --asset-blue: #007bff;
+    --liability-orange: #fd7e14;
+    
+    /* Typography */
+    --font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size-base: 14px;
+    --font-size-sm: 12px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-xxl: 24px;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-xxl: 3rem;
+    
+    /* Border Radius */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* Global Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    color: var(--dark-color);
+    background-color: #f5f6fa;
+    margin: 0;
+    padding: 0;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+}
+
+.text-accounting {
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+/* Layout Components */
+.dashboard-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: var(--spacing-lg) 0;
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard-content {
+    flex: 1;
+    padding: var(--spacing-xl) 0;
+}
+
+/* Navigation */
+.navbar-accounting {
+    background: var(--primary-color) !important;
+    box-shadow: var(--shadow-sm);
+    border-bottom: 3px solid var(--secondary-color);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: var(--font-size-xl);
+    color: white !important;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: var(--border-radius-sm);
+    margin: 0 var(--spacing-xs);
+    color: white !important;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+    color: white !important;
+}
+
+/* Dropdown menu items */
+.dropdown-menu {
+    background-color: var(--primary-color);
+    border: 1px solid var(--secondary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.dropdown-item {
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white !important;
+}
+
+/* Navbar toggler */
+.navbar-toggler {
+    border-color: white;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Cards */
+.card-accounting {
+    border: none;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.card-accounting:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-header-accounting {
+    background: linear-gradient(135deg, var(--light-color) 0%, #ffffff 100%);
+    border-bottom: 2px solid var(--secondary-color);
+    font-weight: 600;
+    color: var(--primary-color);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
+}
+
+/* Dashboard Widgets */
+.dashboard-widget {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.dashboard-widget:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.widget-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    margin-bottom: var(--spacing-md);
+}
+
+.widget-icon.revenue {
+    background: linear-gradient(135deg, var(--revenue-green), #20c997);
+}
+
+.widget-icon.expense {
+    background: linear-gradient(135deg, var(--expense-red), #e83e8c);
+}
+
+.widget-icon.asset {
+    background: linear-gradient(135deg, var(--asset-blue), #6f42c1);
+}
+
+.widget-icon.liability {
+    background: linear-gradient(135deg, var(--liability-orange), #fd7e14);
+}
+
+.widget-value {
+    font-size: var(--font-size-xxl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.widget-label {
+    color: #6c757d;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Financial Summary Cards */
+.financial-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    border-top: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.financial-card.revenue {
+    border-top-color: var(--revenue-green);
+}
+
+.financial-card.expense {
+    border-top-color: var(--expense-red);
+}
+
+.financial-card.profit {
+    border-top-color: var(--success-color);
+}
+
+.financial-card.loss {
+    border-top-color: var(--danger-color);
+}
+
+.financial-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Tables */
+.table-accounting {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table-accounting thead {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.table-accounting th {
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.5px;
+    padding: var(--spacing-md);
+}
+
+.table-accounting td {
+    border: none;
+    padding: var(--spacing-md);
+    vertical-align: middle;
+}
+
+.table-accounting tbody tr {
+    border-bottom: 1px solid #f1f3f4;
+    transition: background-color 0.2s ease;
+}
+
+.table-accounting tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Buttons */
+.btn-accounting {
+    border-radius: var(--border-radius-md);
+    font-weight: 600;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    transition: all 0.3s ease;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: var(--font-size-sm);
+}
+
+.btn-accounting:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-accounting-primary {
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+    color: white;
+}
+
+.btn-accounting-success {
+    background: linear-gradient(135deg, var(--success-color), #229954);
+    color: white;
+}
+
+.btn-accounting-warning {
+    background: linear-gradient(135deg, var(--warning-color), #e67e22);
+    color: white;
+}
+
+.btn-accounting-danger {
+    background: linear-gradient(135deg, var(--danger-color), #c0392b);
+    color: white;
+}
+
+.btn-accounting-info {
+    background: linear-gradient(135deg, var(--info-color), #138496);
+    color: white;
+}
+
+/* Forms */
+.form-accounting {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.form-control-accounting {
+    border: 2px solid #e9ecef;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    transition: all 0.3s ease;
+}
+
+.form-control-accounting:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.form-label-accounting {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.5px;
+}
+
+/* Alerts */
+.alert-accounting {
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+}
+
+.alert-accounting-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border-left: 4px solid var(--success-color);
+}
+
+.alert-accounting-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+    border-left: 4px solid var(--danger-color);
+}
+
+.alert-accounting-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-accounting-info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    color: #0c5460;
+    border-left: 4px solid var(--info-color);
+}
+
+/* Financial Numbers */
+.amount-positive {
+    color: var(--revenue-green);
+    font-weight: 700;
+}
+
+.amount-negative {
+    color: var(--expense-red);
+    font-weight: 700;
+}
+
+.amount-neutral {
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+/* Charts */
+.chart-container {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-content {
+        padding: var(--spacing-md) 0;
+    }
+    
+    .widget-value {
+        font-size: var(--font-size-xl);
+    }
+    
+    .table-accounting {
+        font-size: var(--font-size-sm);
+    }
+    
+    .btn-accounting {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+    }
+}
+
+/* Loading States */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--secondary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Ponmo Business Specific Styles */
+.ponmo-brand {
+    background: linear-gradient(135deg, var(--ponmo-brown), var(--ponmo-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.production-flow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+    margin: var(--spacing-lg) 0;
+}
+
+.production-step {
+    text-align: center;
+    flex: 1;
+    position: relative;
+}
+
+.production-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.production-step-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto var(--spacing-md);
+}
+
+.production-step-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+}
+
+.production-step-value {
+    font-size: var(--font-size-sm);
+    color: #6c757d;
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .btn, .no-print {
+        display: none !important;
+    }
+    
+    .card-accounting, .dashboard-widget {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .table-accounting {
+        box-shadow: none !important;
+    }
+}

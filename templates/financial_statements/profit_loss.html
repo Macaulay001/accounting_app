@@ -1,0 +1,411 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Profit & Loss Statement - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<!-- P&L Header -->
+<div class="dashboard-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-chart-line me-3"></i>
+                    Profit & Loss Statement
+                </h1>
+                <p class="mb-0 fs-5">
+                    <i class="fas fa-calendar me-2"></i>
+                    {% if profit_loss.period_start and profit_loss.period_end %}
+                        {{ profit_loss.period_start.strftime('%B %d, %Y') }} - {{ profit_loss.period_end.strftime('%B %d, %Y') }}
+                    {% else %}
+                        For the period ending {{ profit_loss.period_end.strftime('%B %d, %Y') }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-light" onclick="exportPandL()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter by Period
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{% if profit_loss.period_start %}{{ profit_loss.period_start.strftime('%Y-%m-%d') }}{% endif %}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{% if profit_loss.period_end %}{{ profit_loss.period_end.strftime('%Y-%m-%d') }}{% endif %}">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Generate
+                        </button>
+                        <a href="{{ url_for('profit_loss_route') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- P&L Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon revenue mb-2">
+                    <i class="fas fa-arrow-up fa-2x"></i>
+                </div>
+                <div class="summary-value text-success">{{ profit_loss.revenue.total|currency }}</div>
+                <div class="summary-label">Total Revenue</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon cogs mb-2">
+                    <i class="fas fa-arrow-down fa-2x"></i>
+                </div>
+                <div class="summary-value text-danger">{{ profit_loss.cost_of_goods_sold.total|currency }}</div>
+                <div class="summary-label">Cost of Goods Sold</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon profit mb-2">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+                <div class="summary-value text-primary">{{ profit_loss.gross_profit|currency }}</div>
+                <div class="summary-label">Gross Profit</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon net mb-2">
+                    <i class="fas fa-{% if profit_loss.net_profit_loss >= 0 %}check-circle{% else %}exclamation-triangle{% endif %} fa-2x"></i>
+                </div>
+                <div class="summary-value {% if profit_loss.net_profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ profit_loss.net_profit_loss|currency }}
+                </div>
+                <div class="summary-label">Net Profit/Loss</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Margins -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-percentage me-2"></i>Profit Margins
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="margin-item">
+                    <div class="margin-label">Gross Profit Margin</div>
+                    <div class="margin-value">{{ "%.2f"|format(profit_loss.gross_profit_margin) }}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-success" style="width: {{ profit_loss.gross_profit_margin }}%"></div>
+                    </div>
+                </div>
+                <div class="margin-item">
+                    <div class="margin-label">Net Profit Margin</div>
+                    <div class="margin-value {% if profit_loss.net_profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ "%.2f"|format(profit_loss.net_profit_margin) }}%
+                    </div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar {% if profit_loss.net_profit_margin >= 0 %}bg-success{% else %}bg-danger{% endif %}" 
+                             style="width: {{ profit_loss.net_profit_margin|abs }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Expense Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="expense-breakdown">
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">COGS:</span>
+                        <span class="breakdown-value">{{ profit_loss.cost_of_goods_sold.total|currency }}</span>
+                        <span class="breakdown-percentage">
+                            ({{ "%.1f"|format((profit_loss.cost_of_goods_sold.total / profit_loss.revenue.total * 100) if profit_loss.revenue.total > 0 else 0) }}%)
+                        </span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">Operating Expenses:</span>
+                        <span class="breakdown-value">{{ profit_loss.operating_expenses.total|currency }}</span>
+                        <span class="breakdown-percentage">
+                            ({{ "%.1f"|format((profit_loss.operating_expenses.total / profit_loss.revenue.total * 100) if profit_loss.revenue.total > 0 else 0) }}%)
+                        </span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">Net Profit:</span>
+                        <span class="breakdown-value {% if profit_loss.net_profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ profit_loss.net_profit_loss|currency }}
+                        </span>
+                        <span class="breakdown-percentage">
+                            ({{ "%.1f"|format(profit_loss.net_profit_margin) }}%)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed P&L Statement -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Detailed Profit & Loss Statement
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-accounting">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Account</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Revenue Section -->
+                            <tr class="table-success">
+                                <th colspan="2">REVENUE</th>
+                            </tr>
+                            {% for revenue in profit_loss.revenue.accounts %}
+                            <tr>
+                                <td class="ps-4">{{ revenue.account_name }}</td>
+                                <td class="text-end">{{ revenue.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-success">
+                                <th>Total Revenue</th>
+                                <th class="text-end">{{ profit_loss.revenue.total|currency }}</th>
+                            </tr>
+                            
+                            <!-- COGS Section -->
+                            <tr class="table-danger">
+                                <th colspan="2">COST OF GOODS SOLD</th>
+                            </tr>
+                            {% for cogs in profit_loss.cost_of_goods_sold.accounts %}
+                            <tr>
+                                <td class="ps-4">{{ cogs.account_name }}</td>
+                                <td class="text-end">{{ cogs.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-danger">
+                                <th>Total Cost of Goods Sold</th>
+                                <th class="text-end">{{ profit_loss.cost_of_goods_sold.total|currency }}</th>
+                            </tr>
+                            
+                            <!-- Gross Profit -->
+                            <tr class="table-primary">
+                                <th>GROSS PROFIT</th>
+                                <th class="text-end">{{ profit_loss.gross_profit|currency }}</th>
+                            </tr>
+                            
+                            <!-- Operating Expenses Section -->
+                            <tr class="table-warning">
+                                <th colspan="2">OPERATING EXPENSES</th>
+                            </tr>
+                            {% for expense in profit_loss.operating_expenses.accounts %}
+                            <tr>
+                                <td class="ps-4">{{ expense.account_name }}</td>
+                                <td class="text-end">{{ expense.amount|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-warning">
+                                <th>Total Operating Expenses</th>
+                                <th class="text-end">{{ profit_loss.operating_expenses.total|currency }}</th>
+                            </tr>
+                            
+                            <!-- Net Profit/Loss -->
+                            <tr class="{% if profit_loss.net_profit_loss >= 0 %}table-success{% else %}table-danger{% endif %}">
+                                <th>NET PROFIT/LOSS</th>
+                                <th class="text-end">{{ profit_loss.net_profit_loss|currency }}</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generated Info -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="text-muted text-center">
+            <small>
+                <i class="fas fa-clock me-1"></i>
+                Generated on {{ profit_loss.generated_at.strftime('%B %d, %Y at %I:%M %p') }}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportPandL() {
+    // TODO: Implement CSV/Excel export functionality
+    alert('Export functionality coming soon!');
+}
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('printing');
+});
+</script>
+
+<style>
+@media print {
+    .btn-group, .card-header-accounting .btn {
+        display: none !important;
+    }
+    
+    .card-accounting {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .table-accounting {
+        font-size: 12px;
+    }
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.summary-icon.revenue {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.summary-icon.cogs {
+    background: linear-gradient(135deg, #dc3545, #e83e8c);
+    color: white;
+}
+
+.summary-icon.profit {
+    background: linear-gradient(135deg, #007bff, #6f42c1);
+    color: white;
+}
+
+.summary-icon.net {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.margin-item {
+    margin-bottom: 1.5rem;
+}
+
+.margin-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.margin-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #007bff;
+}
+
+.expense-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.breakdown-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.breakdown-value {
+    font-weight: 700;
+    color: #007bff;
+}
+
+.breakdown-percentage {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

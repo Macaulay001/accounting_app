@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Profit & Loss Statement</h2>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Report Period</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('profit_loss_report') }}">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ pnl_data.period.split(' to ')[0] }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ pnl_data.period.split(' to ')[1] }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Update Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- P&L Statement -->
+<div class="card">
+    <div class="card-header">
+        <h5>Profit & Loss Statement - {{ pnl_data.period }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Description</th>
+                        <th class="text-end">Amount (₦)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>REVENUE</strong></td>
+                        <td class="text-end"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;Sales Revenue</td>
+                        <td class="text-end">{{ "%.2f"|format(pnl_data.revenue) }}</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td><strong>Total Revenue</strong></td>
+                        <td class="text-end"><strong>{{ "%.2f"|format(pnl_data.revenue) }}</strong></td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>COST OF GOODS SOLD</strong></td>
+                        <td class="text-end"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;Raw Materials</td>
+                        <td class="text-end">{{ "%.2f"|format(pnl_data.cost_of_goods_sold) }}</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td><strong>Total COGS</strong></td>
+                        <td class="text-end"><strong>{{ "%.2f"|format(pnl_data.cost_of_goods_sold) }}</strong></td>
+                    </tr>
+                    
+                    <tr class="table-success">
+                        <td><strong>GROSS PROFIT</strong></td>
+                        <td class="text-end"><strong>{{ "%.2f"|format(pnl_data.gross_profit) }}</strong></td>
+                    </tr>
+                    
+                    <tr>
+                        <td><strong>OPERATING EXPENSES</strong></td>
+                        <td class="text-end"></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;&nbsp;General Operating Expenses</td>
+                        <td class="text-end">{{ "%.2f"|format(pnl_data.operating_expenses) }}</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td><strong>Total Operating Expenses</strong></td>
+                        <td class="text-end"><strong>{{ "%.2f"|format(pnl_data.operating_expenses) }}</strong></td>
+                    </tr>
+                    
+                    {% if pnl_data.net_profit >= 0 %}
+                    <tr class="table-success">
+                        <td><strong>NET PROFIT</strong></td>
+                        <td class="text-end"><strong>{{ "%.2f"|format(pnl_data.net_profit) }}</strong></td>
+                    </tr>
+                    {% else %}
+                    <tr class="table-danger">
+                        <td><strong>NET LOSS</strong></td>
+                        <td class="text-end"><strong>{{ "%.2f"|format(pnl_data.net_profit) }}</strong></td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Revenue</h5>
+                        <h4 class="text-primary">₦{{ "%.2f"|format(pnl_data.revenue) }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">COGS</h5>
+                        <h4 class="text-warning">₦{{ "%.2f"|format(pnl_data.cost_of_goods_sold) }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Gross Profit</h5>
+                        <h4 class="text-success">₦{{ "%.2f"|format(pnl_data.gross_profit) }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title {% if pnl_data.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">Net {% if pnl_data.net_profit >= 0 %}Profit{% else %}Loss{% endif %}</h5>
+                        <h4 class="{% if pnl_data.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">₦{{ "%.2f"|format(pnl_data.net_profit) }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <button class="btn btn-outline-primary" onclick="window.print()">Print Report</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

@@ -1,0 +1,708 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Reports - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Business Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Report Selection Form -->
+                <form method="get" action="{{ url_for('reports_route') }}" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="report_type" class="form-label-accounting">Report Type</label>
+                                <select id="report_type" name="report_type" class="form-control-accounting" onchange="updateFormFields()">
+                                    <option value="" {% if not report_type %}selected{% endif %}>Select Report Type</option>
+                                    <option value="vendor_summary" {% if report_type == 'vendor_summary' %}selected{% endif %}>Vendor Summary</option>
+                                    <option value="batch_detail" {% if report_type == 'batch_detail' %}selected{% endif %}>Batch Detail</option>
+                                    <option value="inventory_status" {% if report_type == 'inventory_status' %}selected{% endif %}>Inventory Status</option>
+                                    <option value="production_summary" {% if report_type == 'production_summary' %}selected{% endif %}>Production Summary</option>
+                                    <option value="sales_summary" {% if report_type == 'sales_summary' %}selected{% endif %}>Sales Summary</option>
+                                    <option value="customer_summary" {% if report_type == 'customer_summary' %}selected{% endif %}>Customer Summary</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3" id="vendor_field" style="display: none;">
+                                <label for="vendor_id" class="form-label-accounting">Vendor</label>
+                                <select id="vendor_id" name="vendor_id" class="form-control-accounting">
+                                    <option value="">Select Vendor</option>
+                                    {% for vendor in vendors %}
+                                    <option value="{{ vendor['id'] }}" {% if vendor_id == vendor['id'] %}selected{% endif %}>
+                                        {{ vendor['name'] }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3" id="batch_field" style="display: none;">
+                                <label for="batch_id" class="form-label-accounting">Inventory Batch</label>
+                                <select id="batch_id" name="batch_id" class="form-control-accounting">
+                                    <option value="">Select Batch</option>
+                                    {% for batch in batches %}
+                                    <option value="{{ batch['id'] }}" {% if batch_id == batch['id'] %}selected{% endif %}>
+                                        {{ batch['vendor_name'] }} - {{ batch['raw_material_type'].replace('_', ' ').title() }} 
+                                        ({{ batch['current_pieces'] }} pieces)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3" id="customer_field" style="display: none;">
+                                <label for="customer_id" class="form-label-accounting">Customer</label>
+                                <select id="customer_id" name="customer_id" class="form-control-accounting">
+                                    <option value="">All Customers</option>
+                                    {% for customer in customers %}
+                                    <option value="{{ customer['id'] }}" {% if request.args.get('customer_id') == customer['id'] %}selected{% endif %}>
+                                        {{ customer['name'] }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label-accounting">Start Date</label>
+                                <input type="date" id="start_date" name="start_date" class="form-control-accounting" 
+                                       value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="end_date" class="form-label-accounting">End Date</label>
+                                <input type="date" id="end_date" name="end_date" class="form-control-accounting" 
+                                       value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg px-4 py-2">
+                        <i class="fas fa-chart-bar me-2"></i>Generate Report
+                    </button>
+                </form>
+
+                <!-- Report Content -->
+                {% if report_type == 'vendor_summary' and vendor %}
+                    <div class="report-section">
+                        <h4 class="mb-3">Vendor Summary: {{ vendor['name'] }}</h4>
+                        
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Purchases</h5>
+                                        <h3 class="text-primary">{{ total_purchases|currency }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Amount Paid</h5>
+                                        <h3 class="text-success">{{ total_paid|currency }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Outstanding</h5>
+                                        <h3 class="{% if outstanding_balance > 0 %}text-danger{% else %}text-success{% endif %}">{{ outstanding_balance|currency }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Payment %</h5>
+                                        <h3 class="text-info">{{ "%.1f"|format(payment_percentage) }}%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Processed</h5>
+                                        <h3 class="text-warning">{{ processed_pieces }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Remaining</h5>
+                                        <h3 class="text-success">{{ remaining_pieces }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- Vendor Batches Table -->
+                        <h5>Inventory Batches</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Batch ID</th>
+                                        <th>Material Type</th>
+                                        <th>Purchase Date</th>
+                                        <th>Total Pieces</th>
+                                        <th>Remaining</th>
+                                        <th>Purchase Cost</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in vendor_batches %}
+                                    <tr>
+                                        <td><code>{{ batch['id'][:8] }}...</code></td>
+                                        <td>{{ batch['raw_material_type'].replace('_', ' ').title() }}</td>
+                                        <td>{{ batch['purchase_date'].strftime('%Y-%m-%d') if batch['purchase_date'] else 'N/A' }}</td>
+                                        <td>{{ batch['total_pieces'] }}</td>
+                                        <td>{{ batch['current_pieces'] }}</td>
+                                        <td>{{ batch['purchase_cost']|currency }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if batch['status'] == 'raw_material' %}secondary{% elif batch['status'] == 'in_production' %}warning{% elif batch['status'] == 'finished_goods' %}success{% else %}dark{% endif %}">
+                                                {{ batch['status'].replace('_', ' ').title() }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Production Records -->
+                        {% if production_records %}
+                        <h5 class="mt-4">Production Records</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Batch ID</th>
+                                        <th>Ile Group</th>
+                                        <th>Pieces Processed</th>
+                                        <th>Processing Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in production_records %}
+                                    <tr>
+                                        <td>{{ record['date'].strftime('%Y-%m-%d') if record['date'] else 'N/A' }}</td>
+                                        <td><code>{{ record['batch_id'][:8] }}...</code></td>
+                                        <td>{{ record['ile_number'] }}</td>
+                                        <td>{{ record['pieces_processed'] }}</td>
+                                        <td>₦{{ "%.2f"|format(record['processing_cost']) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                {% elif report_type == 'batch_detail' and batch %}
+                    <div class="report-section">
+                        <h4 class="mb-3">Batch Detail: {{ batch['vendor_name'] }} - {{ batch['raw_material_type'].replace('_', ' ').title() }}</h4>
+                        
+                        <!-- Batch Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Batch Information</h6>
+                                        <p><strong>Purchase Date:</strong> {{ batch['purchase_date'].strftime('%Y-%m-%d') if batch['purchase_date'] else 'N/A' }}</p>
+                                        <p><strong>Total Pieces:</strong> {{ batch['total_pieces'] }}</p>
+                                        <p><strong>Remaining Pieces:</strong> {{ batch['current_pieces'] }}</p>
+                                        <p><strong>Purchase Cost:</strong> ₦{{ "%.2f"|format(batch['purchase_cost']) }}</p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="badge bg-{% if batch['status'] == 'raw_material' %}secondary{% elif batch['status'] == 'in_production' %}warning{% elif batch['status'] == 'finished_goods' %}success{% else %}dark{% endif %}">
+                                                {{ batch['status'].replace('_', ' ').title() }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Ile Groups Status</h6>
+                                        {% for ile_group in batch.get('ile_groups', []) %}
+                                        <p><strong>Ile {{ ile_group['ile_number'] }}:</strong> 
+                                           {{ ile_group['remaining_pieces'] }} pieces remaining
+                                           <span class="badge bg-{% if ile_group['status'] == 'raw_material' %}secondary{% elif ile_group['status'] == 'in_production' %}warning{% elif ile_group['status'] == 'finished_goods' %}success{% else %}dark{% endif %} ms-2">
+                                               {{ ile_group['status'].replace('_', ' ').title() }}
+                                           </span>
+                                        </p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Production Records -->
+                        {% if production_records %}
+                        <h5>Production Records</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Ile Group</th>
+                                        <th>Pieces Processed</th>
+                                        <th>Processing Cost</th>
+                                        <th>Remaining Pieces</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in production_records %}
+                                    <tr>
+                                        <td>{{ record['date'].strftime('%Y-%m-%d') if record['date'] else 'N/A' }}</td>
+                                        <td>{{ record['ile_number'] }}</td>
+                                        <td>{{ record['pieces_processed'] }}</td>
+                                        <td>₦{{ "%.2f"|format(record['processing_cost']) }}</td>
+                                        <td>{{ record['remaining_pieces'] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+
+                        <!-- Sales Records -->
+                        {% if sales_records %}
+                        <h5>Sales Records</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Ile Group</th>
+                                        <th>Pieces Sold</th>
+                                        <th>Sales Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in sales_records %}
+                                    <tr>
+                                        <td>{{ record['date'].strftime('%Y-%m-%d') if record['date'] else 'N/A' }}</td>
+                                        <td>{{ record['ile_number'] }}</td>
+                                        <td>{{ record['pieces_sold'] }}</td>
+                                        <td>₦{{ "%.2f"|format(record['sales_amount']) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                {% elif report_type == 'inventory_status' %}
+                    <div class="report-section">
+                        <h4 class="mb-3">Current Inventory Status</h4>
+                        
+                        <!-- Summary -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Batches</h5>
+                                        <h3>{{ total_batches }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Pieces</h5>
+                                        <h3>{{ total_pieces }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Remaining Pieces</h5>
+                                        <h3>{{ remaining_pieces }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Processed Pieces</h5>
+                                        <h3>{{ total_pieces - remaining_pieces }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vendor Inventory -->
+                        <h5>Inventory by Vendor</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th>Batches</th>
+                                        <th>Total Pieces</th>
+                                        <th>Remaining</th>
+                                        <th>Total Cost</th>
+                                        <th>Avg Cost/Piece</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vendor_id, data in vendor_inventory.items() %}
+                                    <tr>
+                                        <td>{{ data['vendor_name'] }}</td>
+                                        <td>{{ data['batches']|length }}</td>
+                                        <td>{{ data['total_pieces'] }}</td>
+                                        <td>{{ data['remaining_pieces'] }}</td>
+                                        <td>₦{{ "%.2f"|format(data['total_cost']) }}</td>
+                                        <td>₦{{ "%.2f"|format(data['total_cost'] / data['total_pieces']) if data['total_pieces'] > 0 else 0 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                {% elif report_type == 'production_summary' %}
+                    <div class="report-section">
+                        <h4 class="mb-3">Production Summary</h4>
+                        
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Pieces Processed</h5>
+                                        <h3>{{ total_pieces_processed }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Processing Cost</h5>
+                                        <h3>₦{{ "%.2f"|format(total_processing_cost) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Avg Cost/Piece</h5>
+                                        <h3>₦{{ "%.2f"|format(average_cost_per_piece) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Production Records Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Vendor</th>
+                                        <th>Batch ID</th>
+                                        <th>Ile Group</th>
+                                        <th>Pieces Processed</th>
+                                        <th>Processing Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in production_summary %}
+                                    <tr>
+                                        <td>{{ record['date'].strftime('%Y-%m-%d') if record['date'] else 'N/A' }}</td>
+                                        <td>{{ record['vendor_name'] }}</td>
+                                        <td><code>{{ record['batch_id'][:8] }}...</code></td>
+                                        <td>{{ record['ile_number'] }}</td>
+                                        <td>{{ record['pieces_processed'] }}</td>
+                                        <td>₦{{ "%.2f"|format(record['processing_cost']) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                {% elif report_type == 'sales_summary' %}
+                    <div class="report-section">
+                        <h4 class="mb-3">Sales Summary</h4>
+                        
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Sales</h5>
+                                        <h3>₦{{ "%.2f"|format(total_sales) }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Transactions</h5>
+                                        <h3>{{ total_transactions }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sales Records Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Reference</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in sales_entries %}
+                                    <tr>
+                                        <td>{{ entry['date'].strftime('%Y-%m-%d') if entry['date'] else 'N/A' }}</td>
+                                        <td>{{ entry['description'] }}</td>
+                                        <td>{{ entry['reference'] }}</td>
+                                        <td>₦{{ "%.2f"|format(entry.get('total_credits', 0)) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                {% elif report_type == 'customer_summary' %}
+                    <div class="report-section">
+                        <h4 class="mb-3">Customer Summary Report</h4>
+                        
+                        <!-- Overall Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Customers</h5>
+                                        <h3>{{ report_data.summary.total_customers }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Deposits</h5>
+                                        <h3>{{ report_data.summary.total_deposits|currency }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Sales</h5>
+                                        <h3>{{ report_data.summary.total_sales|currency }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Balance</h5>
+                                        <h3>{{ report_data.summary.total_balance|currency }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Individual Customer Reports -->
+                        {% for customer in report_data.customers %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-user me-2"></i>{{ customer.customer_name }}
+                                        </h5>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <span class="badge bg-{% if customer.current_balance > 0 %}success{% elif customer.current_balance < 0 %}danger{% else %}secondary{% endif %} fs-6">
+                                            Account Balance: {{ customer.current_balance|currency }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Customer Summary Stats -->
+                                <div class="row mb-4">
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Total Deposits</h6>
+                                            <h4 class="text-success">{{ customer.total_deposits|currency }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Total Sales</h6>
+                                            <h4 class="text-info">{{ customer.total_sales|currency }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Deposit Count</h6>
+                                            <h4 class="text-primary">{{ customer.deposit_count }}</h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h6 class="text-muted">Sales Count</h6>
+                                            <h4 class="text-warning">{{ customer.sales_count }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Deposits Table -->
+                                {% if customer.recent_deposits %}
+                                <div class="mb-4">
+                                    <h6 class="text-success">
+                                        <i class="fas fa-hand-holding-usd me-2"></i>Deposit History
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <thead class="table-success">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Payment Method</th>
+                                                    <th>Reference</th>
+                                                    <th>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for deposit in customer.recent_deposits %}
+                                                <tr>
+                                                    <td>{{ deposit.deposit_date.strftime('%Y-%m-%d') if deposit.deposit_date else 'N/A' }}</td>
+                                                    <td class="text-end fw-bold">{{ deposit.amount|currency }}</td>
+                                                    <td>
+                                                        <span class="badge bg-info">
+                                                            {{ deposit.payment_method.replace('_', ' ').title() }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ deposit.reference }}</td>
+                                                    <td>{{ deposit.notes or '-' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>No deposits recorded for this customer.
+                                </div>
+                                {% endif %}
+
+                                <!-- Sales Table -->
+                                {% if customer.recent_sales %}
+                                <div class="mb-4">
+                                    <h6 class="text-info">
+                                        <i class="fas fa-chart-line me-2"></i>Sales History
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <thead class="table-info">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Paid at Sale</th>
+                                                    <th>Reference</th>
+                                                    <th>Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for sale in customer.recent_sales %}
+                                                <tr>
+                                                    <td>{{ sale.date.strftime('%Y-%m-%d') if sale.date else 'N/A' }}</td>
+                                                    <td class="text-end fw-bold">{{ sale.amount|currency }}</td>
+                                                    <td class="text-end">{{ (sale.payment_at_sale or 0)|currency }}</td>
+                                                    <td>{{ sale.reference }}</td>
+                                                    <td>{{ sale.description or 'Sale of finished goods' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>No sales recorded for this customer.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- No customers message -->
+                        {% if not report_data.customers %}
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <h5>No Customer Data Available</h5>
+                            <p>No customers found with deposits or sales in the selected period.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                {% elif report_type %}
+                    <div class="alert alert-info">
+                        <h5>No Data Available</h5>
+                        <p>Please select the required parameters to generate this report.</p>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <h4>Select a Report Type</h4>
+                        <p class="text-muted">Choose from the dropdown above to generate specific reports for your business.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    updateFormFields();
+});
+
+function updateFormFields() {
+    const reportType = document.getElementById('report_type').value;
+    const vendorField = document.getElementById('vendor_field');
+    const batchField = document.getElementById('batch_field');
+    const customerField = document.getElementById('customer_field');
+    
+    // Hide all fields first
+    vendorField.style.display = 'none';
+    batchField.style.display = 'none';
+    customerField.style.display = 'none';
+    
+    // Show relevant fields based on report type
+    if (reportType === 'vendor_summary') {
+        vendorField.style.display = 'block';
+    } else if (reportType === 'batch_detail') {
+        batchField.style.display = 'block';
+    } else if (reportType === 'customer_summary') {
+        customerField.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

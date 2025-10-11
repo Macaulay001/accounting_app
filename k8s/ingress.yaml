@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: accounting-app-ingress
+  namespace: accounting-app
+  annotations:
+    # For nginx ingress controller
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # For cert-manager (uncomment if using cert-manager)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  # Uncomment for TLS (requires cert-manager and domain)
+  # tls:
+  # - hosts:
+  #   - your-domain.com
+  #   - www.your-domain.com
+  #   secretName: accounting-app-tls
+  rules:
+  # Replace with your actual domain
+  - host: your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: accounting-app-service
+            port:
+              number: 80
+  # For local development with minikube
+  - host: accounting.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: accounting-app-service
+            port:
+              number: 80

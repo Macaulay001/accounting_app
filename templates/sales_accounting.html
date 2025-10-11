@@ -1,0 +1,379 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Record Sale - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Record Sale Transaction
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('sales_route') }}" onsubmit="showLoading(this)" class="form-accounting">
+                    <div class="row">
+                        <!-- Basic Information -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date" class="form-label-accounting">Sale Date</label>
+                                <input type="date" id="date" name="date" class="form-control-accounting" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="invoice_number" class="form-label-accounting">Invoice Number</label>
+                                <input type="text" id="invoice_number" name="invoice_number" class="form-control-accounting" 
+                                       value="INV-{{ current_date.strftime('%Y%m%d%H%M%S') }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customer" class="form-label-accounting">Customer</label>
+                                <select id="customer" name="customer" class="form-control-accounting" required onchange="onCustomerChange()">
+                                    <option value="" disabled selected>Select Customer</option>
+                                    {% for customer in customers %}
+                                    <option value="{{ customer['id'] }}">{{ customer['name'] }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="mt-2 small text-muted" id="customer-balances" style="display:none;">
+                                    Previous Balance: <span id="prev-balance">₦0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label-accounting">Payment Method</label>
+                                <select id="payment_method" name="payment_method" class="form-control-accounting" required>
+                                    <option value="" disabled selected>Select Payment Method</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="credit">Credit (Accounts Receivable)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Inventory Batch Selection -->
+                    <div class="mb-4">
+                        <h6 class="form-label-accounting mb-3">Source Inventory Batch</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="batch_id" class="form-label-accounting">Inventory Batch</label>
+                                    <select id="batch_id" name="batch_id" class="form-control-accounting" required onchange="updateIleGroups()">
+                                        <option value="" disabled selected>Select Inventory Batch</option>
+                                        {% for batch in batches %}
+                                        <option value="{{ batch['id'] }}" data-vendor="{{ batch['vendor_name'] }}">
+                                            {{ batch['vendor_name'] }} - {{ batch['raw_material_type'].replace('_', ' ').title() }} 
+                                            ({{ batch['current_pieces'] }} pieces remaining)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="ile_number" class="form-label-accounting">Ile Group</label>
+                                    <select id="ile_number" name="ile_number" class="form-control-accounting" required>
+                                        <option value="" disabled selected>Select Ile Group</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Selection -->
+                    <div class="mb-4">
+                        <h6 class="form-label-accounting mb-3">Products Sold</h6>
+                        <div id="product-list">
+                            <div class="product-entry row g-3 mb-3 p-3 border rounded">
+                                <div class="col-md-4">
+                                    <label class="form-label-accounting">Product</label>
+                                    <select class="form-control-accounting product" name="product[]" onchange="updatePrice(this)">
+                                        <option value="" disabled selected>Select Product</option>
+                                        {% for product in products %}
+                                        <option value="{{ product['name'] }}" 
+                                                data-wholesale="{{ product['wholesale_price'] }}" 
+                                                data-retail="{{ product['retail_price'] }}">
+                                            {{ product['name'] }} - Wholesale: ₦{{ product['wholesale_price'] }} / Retail: ₦{{ product['retail_price'] }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label-accounting">Wholesale Qty</label>
+                                    <input type="number" class="form-control-accounting quantity-wholesale" 
+                                           name="quantity_wholesale[]" min="0" value="0" oninput="updateSubtotal(this)">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label-accounting">Retail Qty</label>
+                                    <input type="number" class="form-control-accounting quantity-retail" 
+                                           name="quantity_retail[]" min="0" value="0" oninput="updateSubtotal(this)">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label-accounting">Subtotal</label>
+                                    <input type="text" class="form-control-accounting subtotal" name="subtotal[]" readonly>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger remove-product">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="add-product" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-1"></i>Add Product
+                        </button>
+                    </div>
+                    
+                    <!-- Financial Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Sale Summary</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Total Sales Amount:</span>
+                                        <span class="fw-bold" id="total-sales">₦0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span>Previous Balance:</span>
+                                        <span class="fw-semibold" id="prev-balance-summary">₦0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span>New Balance After Sale:</span>
+                                        <span class="fw-semibold" id="new-balance">₦0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="amount_paid" class="form-label-accounting">Amount Paid</label>
+                                <input type="number" id="amount_paid" name="amount_paid" 
+                                       class="form-control-accounting" step="0.01" min="0" required
+                                       oninput="recalcBalances()">
+                                <small class="form-text text-muted">Leave as 0 for credit sales</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden fields for totals -->
+                    <input type="hidden" id="total_amount" name="total_amount" value="0">
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" id="submit-btn" class="btn btn-accounting btn-accounting-success">
+                            <span id="button-text">
+                                <i class="fas fa-save me-1"></i>Record Sale
+                            </span>
+                            <span id="loading-spinner" class="loading-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Set default date to today
+    document.getElementById("date").value = new Date().toISOString().split('T')[0];
+    
+    // Format currency function
+    function formatCurrency(amount) {
+        return '₦' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    }
+    
+    // Function to update subtotal for each product entry
+    function updateSubtotal(input) {
+        let entry = input.closest(".product-entry");
+        let productSelect = entry.querySelector(".product");
+        let quantityWholesale = parseFloat(entry.querySelector(".quantity-wholesale").value) || 0;
+        let quantityRetail = parseFloat(entry.querySelector(".quantity-retail").value) || 0;
+        let wholesalePrice = parseFloat(productSelect.selectedOptions[0]?.dataset.wholesale) || 0;
+        let retailPrice = parseFloat(productSelect.selectedOptions[0]?.dataset.retail) || 0;
+        
+        let subtotal = (quantityWholesale * wholesalePrice) + (quantityRetail * retailPrice);
+        entry.querySelector(".subtotal").value = subtotal.toFixed(2);
+        updateTotals();
+    }
+    
+    // Function to update total amounts
+    function updateTotals() {
+        let totalSales = 0;
+        
+        document.querySelectorAll(".subtotal").forEach(input => {
+            totalSales += parseFloat(input.value) || 0;
+        });
+        
+        document.getElementById("total-sales").textContent = formatCurrency(totalSales);
+        document.getElementById("total_amount").value = totalSales.toFixed(2);
+        recalcBalances();
+    }
+    // Fetch and display customer balances
+    window.onCustomerChange = function() {
+        const customerId = document.getElementById('customer').value;
+        if (!customerId) return;
+        fetch(`/api/customer/${customerId}/balances`).then(r=>r.json()).then(data=>{
+            if (!data.success) return;
+            window.__customerBalance = parseFloat(data.customer_balance||0);
+            document.getElementById('customer-balances').style.display = 'block';
+            const prev = formatCurrency(window.__customerBalance);
+            document.getElementById('prev-balance').textContent = prev;
+            const prevSummaryEl = document.getElementById('prev-balance-summary');
+            if (prevSummaryEl) prevSummaryEl.textContent = prev;
+            // compute and show new balance immediately
+            recalcBalances();
+        }).catch(()=>{});
+    }
+
+    // Ensure event is wired even if inline handler fails
+    const customerSelect = document.getElementById('customer');
+    if (customerSelect) {
+        customerSelect.addEventListener('change', window.onCustomerChange);
+    }
+
+    // Recalculate after-payment balances
+    window.recalcBalances = function() {
+        const total = parseFloat(document.getElementById('total_amount').value||0);
+        const paid = parseFloat(document.getElementById('amount_paid').value||0);
+        const prevBalance = parseFloat(window.__customerBalance||0);
+        // Apply full delta (paid - total):
+        // - if paid < total => reduces balance (more AR)
+        // - if paid > total => increases balance (excess becomes deposit)
+        const delta = paid - total;
+        const newBalance = prevBalance + delta;
+        if (document.getElementById('new-balance')) document.getElementById('new-balance').textContent = formatCurrency(newBalance);
+    }
+    
+    
+    // Function to prevent duplicate product selection
+    function checkDuplicateProduct(select) {
+        let selectedProducts = Array.from(document.querySelectorAll(".product"))
+            .map(s => s.value)
+            .filter(value => value !== "");
+        
+        let duplicate = selectedProducts.filter(p => p === select.value).length > 1;
+        if (duplicate) {
+            alert("This product has already been selected. Choose another product.");
+            select.value = "";
+        }
+    }
+    
+    
+    // Function to add new product selection row
+    document.getElementById("add-product").addEventListener("click", function () {
+        let newEntry = document.querySelector(".product-entry").cloneNode(true);
+        newEntry.querySelector(".product").value = "";
+        newEntry.querySelector(".quantity-wholesale").value = 0;
+        newEntry.querySelector(".quantity-retail").value = 0;
+        newEntry.querySelector(".subtotal").value = "";
+        
+        newEntry.querySelector(".product").addEventListener("change", function () {
+            checkDuplicateProduct(this);
+        });
+        
+        newEntry.querySelector(".remove-product").addEventListener("click", function () {
+            newEntry.remove();
+            updateTotals();
+        });
+        
+        document.getElementById("product-list").appendChild(newEntry);
+    });
+    
+    // Attach event listeners to all remove buttons
+    document.querySelectorAll(".remove-product").forEach(button => {
+        button.addEventListener("click", function () {
+            this.closest(".product-entry").remove();
+            updateTotals();
+        });
+    });
+    
+    // Event listener for quantity input changes
+    document.getElementById("product-list").addEventListener("input", function (event) {
+        if (event.target.classList.contains("quantity-wholesale") || 
+            event.target.classList.contains("quantity-retail")) {
+            updateSubtotal(event.target.closest(".product-entry"));
+        }
+    });
+    
+    // Event listener for product selection change
+    document.getElementById("product-list").addEventListener("change", function (event) {
+        if (event.target.classList.contains("product")) {
+            checkDuplicateProduct(event.target);
+        }
+    });
+    
+    // Update COGS when total amount changes
+    document.getElementById("total_amount").addEventListener("change", function() {
+        let totalAmount = parseFloat(this.value) || 0;
+        let estimatedCogs = totalAmount * 0.6;
+        document.getElementById("cost_of_goods").value = estimatedCogs.toFixed(2);
+    });
+});
+
+function showLoading(form) {
+    const submitBtn = form.querySelector("#submit-btn");
+    const buttonText = submitBtn.querySelector("#button-text");
+    const spinner = submitBtn.querySelector("#loading-spinner");
+    
+    submitBtn.disabled = true;
+    buttonText.style.display = "none";
+    spinner.style.display = "inline-block";
+}
+
+// Function to update ile groups when batch is selected
+function updateIleGroups() {
+    const batchSelect = document.getElementById('batch_id');
+    const ileSelect = document.getElementById('ile_number');
+    
+    if (!batchSelect || !ileSelect) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    // Clear existing options
+    ileSelect.innerHTML = '<option value="" disabled selected>Select Ile Group</option>';
+    
+    if (batchSelect.value) {
+        const batchId = batchSelect.value;
+        
+        // Fetch ile groups from the server
+        fetch(`/api/batch/${batchId}/ile-groups`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Populate ile groups dropdown
+                    data.ile_groups.forEach(ileGroup => {
+                        const option = document.createElement('option');
+                        option.value = ileGroup.ile_number;
+                        option.textContent = `Ile ${ileGroup.ile_number} (${ileGroup.remaining_pieces} pieces remaining)`;
+                        ileSelect.appendChild(option);
+                    });
+                } else {
+                    console.error('Error fetching ile groups:', data.error);
+                    alert('Error loading ile groups: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading ile groups. Please try again.');
+            });
+    }
+}
+
+</script>
+{% endblock %}

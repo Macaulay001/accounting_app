@@ -1,0 +1,537 @@
+{% extends "layout_accounting.html" %}
+{% block title %}Financial Summary - {{ user.business_name }}{% endblock %}
+
+{% block content %}
+<!-- Financial Summary Header -->
+<div class="dashboard-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-chart-bar me-3"></i>
+                    Financial Summary
+                </h1>
+                <p class="mb-0 fs-5">
+                    <i class="fas fa-calendar me-2"></i>
+                    As of {{ summary.trial_balance.as_of_date.strftime('%B %d, %Y') }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-light" onclick="exportSummary()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filter by Date
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="as_of_date" class="form-label">As of Date</label>
+                        <input type="date" class="form-control" id="as_of_date" name="as_of_date" 
+                               value="{{ summary.trial_balance.as_of_date.strftime('%Y-%m-%d') }}">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Generate
+                        </button>
+                        <a href="{{ url_for('financial_summary_route') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Financial Metrics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon assets mb-2">
+                    <i class="fas fa-building fa-2x"></i>
+                </div>
+                <div class="summary-value text-primary">{{ summary.summary.total_assets|currency }}</div>
+                <div class="summary-label">Total Assets</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon liabilities mb-2">
+                    <i class="fas fa-credit-card fa-2x"></i>
+                </div>
+                <div class="summary-value text-warning">{{ summary.summary.total_liabilities|currency }}</div>
+                <div class="summary-label">Total Liabilities</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon equity mb-2">
+                    <i class="fas fa-chart-line fa-2x"></i>
+                </div>
+                <div class="summary-value text-success">{{ summary.summary.total_equity|currency }}</div>
+                <div class="summary-label">Total Equity</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-accounting">
+            <div class="card-body text-center">
+                <div class="summary-icon profit mb-2">
+                    <i class="fas fa-{% if summary.summary.net_profit_loss >= 0 %}check-circle{% else %}exclamation-triangle{% endif %} fa-2x"></i>
+                </div>
+                <div class="summary-value {% if summary.summary.net_profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ summary.summary.net_profit_loss|currency }}
+                </div>
+                <div class="summary-label">Net Profit/Loss</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Health Status -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-heartbeat me-2"></i>Financial Health Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="health-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Trial Balance</div>
+                                <div class="metric-status">
+                                    {% if summary.summary.is_balanced %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Balanced
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Out of Balance
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="health-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Revenue</div>
+                                <div class="metric-status">
+                                    <span class="badge bg-info">
+                                        {{ summary.summary.total_revenue|currency }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="health-metric">
+                            <div class="metric-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-label">Profit Margin</div>
+                                <div class="metric-status">
+                                    {% if summary.summary.total_revenue > 0 %}
+                                        <span class="badge {% if summary.summary.net_profit_loss >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ "%.1f"|format(summary.summary.net_profit_loss / summary.summary.total_revenue * 100) }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Statements Tabs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <ul class="nav nav-tabs card-header-tabs" id="financialTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="trial-balance-tab" data-bs-toggle="tab" 
+                                data-bs-target="#trial-balance" type="button" role="tab">
+                            <i class="fas fa-balance-scale me-1"></i>Trial Balance
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="profit-loss-tab" data-bs-toggle="tab" 
+                                data-bs-target="#profit-loss" type="button" role="tab">
+                            <i class="fas fa-chart-line me-1"></i>Profit & Loss
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="balance-sheet-tab" data-bs-toggle="tab" 
+                                data-bs-target="#balance-sheet" type="button" role="tab">
+                            <i class="fas fa-building me-1"></i>Balance Sheet
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="financialTabsContent">
+                    <!-- Trial Balance Tab -->
+                    <div class="tab-pane fade show active" id="trial-balance" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-accounting table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Account</th>
+                                        <th class="text-end">Debit</th>
+                                        <th class="text-end">Credit</th>
+                                        <th class="text-end">Net</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for account in summary.trial_balance.trial_balance %}
+                                    <tr>
+                                        <td>
+                                            <code>{{ account.account_code }}</code> {{ account.account_name }}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if account.debit_balance > 0 %}
+                                                {{ account.debit_balance|currency }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if account.credit_balance > 0 %}
+                                                {{ account.credit_balance|currency }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="{% if account.net_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {{ account.net_balance|currency }}
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th>TOTALS</th>
+                                        <th class="text-end">{{ summary.trial_balance.total_debits|currency }}</th>
+                                        <th class="text-end">{{ summary.trial_balance.total_credits|currency }}</th>
+                                        <th class="text-end">
+                                            <strong>{{ (summary.trial_balance.total_debits - summary.trial_balance.total_credits)|currency }}</strong>
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Profit & Loss Tab -->
+                    <div class="tab-pane fade" id="profit-loss" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-accounting table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Account</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Revenue -->
+                                    <tr class="table-success">
+                                        <th>REVENUE</th>
+                                        <th class="text-end">{{ summary.profit_loss.revenue.total|currency }}</th>
+                                    </tr>
+                                    {% for revenue in summary.profit_loss.revenue.accounts %}
+                                    <tr>
+                                        <td class="ps-4">{{ revenue.account_name }}</td>
+                                        <td class="text-end">{{ revenue.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- COGS -->
+                                    <tr class="table-danger">
+                                        <th>COST OF GOODS SOLD</th>
+                                        <th class="text-end">{{ summary.profit_loss.cost_of_goods_sold.total|currency }}</th>
+                                    </tr>
+                                    {% for cogs in summary.profit_loss.cost_of_goods_sold.accounts %}
+                                    <tr>
+                                        <td class="ps-4">{{ cogs.account_name }}</td>
+                                        <td class="text-end">{{ cogs.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Gross Profit -->
+                                    <tr class="table-primary">
+                                        <th>GROSS PROFIT</th>
+                                        <th class="text-end">{{ summary.profit_loss.gross_profit|currency }}</th>
+                                    </tr>
+                                    
+                                    <!-- Operating Expenses -->
+                                    <tr class="table-warning">
+                                        <th>OPERATING EXPENSES</th>
+                                        <th class="text-end">{{ summary.profit_loss.operating_expenses.total|currency }}</th>
+                                    </tr>
+                                    {% for expense in summary.profit_loss.operating_expenses.accounts %}
+                                    <tr>
+                                        <td class="ps-4">{{ expense.account_name }}</td>
+                                        <td class="text-end">{{ expense.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Net Profit/Loss -->
+                                    <tr class="{% if summary.profit_loss.net_profit_loss >= 0 %}table-success{% else %}table-danger{% endif %}">
+                                        <th>NET PROFIT/LOSS</th>
+                                        <th class="text-end">{{ summary.profit_loss.net_profit_loss|currency }}</th>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Balance Sheet Tab -->
+                    <div class="tab-pane fade" id="balance-sheet" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-accounting table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Account</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Assets -->
+                                    <tr class="table-primary">
+                                        <th>ASSETS</th>
+                                        <th class="text-end">{{ summary.balance_sheet.assets.total_assets|currency }}</th>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <th class="ps-3">Current Assets</th>
+                                        <th class="text-end">{{ summary.balance_sheet.assets.total_current_assets|currency }}</th>
+                                    </tr>
+                                    {% for asset in summary.balance_sheet.assets.current_assets %}
+                                    <tr>
+                                        <td class="ps-5">{{ asset.account_name }}</td>
+                                        <td class="text-end">{{ asset.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="table-info">
+                                        <th class="ps-3">Fixed Assets</th>
+                                        <th class="text-end">{{ summary.balance_sheet.assets.total_fixed_assets|currency }}</th>
+                                    </tr>
+                                    {% for asset in summary.balance_sheet.assets.fixed_assets %}
+                                    <tr>
+                                        <td class="ps-5">{{ asset.account_name }}</td>
+                                        <td class="text-end">{{ asset.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Liabilities -->
+                                    <tr class="table-warning">
+                                        <th>LIABILITIES</th>
+                                        <th class="text-end">{{ summary.balance_sheet.liabilities.total_liabilities|currency }}</th>
+                                    </tr>
+                                    {% for liability in summary.balance_sheet.liabilities.current_liabilities %}
+                                    <tr>
+                                        <td class="ps-3">{{ liability.account_name }}</td>
+                                        <td class="text-end">{{ liability.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Equity -->
+                                    <tr class="table-success">
+                                        <th>EQUITY</th>
+                                        <th class="text-end">{{ summary.balance_sheet.equity.total_equity|currency }}</th>
+                                    </tr>
+                                    {% for equity in summary.balance_sheet.equity.accounts %}
+                                    <tr>
+                                        <td class="ps-3">{{ equity.account_name }}</td>
+                                        <td class="text-end">{{ equity.amount|currency }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    <!-- Total Liabilities & Equity -->
+                                    <tr class="table-dark">
+                                        <th>TOTAL LIABILITIES & EQUITY</th>
+                                        <th class="text-end">{{ summary.balance_sheet.total_liabilities_and_equity|currency }}</th>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generated Info -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="text-muted text-center">
+            <small>
+                <i class="fas fa-clock me-1"></i>
+                Generated on {{ summary.trial_balance.generated_at.strftime('%B %d, %Y at %I:%M %p') }}
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportSummary() {
+    // TODO: Implement CSV/Excel export functionality
+    alert('Export functionality coming soon!');
+}
+
+// Print styles
+window.addEventListener('beforeprint', function() {
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('printing');
+});
+</script>
+
+<style>
+@media print {
+    .btn-group, .card-header-accounting .btn, .nav-tabs {
+        display: none !important;
+    }
+    
+    .card-accounting {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .tab-content .tab-pane {
+        display: block !important;
+    }
+    
+    .table-accounting {
+        font-size: 10px;
+    }
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.summary-icon.assets {
+    background: linear-gradient(135deg, #007bff, #6f42c1);
+    color: white;
+}
+
+.summary-icon.liabilities {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.summary-icon.equity {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.summary-icon.profit {
+    background: linear-gradient(135deg, #17a2b8, #6f42c1);
+    color: white;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.health-metric {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.metric-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #007bff, #6f42c1);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+}
+
+.metric-content {
+    flex: 1;
+}
+
+.metric-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.metric-status {
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

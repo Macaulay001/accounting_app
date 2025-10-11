@@ -1,0 +1,135 @@
+{% extends "layout_accounting.html" %}
+{% block content %}
+<h2>Manage Customers</h2>
+
+<!-- Add Customer Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Add New Customer</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('customers_route') }}">
+            <div class="mb-3">
+                <label for="test_name" class="form-label">Customer Name</label>
+                <input type="text" class="form-control" id="test_name" name="test_name" required>
+            </div>
+            <div class="mb-3">
+                <label for="test_phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="test_phone" name="test_phone">
+            </div>
+            <div class="mb-3">
+                <label for="test_email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="test_email" name="test_email">
+            </div>
+            <div class="mb-3">
+                <label for="test_credit" class="form-label">Credit Limit (₦)</label>
+                <input type="number" class="form-control" id="test_credit" name="test_credit" step="0.01" value="0">
+            </div>
+            <div class="mb-3">
+                <label for="test_address" class="form-label">Address</label>
+                <textarea class="form-control" id="test_address" name="test_address" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Customer</button>
+        </form>
+    </div>
+</div>
+
+<!-- Customers List -->
+<div class="card">
+    <div class="card-header">
+        <h5>All Customers</h5>
+    </div>
+    <div class="card-body">
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Credit Limit</th>
+                        <th>Current Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>{{ customer['name'] }}</td>
+                        <td>{{ customer['phone_number'] or 'N/A' }}</td>
+                        <td>{{ customer['email'] or 'N/A' }}</td>
+                        <td>₦{{ "%.2f"|format(customer['credit_limit'] or 0) }}</td>
+                        <td>₦{{ "%.2f"|format(customer['current_balance'] or 0) }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editCustomer('{{ customer['id'] }}')">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer('{{ customer['id'] }}')">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No customers found. Add your first customer above.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function handleSubmit() {
+    const name = document.getElementById('customer_name').value;
+    const phone = document.getElementById('phone_number').value;
+    const email = document.getElementById('email').value;
+    const address = document.getElementById('address').value;
+    const creditLimit = document.getElementById('credit_limit').value;
+    
+    console.log('=== FORM SUBMISSION DEBUG ===');
+    console.log('Raw name value:', name);
+    console.log('Name type:', typeof name);
+    console.log('Name length:', name ? name.length : 'null/undefined');
+    console.log('All form data:', {
+        name: name,
+        phone: phone,
+        email: email,
+        address: address,
+        creditLimit: creditLimit
+    });
+    console.log('=============================');
+    
+    if (!name || name.trim() === '') {
+        alert('Customer name is required!');
+        return false;
+    }
+    
+    showLoading();
+    return true;
+}
+
+function showLoading() {
+    document.getElementById("submit-btn").disabled = true;
+    document.getElementById("button-text").style.display = "none";
+    document.getElementById("loading-spinner").style.display = "inline-block";
+}
+
+function editCustomer(customerId) {
+    // TODO: Implement edit functionality
+    alert('Edit functionality coming soon!');
+}
+
+function deleteCustomer(customerId) {
+    if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete-customer/${customerId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function editCustomer(customerId) {
+    window.location.href = `/edit-customer/${customerId}`;
+}
+</script>
+{% endblock %}

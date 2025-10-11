@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: accounting-app
+  labels:
+    name: accounting-app
+    app: ponmo-accounting
