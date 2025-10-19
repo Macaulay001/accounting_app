@@ -1303,7 +1303,22 @@ def generate_vendor_summary_report(models, vendor_id, start_date, end_date):
     
     # Calculate payment information
     total_paid = models['vendor_payment'].get_total_paid_to_vendor(vendor_id)
-    outstanding_balance = max(0, total_purchases - total_paid)
+    
+    # Get vendor deposits information
+    deposit_summary = models['vendor_deposit'].get_vendor_total_deposits(vendor_id)
+    total_deposits = deposit_summary['total_deposits']
+    total_deposits_applied = deposit_summary['total_applied']
+    total_deposits_remaining = deposit_summary['total_remaining']
+    
+    # Calculate total amount paid (including deposits)
+    total_amount_paid = total_paid + total_deposits
+    
+    # Calculate vendor account balance (what we owe them)
+    accounting_service = get_accounting_service()
+    vendor_account_balance = accounting_service.get_vendor_balance(vendor_id)
+    
+    # Calculate outstanding balance (purchases - payments - deposits)
+    outstanding_balance = max(0, total_purchases - total_amount_paid)
     
     
     # Get production records for this vendor
@@ -1339,8 +1354,13 @@ def generate_vendor_summary_report(models, vendor_id, start_date, end_date):
         'total_processing_cost': total_processing_cost,
         'average_cost_per_piece': total_purchases / total_pieces if total_pieces > 0 else 0,
         'total_paid': total_paid,
+        'total_deposits': total_deposits,
+        'total_deposits_applied': total_deposits_applied,
+        'total_deposits_remaining': total_deposits_remaining,
+        'total_amount_paid': total_amount_paid,
+        'vendor_account_balance': vendor_account_balance,
         'outstanding_balance': outstanding_balance,
-        'payment_percentage': (total_paid / total_purchases * 100) if total_purchases > 0 else 0
+        'payment_percentage': (total_amount_paid / total_purchases * 100) if total_purchases > 0 else 0
     }
 
 def generate_batch_detail_report(models, batch_id):
@@ -2948,5 +2968,5 @@ def delete_expense(expense_id):
 # Main Entry Point
 # ----------------------------------------------------------------------
 if __name__ == '__main__':
-    # app.run(debug=True, port=5000)
-    app.run(debug=False)
+    app.run(debug=True, port=5000)
+    # app.run(debug=False)

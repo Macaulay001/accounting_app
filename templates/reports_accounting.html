@@ -85,7 +85,7 @@
                 </form>
 
                 <!-- Report Content -->
-                {% if report_type == 'vendor_summary' and vendor %}
+                {% if report_type == 'vendor_summary' and vendor and total_amount_paid is defined %}
                     <div class="report-section">
                         <h4 class="mb-3">Vendor Summary: {{ vendor['name'] }}</h4>
                         
@@ -103,7 +103,40 @@
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">Amount Paid</h5>
-                                        <h3 class="text-success">{{ total_paid|currency }}</h3>
+                                        <h3 class="text-success">
+                                            {% if total_amount_paid is defined %}
+                                                {{ total_amount_paid|currency }}
+                                            {% else %}
+                                                ₦0.00
+                                            {% endif %}
+                                        </h3>
+                                        <small class="text-muted">
+                                            Payments: {% if total_paid is defined %}{{ total_paid|currency }}{% else %}₦0.00{% endif %}<br>
+                                            Deposits: {% if total_deposits is defined %}{{ total_deposits|currency }}{% else %}₦0.00{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Account Balance</h5>
+                                        <h3 class="{% if vendor_account_balance is defined and vendor_account_balance > 0 %}text-danger{% elif vendor_account_balance is defined and vendor_account_balance < 0 %}text-success{% else %}text-muted{% endif %}">
+                                            {% if vendor_account_balance is defined %}
+                                                {{ vendor_account_balance|currency }}
+                                            {% else %}
+                                                ₦0.00
+                                            {% endif %}
+                                        </h3>
+                                        <small class="text-muted">
+                                            {% if vendor_account_balance is defined and vendor_account_balance > 0 %}
+                                                We owe vendor
+                                            {% elif vendor_account_balance is defined and vendor_account_balance < 0 %}
+                                                Vendor owes us
+                                            {% else %}
+                                                Balanced
+                                            {% endif %}
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -111,7 +144,13 @@
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">Outstanding</h5>
-                                        <h3 class="{% if outstanding_balance > 0 %}text-danger{% else %}text-success{% endif %}">{{ outstanding_balance|currency }}</h3>
+                                        <h3 class="{% if outstanding_balance is defined and outstanding_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {% if outstanding_balance is defined %}
+                                                {{ outstanding_balance|currency }}
+                                            {% else %}
+                                                ₦0.00
+                                            {% endif %}
+                                        </h3>
                                     </div>
                                 </div>
                             </div>
@@ -119,7 +158,13 @@
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h5 class="card-title">Payment %</h5>
-                                        <h3 class="text-info">{{ "%.1f"|format(payment_percentage) }}%</h3>
+                                        <h3 class="text-info">
+                                            {% if payment_percentage is defined %}
+                                                {{ "%.1f"|format(payment_percentage) }}%
+                                            {% else %}
+                                                0.0%
+                                            {% endif %}
+                                        </h3>
                                     </div>
                                 </div>
                             </div>
@@ -131,6 +176,58 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Deposit Information -->
+                        {% if total_deposits is defined and total_deposits > 0 %}
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Total Deposits</h5>
+                                        <h3>
+                                            {% if total_deposits is defined %}
+                                                {{ total_deposits|currency }}
+                                            {% else %}
+                                                ₦0.00
+                                            {% endif %}
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Applied Deposits</h5>
+                                        <h3>
+                                            {% if total_deposits_applied is defined %}
+                                                {{ total_deposits_applied|currency }}
+                                            {% else %}
+                                                ₦0.00
+                                            {% endif %}
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Available Deposits</h5>
+                                        <h3>
+                                            {% if total_deposits_remaining is defined %}
+                                                {{ total_deposits_remaining|currency }}
+                                            {% else %}
+                                                ₦0.00
+                                            {% endif %}
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Remaining Pieces -->
+                        <div class="row mb-4">
                             <div class="col-md-2">
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
@@ -205,6 +302,13 @@
                             </table>
                         </div>
                         {% endif %}
+                    </div>
+
+                {% elif report_type == 'vendor_summary' and vendor %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Vendor Selected:</strong> {{ vendor['name'] }}<br>
+                        <small>Please click "Generate Report" to view the vendor summary with deposit information and account balance.</small>
                     </div>
 
                 {% elif report_type == 'batch_detail' and batch %}
