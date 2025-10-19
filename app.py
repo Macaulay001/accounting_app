@@ -2968,5 +2968,5 @@ def delete_expense(expense_id):
 # Main Entry Point
 # ----------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
-    # app.run(debug=False)
+    # app.run(debug=True, port=5000)
+    app.run(debug=False)
