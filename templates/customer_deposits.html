@@ -46,7 +46,7 @@
                             <div class="input-group">
                                 <span class="input-group-text">₦</span>
                                 <input type="number" class="form-control" id="amount" name="amount" 
-                                       step="0.01" min="0" required placeholder="0.00">
+                                       step="1" min="0" required placeholder="0">
                             </div>
                         </div>
 
@@ -109,16 +109,10 @@
                                 {% for balance in customer_balances %}
                                 <tr>
                                     <td>
-                                        {% set customer_name = '' %}
-                                        {% for customer in customers %}
-                                            {% if customer['id'] == balance['customer_id'] %}
-                                                {% set customer_name = customer['name'] %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        {{ customer_name }}
+                                        <strong>{{ balance['customer_name'] }}</strong>
                                     </td>
                                     <td class="text-end">
-                                        <span class="badge bg-{% if balance['current_balance'] > 0 %}success{% else %}secondary{% endif %}">
+                                        <span class="badge bg-{% if balance['current_balance'] > 0 %}warning{% elif balance['current_balance'] < 0 %}danger{% else %}secondary{% endif %}">
                                             {{ balance['current_balance']|currency }}
                                         </span>
                                     </td>
@@ -193,14 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('deposit_date').value = today;
     
-    // Format currency input
-    const amountInput = document.getElementById('amount');
-    
-    amountInput.addEventListener('input', function() {
-        if (this.value) {
-            this.value = parseFloat(this.value).toFixed(2);
-        }
-    });
+    // Amount input - no decimal formatting needed
 });
 </script>
 {% endblock %}

@@ -170,6 +170,7 @@
                                     <tr>
                                         <th>ILE Group</th>
                                         <th class="text-end">Status</th>
+                                        <th class="text-end">Pieces</th>
                                         <th class="text-end">Purchase Cost</th>
                                         <th class="text-end">Processing Cost</th>
                                         <th class="text-end">Total Costs</th>
@@ -185,14 +186,23 @@
                                         <td>
                                             <strong>ILE {{ ile_group.ile_number }}</strong>
                                             <br>
-                                            <small class="text-muted">{{ ile_group.pieces_per_ile }} pieces</small>
+                                            <small class="text-muted">{{ ile_group.pieces_per_ile }} pieces in pack</small>
                                         </td>
                                         <td class="text-end">
                                             <span class="badge bg-{% if ile_group.status == 'sold' %}success{% elif ile_group.status == 'finished_goods' %}warning{% else %}secondary{% endif %}">
                                                 {{ ile_group.status.replace('_', ' ').title() }}
                                             </span>
                                         </td>
-                                        <td class="text-end">₦{{ "{:,.2f}".format(ile_group.purchase_cost) }}</td>
+                                        <td class="text-end">
+                                            <strong>{{ ile_group.pieces_processed }}</strong> processed
+                                            <br>
+                                            <small class="text-muted">{{ ile_group.pieces_sold }} sold</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>₦{{ "{:,.2f}".format(ile_group.purchase_cost_processed_only) }}</strong>
+                                            <br>
+                                            <small class="text-muted">₦{{ "{:.2f}".format(ile_group.purchase_cost_per_piece) }}/piece</small>
+                                        </td>
                                         <td class="text-end">₦{{ "{:,.2f}".format(ile_group.processing_cost) }}</td>
                                         <td class="text-end">₦{{ "{:,.2f}".format(ile_group.total_costs) }}</td>
                                         <td class="text-end">₦{{ "{:,.2f}".format(ile_group.sales_revenue) }}</td>

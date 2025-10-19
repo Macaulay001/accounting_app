@@ -209,7 +209,7 @@ class AlertService:
         high_balance_customers = []
         for customer in customers:
             balance_info = balance_service.get_customer_balance_summary(customer['id'])
-            if balance_info['current_balance'] > 50000:  # More than ₦50,000 outstanding
+            if balance_info['current_balance'] < -50000:  # More than ₦50,000 debt (negative balance)
                 high_balance_customers.append({
                     'name': customer['name'],
                     'balance': balance_info['current_balance']

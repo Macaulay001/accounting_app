@@ -85,7 +85,13 @@
                 </div>
                 <div>
                     <div class="widget-value amount-neutral">{{ inventory_value|currency }}</div>
-                    <div class="widget-label">Inventory Value</div>
+                    <div class="widget-label">Raw Materials Stock</div>
+                    <div class="widget-detail">
+                        <small class="text-muted">
+                            Unprocessed materials only<br>
+                            (Production = Immediate Sale)
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,8 +107,31 @@
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div>
-                    <div class="widget-value amount-positive">{{ (total_revenue - (payables + inventory_value))|currency }}</div>
+                    <div class="widget-value amount-positive">{{ net_worth|currency }}</div>
                     <div class="widget-label">Net Worth</div>
+                    <div class="widget-detail">
+                        <small class="text-muted">
+                            Assets: {{ total_assets|currency }}<br>
+                            Liabilities: {{ total_liabilities|currency }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="dashboard-widget">
+            <div class="d-flex align-items-center">
+                <div class="widget-icon asset me-3">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div>
+                    <div class="widget-value amount-neutral">{{ "%.1f"|format(production_efficiency) }}%</div>
+                    <div class="widget-label">Production Rate</div>
+                    <div class="widget-detail">
+                        <small class="text-muted">Materials Processed vs Total</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -177,6 +206,49 @@
                         <a href="{{ url_for('reports_route') }}" class="btn btn-accounting btn-accounting-secondary w-100">
                             <i class="fas fa-chart-bar me-2"></i>Business Reports
                         </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Net Worth Breakdown -->
+<div class="row mb-4">
+    <div class="col-lg-12 mb-4">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-calculator me-2"></i>Net Worth Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Assets (What You Own)</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-money-bill-wave text-success me-2"></i>Cash & Bank: {{ cash_balance|currency }}</li>
+                            <li><i class="fas fa-users text-success me-2"></i>Customer Receivables: {{ receivables|currency }}</li>
+                            <li><i class="fas fa-boxes text-success me-2"></i>Raw Materials Stock: {{ inventory_value|currency }}</li>
+                            <li><i class="fas fa-tools text-success me-2"></i>Equipment (Net): {{ net_equipment_value|currency }}</li>
+                            <li class="border-top pt-2"><strong>Total Assets: {{ total_assets|currency }}</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Liabilities (What You Owe)</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-credit-card text-danger me-2"></i>Accounts Payable: {{ payables|currency }}</li>
+                            <li><i class="fas fa-hand-holding-usd text-danger me-2"></i>Customer Deposits: {{ customer_deposits|currency }}</li>
+                            <li class="border-top pt-2"><strong>Total Liabilities: {{ total_liabilities|currency }}</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info mb-0">
+                            <strong>Net Worth = Assets - Liabilities</strong><br>
+                            <small>This represents the true value of your business (what you own minus what you owe)</small>
+                        </div>
                     </div>
                 </div>
             </div>

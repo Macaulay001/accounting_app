@@ -37,13 +37,7 @@
                 <div class="col-md-3">
                     <div class="mb-3">
                         <label for="total_ile" class="form-label">Number of Ile Packs</label>
-                        <input type="number" class="form-control" id="total_ile" name="total_ile" min="1" value="1" required onchange="calculateTotalPieces()">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mb-3">
-                        <label for="pieces_per_ile" class="form-label">Pieces per Ile</label>
-                        <input type="number" class="form-control" id="pieces_per_ile" name="pieces_per_ile" min="1" value="100" required onchange="calculateTotalPieces()">
+                        <input type="number" class="form-control" id="total_ile" name="total_ile" min="1" value="1" required onchange="generateIlePiecesInputs()">
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -52,10 +46,25 @@
                         <input type="text" class="form-control" id="total_pieces_display" readonly value="100">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <div class="mb-3">
                         <label for="purchase_cost" class="form-label">Total Cost (₦)</label>
                         <input type="number" class="form-control" id="purchase_cost" name="purchase_cost" step="0.01" min="0" required>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dynamic ILE Pieces Inputs -->
+            <div class="row" id="ile_pieces_container">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="form-label">Pieces per ILE Pack</label>
+                        <div class="row" id="ile_pieces_inputs">
+                            <div class="col-md-3 mb-2">
+                                <label for="ile_1_pieces" class="form-label small">ILE Pack 1</label>
+                                <input type="number" class="form-control" id="ile_1_pieces" name="ile_pieces[]" min="1" value="100" required onchange="calculateTotalPieces()">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -170,16 +179,48 @@
 </div>
 
 <script>
+function generateIlePiecesInputs() {
+    const totalIle = parseInt(document.getElementById('total_ile').value) || 1;
+    const container = document.getElementById('ile_pieces_inputs');
+    
+    // Clear existing inputs
+    container.innerHTML = '';
+    
+    // Generate inputs for each ILE pack
+    for (let i = 1; i <= totalIle; i++) {
+        const colDiv = document.createElement('div');
+        colDiv.className = 'col-md-3 mb-2';
+        
+        colDiv.innerHTML = `
+            <label for="ile_${i}_pieces" class="form-label small">ILE Pack ${i}</label>
+            <input type="number" class="form-control" id="ile_${i}_pieces" name="ile_pieces[]" min="1" value="100" required onchange="calculateTotalPieces()">
+        `;
+        
+        container.appendChild(colDiv);
+    }
+    
+    // Calculate total pieces after generating inputs
+    calculateTotalPieces();
+}
+
 function calculateTotalPieces() {
     const totalIle = parseInt(document.getElementById('total_ile').value) || 0;
-    const piecesPerIle = parseInt(document.getElementById('pieces_per_ile').value) || 0;
-    const totalPieces = totalIle * piecesPerIle;
+    let totalPieces = 0;
+    
+    // Sum up pieces from all ILE pack inputs
+    for (let i = 1; i <= totalIle; i++) {
+        const input = document.getElementById(`ile_${i}_pieces`);
+        if (input) {
+            totalPieces += parseInt(input.value) || 0;
+        }
+    }
+    
     document.getElementById('total_pieces_display').value = totalPieces;
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    calculateTotalPieces();
+    generateIlePiecesInputs();
 });
 
 function deleteBatch(batchId, batchName) {

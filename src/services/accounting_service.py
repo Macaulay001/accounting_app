@@ -122,20 +122,19 @@ class AccountingService:
                          finished_goods_value: float,
                          reference: str) -> str:
         """
-        Record production process (raw materials -> finished goods)
+        Record production process (raw materials -> immediate sale)
         
+        Business Model: Production = Immediate Sale
         Journal Entries:
-        1. DEBIT:  5000 - Cost of Goods Sold (raw materials)
-        2. DEBIT:  1310 - Work in Process Inventory (processing cost) - only if > 0
-        3. CREDIT: 1300 - Raw Materials Inventory
-        4. DEBIT:  1320 - Finished Goods Inventory
-        5. CREDIT: 1310 - Work in Process Inventory - only if > 0
+        1. DEBIT:  5000 - Cost of Goods Sold (raw materials + processing)
+        2. CREDIT: 1300 - Raw Materials Inventory (raw materials used)
+        3. CREDIT: 5400 - Processing Materials Expense (processing cost)
         """
-        # First entry: Move raw materials to production
-        entries1 = [
+        # Single entry: Record production as immediate sale
+        entries = [
             {
-                "account_code": "1310",  # Work in Process Inventory
-                "debit": raw_materials_used,
+                "account_code": "5000",  # Cost of Goods Sold
+                "debit": finished_goods_value,  # Total cost (materials + processing)
                 "credit": 0
             },
             {
@@ -147,43 +146,17 @@ class AccountingService:
         
         # Add processing cost entry if it's greater than 0
         if processing_cost > 0:
-            entries1.append({
-                "account_code": "1310",  # Work in Process Inventory
-                "debit": processing_cost,
-                "credit": 0
-            })
-            entries1.append({
+            entries.append({
                 "account_code": "5400",  # Processing Materials Expense
                 "debit": 0,
                 "credit": processing_cost
             })
         
-        self.journal_entry_model.create_entry(
-            date=date,
-            description=f"Transfer raw materials to production - {reference}",
-            reference=f"PROD-{reference}",
-            entries=entries1
-        )
-        
-        # Second entry: Complete production
-        entries2 = [
-            {
-                "account_code": "1320",  # Finished Goods Inventory
-                "debit": finished_goods_value,
-                "credit": 0
-            },
-            {
-                "account_code": "1310",  # Work in Process Inventory
-                "debit": 0,
-                "credit": raw_materials_used + processing_cost  # Total cost
-            }
-        ]
-        
         return self.journal_entry_model.create_entry(
             date=date,
-            description=f"Complete production - {reference}",
-            reference=f"COMP-{reference}",
-            entries=entries2
+            description=f"Production completed (immediate sale) - {reference}",
+            reference=f"PROD-{reference}",
+            entries=entries
         )
     
     def record_vendor_payment(self,
@@ -516,29 +489,21 @@ class AccountingService:
         return self.journal_entry_model.get_trial_balance(as_of_date)
     
     def generate_profit_loss_statement(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
-        """Generate Profit & Loss Statement for the period"""
-        # For now, return a simplified version to avoid Firebase index issues
-        # TODO: Implement proper date-range filtering once Firebase indexes are set up
+        """Generate Profit & Loss Statement for the period - Business Model Specific"""
+        # Use business-specific analysis instead of traditional COGS approach
         
-        # Get current balances (simplified approach)
-        revenue = self.get_account_balance("4000")
-        cogs = self.get_account_balance("5000")
-        operating_expenses = (
-            self.get_account_balance("5400") +
-            self.get_account_balance("5500") +
-            self.get_account_balance("5600")
-        )
-        
-        gross_profit = revenue - cogs
-        net_profit = gross_profit - operating_expenses
+        # Get overall profit/loss summary
+        overall_summary = self.generate_overall_profit_loss_summary(start_date, end_date)
         
         return {
             "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
-            "revenue": revenue,
-            "cost_of_goods_sold": cogs,
-            "gross_profit": gross_profit,
-            "operating_expenses": operating_expenses,
-            "net_profit": net_profit
+            "revenue": overall_summary['total_sales_revenue'],
+            "cost_of_goods_sold": overall_summary['total_costs'],  # Purchase + Processing costs
+            "gross_profit": overall_summary['overall_profit_loss'],
+            "operating_expenses": 0,  # No separate operating expenses in this model
+            "net_profit": overall_summary['overall_profit_loss'],
+            "business_model": "Production = Immediate Sale",
+            "note": "Costs tracked at batch level, not individual item COGS"
         }
     
     def generate_balance_sheet(self, as_of_date: datetime) -> Dict[str, Any]:
@@ -764,35 +729,42 @@ class AccountingService:
         
         # Calculate processing costs from production records and get ILE group details
         total_processing_cost = 0
+        total_pieces_processed = 0
         total_pieces_sold = 0
         total_sales_revenue = 0
+        total_purchase_cost_processed = 0  # Only cost of processed pieces
         ile_groups_analysis = []
         
         for ile_group in batch.get('ile_groups', []):
             ile_analysis = self._analyze_ile_group_profitability(batch, ile_group, start_date, end_date)
             total_processing_cost += ile_analysis['processing_cost']
+            total_pieces_processed += ile_analysis['pieces_processed']
             total_pieces_sold += ile_analysis['pieces_sold']
             total_sales_revenue += ile_analysis['sales_revenue']
+            total_purchase_cost_processed += ile_analysis['purchase_cost_processed_only']
             
             # Add ILE group details for drill-down
             ile_groups_analysis.append(ile_analysis)
         
-        # Sort ILE groups by ILE number (most recent first)
-        ile_groups_analysis.sort(key=lambda x: x.get('ile_number', 0), reverse=True)
+        # Sort ILE groups by ILE number (ascending order - ILE 1 first)
+        ile_groups_analysis.sort(key=lambda x: x.get('ile_number', 0), reverse=False)
         
-        total_costs = purchase_cost + total_processing_cost
+        # Use only the cost of processed pieces for batch-level calculation
+        total_costs = total_purchase_cost_processed + total_processing_cost
         profit_loss = total_sales_revenue - total_costs
         profit_margin = (profit_loss / total_sales_revenue * 100) if total_sales_revenue > 0 else 0
         
         return {
             'batch_id': batch_id,
             'vendor_name': vendor_name,
-            'purchase_cost': purchase_cost,
+            'purchase_cost': purchase_cost,  # Total purchase cost (all pieces)
+            'purchase_cost_processed': total_purchase_cost_processed,  # Cost of processed pieces only
             'processing_cost': total_processing_cost,
-            'total_costs': total_costs,
+            'total_costs': total_costs,  # Based on processed pieces only
             'sales_revenue': total_sales_revenue,
-            'pieces_purchased': total_pieces,
-            'pieces_sold': total_pieces_sold,
+            'pieces_purchased': total_pieces,  # Total pieces purchased
+            'pieces_processed': total_pieces_processed,  # Total pieces processed
+            'pieces_sold': total_pieces_sold,  # Total pieces sold
             'profit_loss': profit_loss,
             'profit_margin': profit_margin,
             'purchase_date': batch.get('purchase_date'),
@@ -808,18 +780,32 @@ class AccountingService:
         total_ile_packs = batch.get('total_ile', 1)
         batch_id = batch.get('id')
         
-        # Calculate purchase cost per ILE pack
-        purchase_cost_per_ile = total_purchase_cost / total_ile_packs if total_ile_packs > 0 else 0
+        # Get actual pieces in this ILE group (not the average)
+        actual_pieces_in_ile = ile_group.get('pieces', pieces_per_ile)
+        
+        # Calculate total pieces across all ILE groups to get proper cost allocation
+        total_pieces_in_batch = sum(ig.get('pieces', pieces_per_ile) for ig in batch.get('ile_groups', []))
+        
+        # Calculate purchase cost per piece based on actual piece distribution
+        purchase_cost_per_piece = total_purchase_cost / total_pieces_in_batch if total_pieces_in_batch > 0 else 0
         
         # Calculate processing costs from production records
         processing_cost = 0
+        pieces_processed = 0
         for prod_record in ile_group.get('production_records', []):
             prod_date = prod_record.get('production_date')
+            pieces_in_production = prod_record.get('pieces_processed', 0)  # Fixed: was 'pieces_produced'
+            
             if start_date and end_date:
                 if prod_date and start_date <= prod_date <= end_date:
                     processing_cost += prod_record.get('processing_cost', 0)
+                    pieces_processed += pieces_in_production
             else:
                 processing_cost += prod_record.get('processing_cost', 0)
+                pieces_processed += pieces_in_production
+        
+        # Calculate purchase cost of ONLY processed items
+        actual_purchase_cost = purchase_cost_per_piece * pieces_processed
         
         # Get sales revenue from journal entries (not from sales_records)
         sales_revenue = self._get_sales_revenue_for_ile_group(batch_id, ile_number, start_date, end_date)
@@ -827,18 +813,22 @@ class AccountingService:
         # Determine pieces sold based on status
         pieces_sold = pieces_per_ile if ile_group.get('status') == 'sold' else 0
         
-        total_costs = purchase_cost_per_ile + processing_cost
+        total_costs = actual_purchase_cost + processing_cost
         profit_loss = sales_revenue - total_costs
         profit_margin = (profit_loss / sales_revenue * 100) if sales_revenue > 0 else 0
         
         return {
             'ile_number': ile_number,
-            'pieces_per_ile': pieces_per_ile,
-            'purchase_cost': purchase_cost_per_ile,
+            'pieces_per_ile': actual_pieces_in_ile,  # Actual pieces in this ILE group
+            'pieces_processed': pieces_processed,
+            'pieces_sold': pieces_sold,
+            'purchase_cost_per_piece': purchase_cost_per_piece,
+            'purchase_cost': purchase_cost_per_piece * actual_pieces_in_ile,  # Total purchase cost for this ILE
+            'purchase_cost_total_ile': purchase_cost_per_piece * actual_pieces_in_ile,  # Full ILE pack cost
+            'purchase_cost_processed_only': actual_purchase_cost,  # Cost of processed items only
             'processing_cost': processing_cost,
             'total_costs': total_costs,
             'sales_revenue': sales_revenue,
-            'pieces_sold': pieces_sold,
             'profit_loss': profit_loss,
             'profit_margin': profit_margin,
             'status': ile_group.get('status', 'raw_material')

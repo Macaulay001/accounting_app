@@ -108,7 +108,7 @@
                         <td>
                             {% set current_balance = customer.get('current_balance', 0) %}
                             {% if current_balance > 0 %}
-                                <span class="text-success">₦{{ "%.2f"|format(current_balance) }}</span>
+                                <span class="text-warning">₦{{ "%.2f"|format(current_balance) }}</span>
                             {% elif current_balance < 0 %}
                                 <span class="text-danger">₦{{ "%.2f"|format(current_balance) }}</span>
                             {% else %}

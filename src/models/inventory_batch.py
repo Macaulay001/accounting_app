@@ -19,6 +19,7 @@ class InventoryBatch(BaseModel):
                     raw_material_type: str = "cow_skin",
                     total_ile: int = 1,
                     pieces_per_ile: int = 100,
+                    ile_pieces: List[int] = None,
                     total_pieces: int = None,
                     purchase_date: datetime = None,
                     purchase_cost: float = 0.0,
@@ -33,13 +34,17 @@ class InventoryBatch(BaseModel):
             vendor_name: Name of the vendor
             raw_material_type: Type of raw material (cow_skin, etc.)
             total_ile: Number of ile packs purchased
-            pieces_per_ile: Pieces per ile (usually 100)
+            pieces_per_ile: Average pieces per ile (for backward compatibility)
+            ile_pieces: List of pieces for each ILE pack (if provided)
             total_pieces: Total pieces (calculated if not provided)
             purchase_date: Date of purchase
             purchase_cost: Total cost of the batch
             status: Current status (raw_material, in_production, finished_goods, sold)
         """
-        if total_pieces is None:
+        # Use individual ILE pieces if provided, otherwise use average
+        if ile_pieces and len(ile_pieces) == total_ile:
+            total_pieces = sum(ile_pieces)
+        elif total_pieces is None:
             total_pieces = total_ile * pieces_per_ile
         
         if purchase_date is None:
@@ -58,7 +63,7 @@ class InventoryBatch(BaseModel):
             'reference': reference,
             'status': status,
             'current_pieces': total_pieces,  # Track remaining pieces
-            'ile_groups': self._create_ile_groups(total_ile, pieces_per_ile),
+            'ile_groups': self._create_ile_groups(total_ile, pieces_per_ile, ile_pieces),
             'production_records': [],
             'sales_records': [],
             'expense_records': [],
@@ -68,18 +73,22 @@ class InventoryBatch(BaseModel):
         
         return self.create(batch_data)
     
-    def _create_ile_groups(self, total_ile: int, pieces_per_ile: int) -> List[Dict[str, Any]]:
+    def _create_ile_groups(self, total_ile: int, pieces_per_ile: int, ile_pieces: List[int] = None) -> List[Dict[str, Any]]:
         """Create ile group tracking structure"""
         ile_groups = []
         for i in range(total_ile):
+            # Use individual pieces if provided, otherwise use average
+            pieces = ile_pieces[i] if ile_pieces and i < len(ile_pieces) else pieces_per_ile
+            
             ile_groups.append({
                 'ile_number': i + 1,
-                'pieces': pieces_per_ile,
-                'remaining_pieces': pieces_per_ile,
+                'pieces': pieces,
+                'remaining_pieces': pieces,
                 'status': 'raw_material',  # raw_material, in_production, finished_goods, sold
                 'production_date': None,
                 'completion_date': None,
-                'sales_date': None
+                'sales_date': None,
+                'production_records': []  # Track production history
             })
         return ile_groups
     

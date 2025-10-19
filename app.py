@@ -330,11 +330,34 @@ def dashboard():
     # Calculate outstanding payables from journal entries (proper accounting)
     outstanding_payables = accounting_service.get_account_balance("2000")  # Accounts Payable
     
-    # Calculate inventory value from journal entries (proper accounting)
+    # Calculate inventory value from journal entries (raw materials only - unprocessed stock)
     raw_materials_value = accounting_service.get_account_balance("1300")  # Raw Materials
-    work_in_process_value = accounting_service.get_account_balance("1310")  # Work in Process  
-    finished_goods_value = accounting_service.get_account_balance("1320")  # Finished Goods
-    total_inventory_value = raw_materials_value + work_in_process_value + finished_goods_value
+    work_in_process_value = accounting_service.get_account_balance("1310")  # Work in Process (should be 0)
+    finished_goods_value = accounting_service.get_account_balance("1320")  # Finished Goods (should be 0)
+    
+    # In this business model: Production = Immediate Sale
+    # So inventory value = only raw materials (unprocessed stock)
+    total_inventory_value = raw_materials_value
+    
+    # Calculate production efficiency metrics
+    total_production_cost = accounting_service.get_account_balance("5400")  # Processing Materials Expense
+    total_cogs = accounting_service.get_account_balance("5000")  # Cost of Goods Sold
+    production_efficiency = (total_cogs / (raw_materials_value + total_cogs) * 100) if (raw_materials_value + total_cogs) > 0 else 0
+    
+    # Calculate Net Worth (Assets - Liabilities)
+    # ASSETS
+    equipment_value = accounting_service.get_account_balance("1400")  # Equipment
+    accumulated_depreciation = accounting_service.get_account_balance("1500")  # Accumulated Depreciation
+    net_equipment_value = equipment_value - accumulated_depreciation  # Equipment minus depreciation
+    
+    total_assets = cash_balance + receivables + raw_materials_value + net_equipment_value
+    
+    # LIABILITIES
+    customer_deposits = accounting_service.get_account_balance("2200")  # Customer Deposits (liability)
+    total_liabilities = outstanding_payables + customer_deposits
+    
+    # NET WORTH
+    net_worth = total_assets - total_liabilities
     
     # Get recent transactions from journal entries (created by inventory batches and sales)
     all_entries = models['journal_entry'].get_all(order_by='created_at')
@@ -401,6 +424,16 @@ def dashboard():
                          total_revenue=total_revenue,
                          payables=outstanding_payables,
                          inventory_value=total_inventory_value,
+                         raw_materials_value=raw_materials_value,
+                         work_in_process_value=work_in_process_value,
+                         finished_goods_value=finished_goods_value,
+                         total_production_cost=total_production_cost,
+                         production_efficiency=production_efficiency,
+                         net_worth=net_worth,
+                         total_assets=total_assets,
+                         total_liabilities=total_liabilities,
+                         net_equipment_value=net_equipment_value,
+                         customer_deposits=customer_deposits,
                          recent_entries=recent_entries,
                          current_date=datetime.now())
 
@@ -2292,7 +2325,22 @@ def inventory_batches_route():
             vendor_id = request.form.get('vendor_id')
             raw_material_type = request.form.get('raw_material_type', 'cow_skin')
             total_ile = int(request.form.get('total_ile', 1))
-            pieces_per_ile = int(request.form.get('pieces_per_ile', 100))
+            
+            # Get pieces per ILE pack from the array
+            ile_pieces_list = request.form.getlist('ile_pieces[]')
+            if not ile_pieces_list or len(ile_pieces_list) != total_ile:
+                flash("Please provide pieces count for all ILE packs.", "danger")
+                return redirect(url_for('inventory_batches_route'))
+            
+            # Convert to integers and validate
+            ile_pieces = [int(pieces) for pieces in ile_pieces_list if pieces.strip()]
+            if len(ile_pieces) != total_ile or any(pieces <= 0 for pieces in ile_pieces):
+                flash("All ILE packs must have valid pieces count greater than 0.", "danger")
+                return redirect(url_for('inventory_batches_route'))
+            
+            # Calculate average pieces per ILE for backward compatibility
+            pieces_per_ile = sum(ile_pieces) // total_ile if total_ile > 0 else 100
+            
             purchase_cost = float(request.form.get('purchase_cost', 0))
             purchase_date_str = request.form.get('purchase_date')
             payment_method = request.form.get('payment_method', 'accounts_payable')
@@ -2306,13 +2354,14 @@ def inventory_batches_route():
             
             purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d') if purchase_date_str else datetime.now()
             
-            # Create batch
+            # Create batch with individual ILE pieces
             batch_id = models['inventory_batch'].create_batch(
                 vendor_id=vendor_id,
                 vendor_name=vendor['name'],
                 raw_material_type=raw_material_type,
                 total_ile=total_ile,
                 pieces_per_ile=pieces_per_ile,
+                ile_pieces=ile_pieces,  # Pass individual pieces array
                 purchase_cost=purchase_cost,
                 purchase_date=purchase_date,
                 payment_method=payment_method,

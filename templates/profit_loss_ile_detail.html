@@ -147,7 +147,7 @@
                             <h6>Purchase Cost Breakdown</h6>
                             <ul class="list-unstyled">
                                 <li><strong>Total Purchase Cost:</strong> ₦{{ "{:,.2f}".format(ile_analysis.purchase_cost) }}</li>
-                                <li><strong>Cost per Piece:</strong> ₦{{ "{:.2f}".format(ile_analysis.purchase_cost / ile_analysis.pieces_per_ile) if ile_analysis.pieces_per_ile > 0 else 0 }}</li>
+                                <li><strong>Cost per Piece:</strong> ₦{{ "{:.2f}".format(ile_analysis.purchase_cost_per_piece) }}</li>
                                 <li><strong>Percentage of Total Cost:</strong> {{ "{:.1f}".format((ile_analysis.purchase_cost / ile_analysis.total_costs) * 100) if ile_analysis.total_costs > 0 else 0 }}%</li>
                             </ul>
                         </div>
