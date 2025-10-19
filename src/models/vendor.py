@@ -18,7 +18,6 @@ class Vendor(BaseModel):
                      phone_number: Optional[str] = None,
                      email: Optional[str] = None,
                      address: Optional[str] = None,
-                     contact_person: Optional[str] = None,
                      payment_terms: str = "cash") -> str:
         """Create a new vendor"""
         vendor_data = {
@@ -26,7 +25,6 @@ class Vendor(BaseModel):
             'phone_number': phone_number,
             'email': email,
             'address': address,
-            'contact_person': contact_person,
             'payment_terms': payment_terms,
             'current_balance': 0.0,  # Will be calculated from journal entries
             'total_purchases': 0.0,

@@ -1,0 +1,162 @@
+{% extends "layout_accounting.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card-accounting">
+            <div class="card-header-accounting">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Business Information Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="form-label-accounting mb-3">Business Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Business Name</label>
+                                    <input type="text" class="form-control" value="{{ user.business_name }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Management Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="form-label-accounting mb-3">Data Management</h6>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> The reset function will permanently delete all transaction records but will keep your master data (customers, vendors, products, expense types).
+                        </div>
+                        
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-trash-alt me-2"></i>Reset Transaction Data
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-3">This will clear all the following data:</p>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-times text-danger me-2"></i>All sales records</li>
+                                    <li><i class="fas fa-times text-danger me-2"></i>All expense records</li>
+                                    <li><i class="fas fa-times text-danger me-2"></i>All production records</li>
+                                    <li><i class="fas fa-times text-danger me-2"></i>All inventory batches and transactions</li>
+                                    <li><i class="fas fa-times text-danger me-2"></i>All customer deposits and payments</li>
+                                    <li><i class="fas fa-times text-danger me-2"></i>All vendor payments</li>
+                                    <li><i class="fas fa-times text-danger me-2"></i>All journal entries</li>
+                                </ul>
+                                
+                                <p class="mb-3 text-success">
+                                    <i class="fas fa-check me-2"></i>
+                                    <strong>Will be preserved:</strong> Customers, Vendors, Products, Expense Types
+                                </p>
+                                
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#resetConfirmModal">
+                                    <i class="fas fa-trash-alt me-2"></i>Reset All Transaction Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Information Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="form-label-accounting mb-3">System Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Chart of Accounts Version</label>
+                                    <input type="text" class="form-control" value="1.0" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Last Reset</label>
+                                    <input type="text" class="form-control" value="Never" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetConfirmModal" tabindex="-1" aria-labelledby="resetConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="resetConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Data Reset
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>⚠️ WARNING: This action cannot be undone!</strong>
+                </div>
+                
+                <p>You are about to permanently delete all transaction data including:</p>
+                <ul>
+                    <li>All sales, expenses, and production records</li>
+                    <li>All inventory batch transactions</li>
+                    <li>All customer deposits and payments</li>
+                    <li>All vendor payments</li>
+                    <li>All journal entries and accounting records</li>
+                </ul>
+                
+                <p class="text-success">
+                    <strong>Your master data will be preserved:</strong><br>
+                    Customers, Vendors, Products, and Expense Types will remain intact.
+                </p>
+                
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="confirmReset" required>
+                    <label class="form-check-label" for="confirmReset">
+                        I understand this action cannot be undone and I want to proceed
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('reset_data_route') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger" id="confirmResetBtn" disabled>
+                        <i class="fas fa-trash-alt me-2"></i>Yes, Reset All Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmReset');
+    const confirmBtn = document.getElementById('confirmResetBtn');
+    
+    confirmCheckbox.addEventListener('change', function() {
+        confirmBtn.disabled = !this.checked;
+    });
+    
+    // Reset form when modal is closed
+    document.getElementById('resetConfirmModal').addEventListener('hidden.bs.modal', function() {
+        confirmCheckbox.checked = false;
+        confirmBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

@@ -1076,6 +1076,85 @@ def alerts_route():
                          alert_counts=alert_counts,
                          user=session["user"])
 
+@app.route('/settings')
+@auth_required
+def settings_route():
+    """Settings page"""
+    return render_template('settings.html', user=session["user"])
+
+@app.route('/reset-data', methods=['POST'])
+@auth_required
+def reset_data_route():
+    """Reset all transaction data while preserving master data"""
+    try:
+        models = get_models()
+        
+        # Clear all transaction-related collections
+        collections_to_clear = [
+            'expenses',
+            'sales', 
+            'production',
+            'inventory_batches',
+            'customer_deposits',
+            'vendor_payments',
+            'journal_entries'
+        ]
+        
+        cleared_count = 0
+        for collection_name in collections_to_clear:
+            try:
+                collection_ref = db.collection(f"user_data_{session['user']['uid']}").document("accounting").collection(collection_name)
+                docs = collection_ref.stream()
+                
+                for doc in docs:
+                    doc.reference.delete()
+                    cleared_count += 1
+            except Exception as e:
+                print(f"Error clearing {collection_name}: {e}")
+                continue
+        
+        # Reset accounting balances to zero
+        accounting_service = get_accounting_service()
+        
+        # Create a reset journal entry to zero out all accounts
+        reset_entries = []
+        
+        # Get all account balances and create reversing entries
+        for account_code in ["1000", "1100", "1200", "1300", "1310", "1320", "1400", "1500", 
+                           "2000", "2100", "2200", "3000", "3100", "3200", "4000", "4100", 
+                           "5000", "5100", "5200", "5300", "5400", "5500", "5600", "5700"]:
+            balance = accounting_service.get_account_balance(account_code)
+            if balance != 0:
+                if balance > 0:
+                    # Account has debit balance, credit it to zero
+                    reset_entries.append({
+                        "account_code": account_code,
+                        "debit": 0,
+                        "credit": balance
+                    })
+                else:
+                    # Account has credit balance, debit it to zero
+                    reset_entries.append({
+                        "account_code": account_code,
+                        "debit": abs(balance),
+                        "credit": 0
+                    })
+        
+        if reset_entries:
+            accounting_service.journal_entry_model.create_entry(
+                date=datetime.now(),
+                description="Data Reset - Zero out all account balances",
+                reference="RESET-ALL",
+                entries=reset_entries
+            )
+        
+        flash(f"Data reset completed successfully! Cleared {cleared_count} transaction records. All master data (customers, vendors, products, expense types) has been preserved.", "success")
+        
+    except Exception as e:
+        flash(f"Error during data reset: {str(e)}", "danger")
+    
+    return redirect(url_for('settings_route'))
+
 @app.route('/reports')
 @auth_required
 def reports_route():
@@ -1782,7 +1861,6 @@ def vendors_route():
             phone_number = request.form.get('vendor_phone', '')
             email = request.form.get('vendor_email', '')
             address = request.form.get('vendor_address', '')
-            contact_person = request.form.get('vendor_contact', '')
             payment_terms = request.form.get('vendor_payment', 'cash')
             
             # Debug: Print form data
@@ -1797,7 +1875,6 @@ def vendors_route():
                 phone_number=phone_number,
                 email=email,
                 address=address,
-                contact_person=contact_person,
                 payment_terms=payment_terms
             )
             
@@ -2228,7 +2305,6 @@ def edit_vendor(vendor_id):
             phone_number = request.form.get('vendor_phone', '')
             email = request.form.get('vendor_email', '')
             address = request.form.get('vendor_address', '')
-            contact_person = request.form.get('vendor_contact', '')
             payment_terms = request.form.get('vendor_payment', 'cash')
             
             # Validate name is not empty
@@ -2242,7 +2318,6 @@ def edit_vendor(vendor_id):
                 'phone_number': phone_number,
                 'email': email,
                 'address': address,
-                'contact_person': contact_person,
                 'payment_terms': payment_terms
             })
             

@@ -21,10 +21,6 @@
                 <input type="email" class="form-control" id="vendor_email" name="vendor_email" value="{{ vendor['email'] or '' }}">
             </div>
             <div class="mb-3">
-                <label for="vendor_contact" class="form-label">Contact Person</label>
-                <input type="text" class="form-control" id="vendor_contact" name="vendor_contact" value="{{ vendor['contact_person'] or '' }}">
-            </div>
-            <div class="mb-3">
                 <label for="vendor_address" class="form-label">Address</label>
                 <textarea class="form-control" id="vendor_address" name="vendor_address" rows="2">{{ vendor['address'] or '' }}</textarea>
             </div>
