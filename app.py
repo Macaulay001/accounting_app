@@ -20,6 +20,7 @@ from src.models.product import Product
 from src.models.journal_entry import JournalEntry
 from src.models.inventory_batch import InventoryBatch
 from src.models.vendor_payment import VendorPayment
+from src.models.vendor_deposit import VendorDeposit
 from src.models.customer_deposit import CustomerDeposit
 from src.models.expense_type import ExpenseType
 from src.models.expense import Expense
@@ -200,6 +201,7 @@ def get_models():
         'journal_entry': JournalEntry(db, user_id),
         'inventory_batch': InventoryBatch(db, user_id),
         'vendor_payment': VendorPayment(db, user_id),
+        'vendor_deposit': VendorDeposit(db, user_id),
         'customer_deposit': CustomerDeposit(db, user_id),
         'expense_type': ExpenseType(db, user_id),
         'expense': Expense(db, user_id)
@@ -929,27 +931,58 @@ def vendor_payments_route():
                 flash("Vendor information not found for this batch.", "danger")
                 return redirect(url_for('vendor_payments_route'))
             
-            # Record the payment
+            # Calculate outstanding balance for this batch
+            total_paid = models['vendor_payment'].get_total_paid_for_batch(batch_id)
+            purchase_cost = batch.get('purchase_cost', 0)
+            outstanding_balance = max(0, purchase_cost - total_paid)
+            
+            # Determine how much to pay for the batch vs how much becomes deposit
+            batch_payment_amount = min(payment_amount, outstanding_balance)
+            excess_amount = max(0, payment_amount - outstanding_balance)
+            
+            # Record the payment for the batch
             payment_id = models['vendor_payment'].create_payment(
                 batch_id=batch_id,
                 vendor_id=vendor_id,
-                payment_amount=payment_amount,
+                payment_amount=batch_payment_amount,
                 payment_date=payment_date,
                 payment_method=payment_method,
                 reference=reference,
                 notes=notes
             )
             
-            # Create journal entry for the payment
+            # Create journal entry for the batch payment
             journal_entry_id = accounting_service.record_vendor_payment(
                 vendor_id=vendor_id,
                 date=payment_date,
-                amount=payment_amount,
+                amount=batch_payment_amount,
                 payment_method=payment_method,
                 reference=reference
             )
             
-            flash(f"Payment recorded successfully! Payment ID: {payment_id}, Journal Entry: {journal_entry_id}", "success")
+            # If there's excess payment, create a vendor deposit
+            if excess_amount > 0:
+                deposit_id = models['vendor_deposit'].create_deposit(
+                    vendor_id=vendor_id,
+                    amount=excess_amount,
+                    deposit_date=payment_date,
+                    payment_method=payment_method,
+                    reference=f"Excess-{reference}" if reference else f"Excess-{payment_id[:8]}...",
+                    notes=f"Excess payment from batch {batch_id[:8]}... - {notes}" if notes else f"Excess payment from batch {batch_id[:8]}..."
+                )
+                
+                # Create journal entry for the excess payment (deposit)
+                deposit_journal_id = accounting_service.record_vendor_deposit(
+                    vendor_id=vendor_id,
+                    amount=excess_amount,
+                    date=payment_date,
+                    reference=f"Excess-{reference}" if reference else f"Excess-{payment_id[:8]}...",
+                    payment_method=payment_method
+                )
+                
+                flash(f"Payment recorded successfully! Batch Payment: ₦{batch_payment_amount:,.2f}, Excess added to vendor balance: ₦{excess_amount:,.2f}", "success")
+            else:
+                flash(f"Payment recorded successfully! Payment ID: {payment_id}, Journal Entry: {journal_entry_id}", "success")
             
             return redirect(url_for('vendor_payments_route'))
             
@@ -962,6 +995,27 @@ def vendor_payments_route():
     
     # Get recent payments (most recent first)
     recent_payments = models['vendor_payment'].get_recent_payments(20)
+    
+    # Get vendor deposits
+    vendor_deposits = models['vendor_deposit'].get_all()
+    
+    # Calculate vendor balances (including deposits)
+    vendor_balances = {}
+    for vendor in vendors:
+        vendor_id = vendor['id']
+        
+        # Get total balance from journal entries
+        total_balance = accounting_service.get_vendor_balance(vendor_id)
+        
+        # Get deposit summary
+        deposit_summary = models['vendor_deposit'].get_vendor_total_deposits(vendor_id)
+        
+        vendor_balances[vendor_id] = {
+            'total_balance': total_balance,
+            'total_remaining': deposit_summary['total_remaining'],
+            'total_deposits': deposit_summary['total_deposits'],
+            'total_applied': deposit_summary['total_applied']
+        }
     
     # Calculate payment status for each batch
     batch_payment_status = []
@@ -983,8 +1037,11 @@ def vendor_payments_route():
                          vendors=vendors,
                          recent_payments=recent_payments,
                          batch_payment_status=batch_payment_status,
+                         vendor_deposits=vendor_deposits,
+                         vendor_balances=vendor_balances,
                          current_date=datetime.now(),
                          user=session["user"])
+
 
 @app.route('/profit-loss-analysis')
 @auth_required
@@ -1097,6 +1154,7 @@ def reset_data_route():
             'inventory_batches',
             'customer_deposits',
             'vendor_payments',
+            'vendor_deposits',
             'journal_entries'
         ]
         
@@ -2457,12 +2515,32 @@ def inventory_batches_route():
     batches = models['inventory_batch'].get_all()
     vendors = models['vendor'].get_all()
     
+    # Calculate vendor balances (including deposits)
+    accounting_service = get_accounting_service()
+    vendor_balances = {}
+    for vendor in vendors:
+        vendor_id = vendor['id']
+        
+        # Get total balance from journal entries
+        total_balance = accounting_service.get_vendor_balance(vendor_id)
+        
+        # Get deposit summary
+        deposit_summary = models['vendor_deposit'].get_vendor_total_deposits(vendor_id)
+        
+        vendor_balances[vendor_id] = {
+            'total_balance': total_balance,
+            'total_remaining': deposit_summary['total_remaining'],
+            'total_deposits': deposit_summary['total_deposits'],
+            'total_applied': deposit_summary['total_applied']
+        }
+    
     # Sort batches by creation date (most recent first)
     batches.sort(key=lambda x: x.get('created_at', x.get('purchase_date', datetime.min)), reverse=True)
     
     return render_template('inventory_batches.html', 
                          batches=batches, 
-                         vendors=vendors, 
+                         vendors=vendors,
+                         vendor_balances=vendor_balances,
                          current_date=datetime.now(),
                          user=session["user"])
 

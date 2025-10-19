@@ -986,3 +986,71 @@ class AccountingService:
             sales_transactions = sales_transactions[:limit]
         
         return sales_transactions
+    
+    def record_vendor_deposit(self, vendor_id: str, amount: float, date: datetime, reference: str, payment_method: str = "bank_transfer") -> str:
+        """
+        Record vendor deposit/advance payment
+        
+        Journal Entries:
+        1. DEBIT:  2100 - Accounts Payable (vendor liability)
+        2. CREDIT: 1000 - Cash (if cash) or 1100 - Bank Account (if transfer)
+        """
+        # Determine cash or bank account based on payment method
+        if payment_method == "cash":
+            cash_account = "1000"  # Cash
+        else:
+            cash_account = "1100"  # Bank Account
+        
+        entries = [
+            {
+                "account_code": "2100",  # Accounts Payable
+                "debit": amount,
+                "credit": 0
+            },
+            {
+                "account_code": cash_account,
+                "debit": 0,
+                "credit": amount
+            }
+        ]
+        
+        return self.journal_entry_model.create_entry(
+            date=date,
+            description=f"Vendor deposit - {reference}",
+            reference=f"DEP-{reference}",
+            entries=entries
+        )
+    
+    def get_vendor_balance(self, vendor_id: str) -> float:
+        """
+        Get the current balance for a vendor (what we owe them)
+        Positive balance = we owe the vendor money
+        Negative balance = vendor owes us money (overpaid)
+        """
+        # Get all journal entries
+        all_entries = self.journal_entry_model.get_all()
+        
+        # Calculate vendor-specific balance by looking at entries that reference this vendor
+        vendor_balance = 0.0
+        
+        for entry in all_entries:
+            description = entry.get('description', '').lower()
+            reference = entry.get('reference', '').lower()
+            
+            # Check if this entry is related to the specific vendor
+            if (vendor_id in description or 
+                f"vendor-{vendor_id}" in description or
+                f"batch-{vendor_id}" in reference or
+                f"dep-{vendor_id}" in reference):
+                
+                # Process each entry in this journal entry
+                for journal_entry in entry.get('entries', []):
+                    account_code = journal_entry.get('account_code', '')
+                    debit = journal_entry.get('debit', 0)
+                    credit = journal_entry.get('credit', 0)
+                    
+                    # Accounts Payable (2100) affects vendor balance
+                    if account_code == "2100":
+                        vendor_balance += debit - credit
+        
+        return vendor_balance

@@ -13,10 +13,14 @@
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="vendor_id" class="form-label">Vendor</label>
-                        <select id="vendor_id" name="vendor_id" class="form-select" required>
+                        <select id="vendor_id" name="vendor_id" class="form-select" required onchange="updateVendorBalance()">
                             <option value="" disabled selected>Select Vendor</option>
                             {% for vendor in vendors %}
-                            <option value="{{ vendor['id'] }}">{{ vendor['name'] }}</option>
+                            <option value="{{ vendor['id'] }}" 
+                                    data-balance="{{ vendor_balances[vendor['id']]['total_balance'] if vendor_balances.get(vendor['id']) else 0 }}"
+                                    data-deposits="{{ vendor_balances[vendor['id']]['total_remaining'] if vendor_balances.get(vendor['id']) else 0 }}">
+                                {{ vendor['name'] }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -29,6 +33,22 @@
                             <option value="goat_skin">Goat Skin</option>
                             <option value="other">Other</option>
                         </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vendor Balance Info -->
+            <div id="vendor-balance-info" class="alert alert-info mb-3" style="display: none;">
+                <h6>Vendor Balance Information</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>Total Balance:</strong> ₦<span id="vendor-total-balance">0.00</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Available Deposits:</strong> ₦<span id="vendor-deposits">0.00</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Net Balance:</strong> ₦<span id="vendor-net-balance">0.00</span>
                     </div>
                 </div>
             </div>
@@ -218,9 +238,33 @@ function calculateTotalPieces() {
     document.getElementById('total_pieces_display').value = totalPieces;
 }
 
+function updateVendorBalance() {
+    const vendorSelect = document.getElementById('vendor_id');
+    const vendorBalanceInfo = document.getElementById('vendor-balance-info');
+    const vendorTotalBalance = document.getElementById('vendor-total-balance');
+    const vendorDeposits = document.getElementById('vendor-deposits');
+    const vendorNetBalance = document.getElementById('vendor-net-balance');
+    
+    if (vendorSelect.value) {
+        const selectedOption = vendorSelect.selectedOptions[0];
+        const totalBalance = parseFloat(selectedOption.dataset.balance) || 0;
+        const deposits = parseFloat(selectedOption.dataset.deposits) || 0;
+        const netBalance = totalBalance - deposits;
+        
+        vendorTotalBalance.textContent = totalBalance.toFixed(2);
+        vendorDeposits.textContent = deposits.toFixed(2);
+        vendorNetBalance.textContent = netBalance.toFixed(2);
+        
+        vendorBalanceInfo.style.display = 'block';
+    } else {
+        vendorBalanceInfo.style.display = 'none';
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     generateIlePiecesInputs();
+    updateVendorBalance();
 });
 
 function deleteBatch(batchId, batchName) {
