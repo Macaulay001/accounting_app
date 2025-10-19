@@ -19,7 +19,7 @@ class Vendor(BaseModel):
                      email: Optional[str] = None,
                      address: Optional[str] = None,
                      contact_person: Optional[str] = None,
-                     payment_terms: str = "net_30") -> str:
+                     payment_terms: str = "cash") -> str:
         """Create a new vendor"""
         vendor_data = {
             'name': name,

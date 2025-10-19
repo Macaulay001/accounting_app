@@ -173,6 +173,12 @@ CHART_OF_ACCOUNTS = {
         "type": AccountType.EXPENSE,
         "category": AccountCategory.OPERATING_EXPENSE,
         "description": "Marketing and selling expenses"
+    },
+    "5700": {
+        "name": "Financing Expenses",
+        "type": AccountType.EXPENSE,
+        "category": AccountCategory.OPERATING_EXPENSE,
+        "description": "Interest on loans, bank charges, and other financing costs"
     }
 }
 

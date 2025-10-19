@@ -1783,7 +1783,7 @@ def vendors_route():
             email = request.form.get('vendor_email', '')
             address = request.form.get('vendor_address', '')
             contact_person = request.form.get('vendor_contact', '')
-            payment_terms = request.form.get('vendor_payment', 'net_30')
+            payment_terms = request.form.get('vendor_payment', 'cash')
             
             # Debug: Print form data
             
@@ -1829,8 +1829,6 @@ def products_route():
             description = request.form.get('product_description', '')
             wholesale_price = float(request.form.get('product_wholesale', 0))
             retail_price = float(request.form.get('product_retail', 0))
-            unit_of_measure = request.form.get('product_unit', 'piece')
-            category = request.form.get('product_category', 'ponmo')
             
             # Debug: Print form data
             
@@ -1843,9 +1841,7 @@ def products_route():
                 name=name.strip(),
                 description=description,
                 wholesale_price=wholesale_price,
-                retail_price=retail_price,
-                unit_of_measure=unit_of_measure,
-                category=category
+                retail_price=retail_price
             )
             
             flash(f"Product '{name.strip()}' created successfully.", "success")
@@ -2233,7 +2229,7 @@ def edit_vendor(vendor_id):
             email = request.form.get('vendor_email', '')
             address = request.form.get('vendor_address', '')
             contact_person = request.form.get('vendor_contact', '')
-            payment_terms = request.form.get('vendor_payment', 'net_30')
+            payment_terms = request.form.get('vendor_payment', 'cash')
             
             # Validate name is not empty
             if not name or name.strip() == '':
@@ -2279,8 +2275,6 @@ def edit_product(product_id):
             description = request.form.get('product_description', '')
             wholesale_price = float(request.form.get('product_wholesale', 0))
             retail_price = float(request.form.get('product_retail', 0))
-            unit_of_measure = request.form.get('product_unit', 'piece')
-            category = request.form.get('product_category', 'ponmo')
             
             # Validate name is not empty
             if not name or name.strip() == '':
@@ -2292,9 +2286,7 @@ def edit_product(product_id):
                 'name': name.strip(),
                 'description': description,
                 'wholesale_price': wholesale_price,
-                'retail_price': retail_price,
-                'unit_of_measure': unit_of_measure,
-                'category': category
+                'retail_price': retail_price
             })
             
             if success:

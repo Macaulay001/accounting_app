@@ -18,8 +18,6 @@ class Product(BaseModel):
                       description: Optional[str] = None,
                       wholesale_price: float = 0.0,
                       retail_price: float = 0.0,
-                      unit_of_measure: str = "piece",
-                      category: str = "ponmo",
                       is_active: bool = True) -> str:
         """Create a new product"""
         product_data = {
@@ -27,8 +25,6 @@ class Product(BaseModel):
             'description': description,
             'wholesale_price': wholesale_price,  # Owo price
             'retail_price': retail_price,        # Piece price
-            'unit_of_measure': unit_of_measure,
-            'category': category,
             'is_active': is_active,
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()
@@ -45,9 +41,6 @@ class Product(BaseModel):
         """Get all active products"""
         return self.search('is_active', True)
     
-    def get_products_by_category(self, category: str) -> List[Dict[str, Any]]:
-        """Get products by category"""
-        return self.search('category', category)
     
     def search_products(self, query: str) -> List[Dict[str, Any]]:
         """Search products by name or description"""

@@ -31,10 +31,8 @@
             <div class="mb-3">
                 <label for="vendor_payment" class="form-label">Payment Terms</label>
                 <select class="form-select" id="vendor_payment" name="vendor_payment">
-                    <option value="net_30" {% if vendor['payment_terms'] == 'net_30' %}selected{% endif %}>Net 30</option>
-                    <option value="net_15" {% if vendor['payment_terms'] == 'net_15' %}selected{% endif %}>Net 15</option>
-                    <option value="net_7" {% if vendor['payment_terms'] == 'net_7' %}selected{% endif %}>Net 7</option>
                     <option value="cash" {% if vendor['payment_terms'] == 'cash' %}selected{% endif %}>Cash</option>
+                    <option value="transfer" {% if vendor['payment_terms'] == 'transfer' %}selected{% endif %}>Transfer</option>
                 </select>
             </div>
             <div class="d-flex gap-2">

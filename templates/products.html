@@ -14,30 +14,12 @@
                 <input type="text" class="form-control" id="product_name" name="product_name" required>
             </div>
             <div class="mb-3">
-                <label for="product_category" class="form-label">Category</label>
-                <select class="form-select" id="product_category" name="product_category">
-                    <option value="ponmo" selected>Ponmo</option>
-                    <option value="raw_materials">Raw Materials</option>
-                    <option value="processing">Processing</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="mb-3">
                 <label for="product_wholesale" class="form-label">Wholesale Price (Owo) - ₦</label>
                 <input type="number" class="form-control" id="product_wholesale" name="product_wholesale" step="0.01" required>
             </div>
             <div class="mb-3">
-                <label for="product_retail" class="form-label">Retail Price (Piece) - ₦</label>
+                <label for="product_retail" class="form-label">Wholesale Price (Piece) - ₦</label>
                 <input type="number" class="form-control" id="product_retail" name="product_retail" step="0.01" required>
-            </div>
-            <div class="mb-3">
-                <label for="product_unit" class="form-label">Unit of Measure</label>
-                <select class="form-select" id="product_unit" name="product_unit">
-                    <option value="piece" selected>Piece</option>
-                    <option value="kg">Kilogram</option>
-                    <option value="lb">Pound</option>
-                    <option value="dozen">Dozen</option>
-                </select>
             </div>
             <div class="mb-3">
                 <label for="product_description" class="form-label">Description</label>
@@ -60,10 +42,8 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Category</th>
                         <th>Wholesale Price</th>
                         <th>Retail Price</th>
-                        <th>Unit</th>
                         <th>Description</th>
                         <th>Actions</th>
                     </tr>
@@ -72,10 +52,8 @@
                     {% for product in products %}
                     <tr>
                         <td>{{ product['name'] }}</td>
-                        <td>{{ product['category'] or 'N/A' }}</td>
                         <td>₦{{ "%.2f"|format(product['wholesale_price'] or 0) }}</td>
                         <td>₦{{ "%.2f"|format(product['retail_price'] or 0) }}</td>
-                        <td>{{ product['unit_of_measure'] or 'N/A' }}</td>
                         <td>{{ product['description'] or 'N/A' }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-primary" onclick="editProduct('{{ product['id'] }}')">Edit</button>
